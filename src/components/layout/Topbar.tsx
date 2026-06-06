@@ -25,7 +25,7 @@ export function Topbar() {
   const location = useLocation()
   const toggleSidebar = useUIStore((s) => s.toggleSidebar)
 
-  const currentLabel = VIEW_LABELS[location.pathname] ?? 'JL OS'
+  const currentLabel = VIEW_LABELS[location.pathname] ?? 'MOS'
   const dateStr = format(new Date(), "EEE dd MMM", { locale: ptBR })
 
   return (
@@ -46,7 +46,7 @@ export function Topbar() {
         </button>
 
         <div className="text-ink-2" style={{ fontFamily: 'Manrope, sans-serif', fontSize: 13 }}>
-          JL OS /{' '}
+          MOS /{' '}
           <strong className="text-ink" style={{ fontWeight: 600 }}>
             {currentLabel}
           </strong>

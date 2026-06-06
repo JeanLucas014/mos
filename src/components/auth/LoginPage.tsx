@@ -32,10 +32,10 @@ export function LoginPage() {
             className="w-9 h-9 rounded-[9px] bg-brand flex items-center justify-center flex-shrink-0"
             style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 14, color: '#fff' }}
           >
-            JL
+            M
           </div>
           <span style={{ fontFamily: 'Sora, sans-serif', fontWeight: 700, fontSize: 17, color: '#fff' }}>
-            JL OS
+            MOS
           </span>
         </div>
 

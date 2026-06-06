@@ -217,10 +217,10 @@ export function Sidebar() {
           className="w-7 h-7 rounded-[6px] bg-brand flex items-center justify-center flex-shrink-0"
           style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 11, color: '#fff' }}
         >
-          JL
+          M
         </div>
         <span style={{ fontFamily: 'Sora, sans-serif', fontWeight: 700, fontSize: 15, color: '#fff' }}>
-          JL OS
+          MOS
         </span>
       </div>
 
