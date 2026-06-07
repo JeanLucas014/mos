@@ -553,7 +553,7 @@ function DiarioView({ mes, months, avulsos, setAvulsos, updateMonth }: {
 
 /* ─── Main page ──────────────────────────────────────────────────────── */
 export function FinancePage() {
-  const ano = 2026
+  const [ano, setAno] = useState(new Date().getFullYear())
   const [months, setMonths] = useState<Record<string, MonthData>>(buildEmptyMonths)
   const [avulsos, setAvulsos] = useState<Record<string, Avulso[]>>({})
   const [cartaosList, setCartaosList] = useState<string[]>(['Nubank','Bradesco'])
@@ -576,8 +576,17 @@ export function FinancePage() {
   const [aportePopup, setAportePopup] = useState<{ invId: string; valor: string; data: string } | null>(null)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  /* load */
+  /* load — resets + reloads whenever ano changes */
   useEffect(() => {
+    setLoaded(false)
+    setMonths(buildEmptyMonths())
+    setAvulsos({})
+    setCartaosList(['Nubank','Bradesco'])
+    setMetas([])
+    setCarteira([])
+    setInvestimentos({})
+    setDividas([])
+    setTaxaSelic(13.75)
     ;(async () => {
       const { data } = await (supabase as ReturnType<typeof supabase.from> extends never ? never : typeof supabase).from('financeiro').select('payload').eq('id', String(ano)).maybeSingle() as unknown as { data: { payload: Record<string, unknown> } | null }
       if (data?.payload) {
@@ -587,7 +596,7 @@ export function FinancePage() {
         if (p.cartaosList) setCartaosList(p.cartaosList as string[])
         if (p.metas) setMetas(p.metas as Meta[])
         if (p.carteira) setCarteira(p.carteira as Investimento[])
-        if (p.investimentos) setInvestimentos(p.investimentos as Record<string, { economia: number }>)
+        if (p.investimentos) setInvestimentos(p.investimentos as Record<string, any>)
         if (p.dividas) setDividas(p.dividas as Divida[])
         if (p.taxaSelic) setTaxaSelic(p.taxaSelic as number)
       }
@@ -639,17 +648,18 @@ export function FinancePage() {
     triggerSave(months, avulsos, nl)
   }
 
-  /* overview computation */
+  /* overview computation
+     Tiles: ENTRADAS=entradas, FIXAS=fixas, VARIÁVEIS=variaveis, CARTÕES=cartao
+     RESULTADO = ENTRADAS − (FIXAS + VARIÁVEIS + CARTÕES)                       */
   const overview = useMemo(() => MS.map(mes => {
     const md = months[mes] || { entradas: [], fixas: [], variaveis: [], cartoes_itens: [] }
     const entradas = md.entradas.reduce((a, b) => a + b.valor, 0)
-    const fixas = md.fixas.reduce((a, b) => a + b.valor, 0)
+    const fixas    = md.fixas.reduce((a, b) => a + b.valor, 0)
     const variaveis = md.variaveis.reduce((a, b) => a + b.valor, 0)
-    const cartao = md.cartoes_itens.reduce((a, b) => a + b.valor, 0)
-    const avSai = (avulsos[mes] || []).filter(a => a.tipo !== 'entrada').reduce((a, b) => a + b.valor, 0)
-    const resultado = entradas - fixas - variaveis - cartao - avSai
+    const cartao   = md.cartoes_itens.reduce((a, b) => a + b.valor, 0)
+    const resultado = entradas - fixas - variaveis - cartao
     return { mes, entradas, fixas, variaveis, cartao, resultado }
-  }), [months, avulsos])
+  }), [months])
 
   const filteredOverview = useMemo(() => {
     const ranges: Record<string, number[]> = {
@@ -692,7 +702,15 @@ export function FinancePage() {
 
       {/* Header */}
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-        <h1 style={{ fontFamily: 'Sora,sans-serif', fontWeight: 800, fontSize: 28, letterSpacing: '-0.03em', margin: 0 }}>Financeiro {ano}</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <h1 style={{ fontFamily: 'Sora,sans-serif', fontWeight: 800, fontSize: 28, letterSpacing: '-0.03em', margin: 0 }}>Financeiro</h1>
+          {/* Year selector */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 2, background: C.card, border: '1px solid ' + C.border, borderRadius: 8, padding: '3px 6px' }}>
+            <button onClick={() => setAno(a => a - 1)} style={{ background: 'none', border: 'none', color: C.dm, cursor: 'pointer', fontSize: 18, padding: '0 6px', lineHeight: 1, fontWeight: 400 }}>‹</button>
+            <span style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 13, fontWeight: 700, color: C.tx, minWidth: 38, textAlign: 'center' }}>{ano}</span>
+            <button onClick={() => setAno(a => a + 1)} style={{ background: 'none', border: 'none', color: C.dm, cursor: 'pointer', fontSize: 18, padding: '0 6px', lineHeight: 1, fontWeight: 400 }}>›</button>
+          </div>
+        </div>
         {saving && <span style={{ fontSize: 11, color: C.g, fontFamily: 'JetBrains Mono,monospace' }}>✓ Salvo</span>}
       </div>
 
@@ -786,15 +804,17 @@ export function FinancePage() {
                 <tbody>
                   {filteredOverview.map(r => {
                     const mi = MS.indexOf(r.mes)
-                    const avSai = (avulsos[r.mes]||[]).filter(a=>a.tipo!=='entrada').reduce((a,b)=>a+b.valor,0)
+                    // Resultado = Entradas − (Fixas + Cartões + Diário)
+                    // Diário = r.variaveis (kind='out' category='variavel')
+                    const resultado = r.entradas - r.fixas - r.cartao - r.variaveis
                     return (
                       <tr key={mi} style={{ borderBottom: '1px solid ' + C.border, cursor: 'pointer', background: mi === currentMonthIdx ? C.bB : 'transparent' }} onClick={() => { setView('meses'); setDiarioMes(r.mes) }}>
                         <td style={{ padding: '10px', fontWeight: 600, fontSize: 12 }}>{MSH[mi]}</td>
                         <td style={{ padding: '10px', textAlign: 'right', color: C.g, fontFamily: 'JetBrains Mono,monospace' }}>{fmt(r.entradas)}</td>
                         <td style={{ padding: '10px', textAlign: 'right', color: C.r, fontFamily: 'JetBrains Mono,monospace' }}>{fmt(r.fixas)}</td>
                         <td style={{ padding: '10px', textAlign: 'right', color: C.p, fontFamily: 'JetBrains Mono,monospace' }}>{fmt(r.cartao)}</td>
-                        <td style={{ padding: '10px', textAlign: 'right', color: C.a, fontFamily: 'JetBrains Mono,monospace' }}>{fmt(avSai)}</td>
-                        <td style={{ padding: '10px', textAlign: 'right', fontWeight: 700, color: r.resultado >= 0 ? C.g : C.r, fontFamily: 'JetBrains Mono,monospace' }}>{fmt(r.resultado)}</td>
+                        <td style={{ padding: '10px', textAlign: 'right', color: C.a, fontFamily: 'JetBrains Mono,monospace' }}>{fmt(r.variaveis)}</td>
+                        <td style={{ padding: '10px', textAlign: 'right', fontWeight: 700, color: resultado >= 0 ? C.g : C.r, fontFamily: 'JetBrains Mono,monospace' }}>{fmt(resultado)}</td>
                       </tr>
                     )
                   })}
