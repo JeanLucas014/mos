@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 
@@ -61,9 +61,18 @@ export function LoginPage() {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-ink-2" style={{ fontSize: 12, fontWeight: 500 }}>
-              Senha
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-ink-2" style={{ fontSize: 12, fontWeight: 500 }}>
+                Senha
+              </label>
+              <Link
+                to="/recuperar-senha"
+                className="text-ink-3 hover:text-brand transition-colors"
+                style={{ fontSize: 11.5 }}
+              >
+                Esqueci minha senha
+              </Link>
+            </div>
             <input
               type="password"
               value={password}

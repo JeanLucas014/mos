@@ -19,6 +19,7 @@ const VIEW_LABELS: Record<string, string> = {
   '/senhas': 'Senhas',
   '/esportes': 'Esportes',
   '/integracoes': 'Integrações',
+  '/perfil': 'Perfil',
 }
 
 export function Topbar() {

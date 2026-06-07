@@ -256,7 +256,27 @@ export function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="px-2 py-3 border-t border-line flex-shrink-0">
+      <div className="px-2 py-3 border-t border-line flex-shrink-0 space-y-0.5">
+        <NavLink
+          to="/perfil"
+          onClick={handleNavClick}
+          className={({ isActive }) =>
+            [
+              'flex items-center gap-2.5 px-[10px] py-2 rounded-input transition-colors duration-[180ms] cursor-pointer select-none',
+              isActive
+                ? 'nav-active bg-bg-3 text-ink'
+                : 'text-ink-2 hover:bg-bg-3 hover:text-ink',
+            ].join(' ')
+          }
+          style={{ fontSize: 13, fontWeight: 500, textDecoration: 'none' }}
+        >
+          <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="5.5" r="2.8" stroke="currentColor" strokeWidth="1.3" />
+            <path d="M2 13.5c0-2.5 2.7-4 6-4s6 1.5 6 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+          </svg>
+          <span>Perfil</span>
+        </NavLink>
+
         <button
           onClick={handleSignOut}
           className="flex items-center gap-2.5 px-[10px] py-2 rounded-input text-ink-2 hover:bg-bg-3 hover:text-ink transition-colors duration-[180ms] w-full"

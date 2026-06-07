@@ -2,6 +2,8 @@ import { Routes, Route } from 'react-router-dom'
 import { AppShell } from './components/layout/AppShell'
 import { RequireAuth } from './components/auth/RequireAuth'
 import { LoginPage } from './components/auth/LoginPage'
+import { ForgotPasswordPage } from './components/auth/ForgotPasswordPage'
+import { ResetPasswordPage } from './components/auth/ResetPasswordPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { AgendaPage } from './pages/AgendaPage'
 import { TasksPage } from './pages/TasksPage'
@@ -17,11 +19,14 @@ import { StudiesPage } from './pages/StudiesPage'
 import { VaultPage } from './pages/VaultPage'
 import { SportsPage } from './pages/SportsPage'
 import { IntegrationsPage } from './pages/IntegrationsPage'
+import { ProfilePage } from './pages/ProfilePage'
 
 export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/recuperar-senha" element={<ForgotPasswordPage />} />
+      <Route path="/nova-senha" element={<ResetPasswordPage />} />
       <Route
         element={
           <RequireAuth>
@@ -44,6 +49,7 @@ export default function App() {
         <Route path="senhas" element={<VaultPage />} />
         <Route path="esportes" element={<SportsPage />} />
         <Route path="integracoes" element={<IntegrationsPage />} />
+        <Route path="perfil" element={<ProfilePage />} />
       </Route>
     </Routes>
   )
