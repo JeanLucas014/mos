@@ -214,9 +214,6 @@ export function Sidebar() {
         className="flex items-center gap-2.5 px-[14px] h-[52px] flex-shrink-0 border-b border-line"
       >
         <img src="/logo.png" alt="MOS" className="h-8 w-auto" />
-        <span style={{ fontFamily: 'Sora, sans-serif', fontWeight: 700, fontSize: 15, color: '#fff' }}>
-          MOS
-        </span>
       </div>
 
       {/* Nav */}

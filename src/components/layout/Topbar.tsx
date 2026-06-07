@@ -46,13 +46,12 @@ export function Topbar() {
           </svg>
         </button>
 
-        {/* MOS centrado */}
-        <span
-          className="absolute left-1/2 -translate-x-1/2 text-ink"
-          style={{ fontFamily: 'Sora, sans-serif', fontWeight: 700, fontSize: 15 }}
-        >
-          MOS
-        </span>
+        {/* Logo centrada */}
+        <img
+          src="/logo.png"
+          alt="MOS"
+          className="h-7 w-auto absolute left-1/2 -translate-x-1/2"
+        />
       </div>
 
       {/* ── Desktop layout ── */}
