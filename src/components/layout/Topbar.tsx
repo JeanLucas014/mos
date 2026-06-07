@@ -17,7 +17,7 @@ const VIEW_LABELS: Record<string, string> = {
   '/biblioteca': 'Biblioteca',
   '/estudos': 'Estudos',
   '/senhas': 'Senhas',
-  '/corridas': 'Corridas',
+  '/esportes': 'Esportes',
   '/integracoes': 'Integrações',
 }
 

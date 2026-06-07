@@ -15,7 +15,7 @@ import { NotesPage } from './pages/NotesPage'
 import { LibraryPage } from './pages/LibraryPage'
 import { StudiesPage } from './pages/StudiesPage'
 import { VaultPage } from './pages/VaultPage'
-import { RunsPage } from './pages/RunsPage'
+import { SportsPage } from './pages/SportsPage'
 import { IntegrationsPage } from './pages/IntegrationsPage'
 
 export default function App() {
@@ -42,7 +42,7 @@ export default function App() {
         <Route path="biblioteca" element={<LibraryPage />} />
         <Route path="estudos" element={<StudiesPage />} />
         <Route path="senhas" element={<VaultPage />} />
-        <Route path="corridas" element={<RunsPage />} />
+        <Route path="esportes" element={<SportsPage />} />
         <Route path="integracoes" element={<IntegrationsPage />} />
       </Route>
     </Routes>

@@ -286,6 +286,14 @@ export interface Database {
           status: string
           cover_url: string | null
           progress: number
+          favorite: boolean
+          category: string | null
+          total_pages: number | null
+          pages_read: number | null
+          started_at: string | null
+          finished_at: string | null
+          rating: number | null
+          format: string | null
           created_at: string
         }
         Insert: {
@@ -296,6 +304,14 @@ export interface Database {
           status?: string
           cover_url?: string | null
           progress?: number
+          favorite?: boolean
+          category?: string | null
+          total_pages?: number | null
+          pages_read?: number | null
+          started_at?: string | null
+          finished_at?: string | null
+          rating?: number | null
+          format?: string | null
           created_at?: string
         }
         Update: {
@@ -306,6 +322,148 @@ export interface Database {
           status?: string
           cover_url?: string | null
           progress?: number
+          favorite?: boolean
+          category?: string | null
+          total_pages?: number | null
+          pages_read?: number | null
+          started_at?: string | null
+          finished_at?: string | null
+          rating?: number | null
+          format?: string | null
+          created_at?: string
+        }
+      }
+      workouts: {
+        Row: {
+          id: string
+          user_id: string
+          sport: string
+          kind: string
+          distance_m: number
+          duration_s: number
+          pace_label: string | null
+          workout_date: string
+          notes: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string
+          sport: string
+          kind: string
+          distance_m: number
+          duration_s: number
+          pace_label?: string | null
+          workout_date?: string
+          notes?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          sport?: string
+          kind?: string
+          distance_m?: number
+          duration_s?: number
+          pace_label?: string | null
+          workout_date?: string
+          notes?: string | null
+          created_at?: string
+        }
+      }
+      sport_goals: {
+        Row: {
+          id: string
+          user_id: string
+          sport: string
+          name: string
+          target: string | null
+          target_date: string | null
+          done: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string
+          sport: string
+          name: string
+          target?: string | null
+          target_date?: string | null
+          done?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          sport?: string
+          name?: string
+          target?: string | null
+          target_date?: string | null
+          done?: boolean
+          created_at?: string
+        }
+      }
+      sport_races: {
+        Row: {
+          id: string
+          user_id: string
+          sport: string
+          name: string
+          race_date: string
+          location: string | null
+          distance: string | null
+          goal_time: string | null
+          registered: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string
+          sport: string
+          name: string
+          race_date: string
+          location?: string | null
+          distance?: string | null
+          goal_time?: string | null
+          registered?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          sport?: string
+          name?: string
+          race_date?: string
+          location?: string | null
+          distance?: string | null
+          goal_time?: string | null
+          registered?: boolean
+          created_at?: string
+        }
+      }
+      sport_shopping: {
+        Row: {
+          id: string
+          user_id: string
+          sport: string
+          name: string
+          done: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string
+          sport: string
+          name: string
+          done?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          sport?: string
+          name?: string
+          done?: boolean
           created_at?: string
         }
       }
