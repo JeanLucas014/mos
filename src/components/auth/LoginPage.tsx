@@ -28,12 +28,7 @@ export function LoginPage() {
       <div className="w-full max-w-[360px]">
         {/* Brand */}
         <div className="flex items-center gap-3 mb-10">
-          <div
-            className="w-9 h-9 rounded-[9px] bg-brand flex items-center justify-center flex-shrink-0"
-            style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 14, color: '#fff' }}
-          >
-            M
-          </div>
+          <img src="/logo.png" alt="MOS" style={{ height: 36, width: 'auto', flexShrink: 0 }} />
           <span style={{ fontFamily: 'Sora, sans-serif', fontWeight: 700, fontSize: 17, color: '#fff' }}>
             MOS
           </span>

@@ -213,12 +213,7 @@ export function Sidebar() {
       <div
         className="flex items-center gap-2.5 px-[14px] h-[52px] flex-shrink-0 border-b border-line"
       >
-        <div
-          className="w-7 h-7 rounded-[6px] bg-brand flex items-center justify-center flex-shrink-0"
-          style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 11, color: '#fff' }}
-        >
-          M
-        </div>
+        <img src="/logo.png" alt="MOS" style={{ height: 32, width: 'auto', flexShrink: 0 }} />
         <span style={{ fontFamily: 'Sora, sans-serif', fontWeight: 700, fontSize: 15, color: '#fff' }}>
           MOS
         </span>
