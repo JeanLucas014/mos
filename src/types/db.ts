@@ -338,6 +338,38 @@ export interface Database {
           created_at?: string
         }
       }
+      study_files: {
+        Row: {
+          id: string
+          user_id: string
+          study_id: string | null
+          name: string
+          kind: string | null
+          source: string | null
+          external_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string
+          study_id?: string | null
+          name: string
+          kind?: string | null
+          source?: string | null
+          external_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          study_id?: string | null
+          name?: string
+          kind?: string | null
+          source?: string | null
+          external_url?: string | null
+          updated_at?: string
+        }
+      }
       vault_items: {
         Row: {
           id: string
