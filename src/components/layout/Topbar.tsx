@@ -5,6 +5,7 @@ import { useUIStore } from '../../stores/useUIStore'
 
 const VIEW_LABELS: Record<string, string> = {
   '/': 'Dashboard',
+  '/dashboard': 'Dashboard',
   '/agenda': 'Agenda',
   '/tarefas': 'Tarefas & To-do',
   '/projetos': 'Projetos',

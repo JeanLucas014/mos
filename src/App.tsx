@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { AppShell } from './components/layout/AppShell'
 import { RequireAuth } from './components/auth/RequireAuth'
 import { LoginPage } from './components/auth/LoginPage'
@@ -34,7 +34,8 @@ export default function App() {
           </RequireAuth>
         }
       >
-        <Route index element={<DashboardPage />} />
+        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="dashboard" element={<DashboardPage />} />
         <Route path="agenda" element={<AgendaPage />} />
         <Route path="tarefas" element={<TasksPage />} />
         <Route path="projetos" element={<ProjectsPage />} />

@@ -7,7 +7,7 @@ const GROUPS = [
     label: 'Sistema',
     items: [
       {
-        path: '/',
+        path: '/dashboard',
         label: 'Dashboard',
         icon: (
           <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
@@ -17,7 +17,7 @@ const GROUPS = [
             <rect x="9" y="9" width="5.5" height="5.5" rx="1.2" stroke="currentColor" strokeWidth="1.3" />
           </svg>
         ),
-        end: true,
+        end: false,
       },
     ],
   },
