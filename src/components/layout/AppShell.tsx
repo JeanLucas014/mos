@@ -9,11 +9,12 @@ export function AppShell() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-bg">
-      {/* Sidebar */}
+      {/* Sidebar — fixed drawer on mobile, static column on lg+ */}
       <div
         className={[
-          'fixed md:relative z-30 md:z-auto h-full bg-bg-2 border-r border-line transition-transform duration-[280ms]',
-          'md:translate-x-0',
+          'fixed lg:relative z-30 lg:z-auto h-full bg-bg-2 border-r border-line',
+          'transition-transform duration-[280ms] ease-smooth',
+          'lg:translate-x-0',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full',
         ].join(' ')}
         style={{ width: 220, flexShrink: 0 }}
@@ -21,14 +22,14 @@ export function AppShell() {
         <Sidebar />
       </div>
 
-      {/* Scrim for mobile */}
+      {/* Overlay scrim — mobile only */}
       <MobileScrim />
 
       {/* Main area */}
-      <div className="flex flex-col flex-1 min-w-0 md:ml-0 overflow-hidden">
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <Topbar />
         <main className="flex-1 overflow-y-auto bg-bg">
-          <div className="px-7 py-7 md:px-7 md:py-7" style={{ padding: '30px 28px' }}>
+          <div className="p-4 lg:px-7 lg:py-[30px]">
             <Outlet />
           </div>
         </main>

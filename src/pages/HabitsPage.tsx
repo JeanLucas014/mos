@@ -34,17 +34,12 @@ export function HabitsPage() {
   return (
     <div>
       <h1
-        style={{
-          fontFamily: 'Sora, sans-serif',
-          fontWeight: 800,
-          fontSize: 30,
-          letterSpacing: '-0.03em',
-          lineHeight: 1.05,
-        }}
+        className="text-2xl lg:text-[30px]"
+        style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.05 }}
       >
         Hábitos
       </h1>
-      <p className="text-ink-2 mt-1" style={{ fontSize: 13.5 }}>
+      <p className="text-ink-2 mt-1 text-sm">
         {isLoading ? 'Carregando...' : 'Acompanhe seus hábitos diários esta semana.'}
       </p>
 
@@ -52,7 +47,7 @@ export function HabitsPage() {
         <p className="text-red-400 text-sm mt-3">Erro: {(error as Error).message}</p>
       )}
 
-      <div className="bg-bg-2 border border-line rounded-card p-5 mt-5">
+      <div className="bg-bg-2 border border-line rounded-card p-4 lg:p-5 mt-5">
         <h2
           className="mb-5"
           style={{ fontFamily: 'Sora, sans-serif', fontWeight: 700, fontSize: 15 }}
@@ -63,15 +58,15 @@ export function HabitsPage() {
         {isLoading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-12 bg-bg-3 rounded-input animate-pulse" />
+              <div key={i} className="h-14 bg-bg-3 rounded-input animate-pulse" />
             ))}
           </div>
         ) : habits.length === 0 ? (
-          <p className="text-ink-3 text-sm py-6 text-center">
+          <p className="text-ink-3 text-sm py-8 text-center">
             Nenhum hábito cadastrado — adicione o primeiro.
           </p>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {habits.map((habit) => {
               const logDates = new Set(habit.logs.map((l) => l.log_date))
               const isDoneToday = logDates.has(todayStr)
@@ -79,21 +74,20 @@ export function HabitsPage() {
               return (
                 <div
                   key={habit.id}
-                  className="group flex items-center gap-4 px-2 py-2 rounded-input hover:bg-bg-3 transition-colors"
+                  className="group flex items-center gap-3 px-2 rounded-input hover:bg-bg-3 transition-colors"
+                  style={{ minHeight: 52 }}
                 >
                   {/* Name + streak */}
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm text-ink font-medium truncate">
-                      {habit.name}
-                    </div>
+                    <div className="text-sm text-ink font-medium truncate">{habit.name}</div>
                     <div className="text-ink-3" style={{ fontSize: 11 }}>
                       <span className="text-brand font-semibold">{habit.streak}</span>{' '}
                       dia{habit.streak !== 1 ? 's' : ''} seguido{habit.streak !== 1 ? 's' : ''}
                     </div>
                   </div>
 
-                  {/* Week squares */}
-                  <div className="flex gap-1">
+                  {/* Week squares — hidden on very small screens, shown from sm: */}
+                  <div className="hidden sm:flex gap-1">
                     {week.map((d) => {
                       const filled = logDates.has(d.date)
                       return (
@@ -114,7 +108,7 @@ export function HabitsPage() {
                   <button
                     onClick={() => toggleDay.mutate({ habitId: habit.id, date: todayStr })}
                     className={[
-                      'w-[30px] h-[30px] rounded-input flex items-center justify-center flex-shrink-0 transition-colors',
+                      'w-[44px] h-[44px] rounded-input flex items-center justify-center flex-shrink-0 transition-colors',
                       isDoneToday
                         ? 'bg-brand text-white'
                         : 'bg-bg-3 text-ink-3 hover:text-ink',
@@ -122,23 +116,12 @@ export function HabitsPage() {
                     title={isDoneToday ? 'Desmarcar hoje' : 'Marcar hoje'}
                   >
                     {isDoneToday ? (
-                      <svg width="14" height="14" viewBox="0 0 12 12" fill="none">
-                        <path
-                          d="M2.5 6L5 8.5L9.5 3.5"
-                          stroke="currentColor"
-                          strokeWidth="1.8"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
+                      <svg width="16" height="16" viewBox="0 0 12 12" fill="none">
+                        <path d="M2.5 6L5 8.5L9.5 3.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     ) : (
-                      <svg width="14" height="14" viewBox="0 0 12 12" fill="none">
-                        <path
-                          d="M6 3v6M3 6h6"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                        />
+                      <svg width="16" height="16" viewBox="0 0 12 12" fill="none">
+                        <path d="M6 3v6M3 6h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                       </svg>
                     )}
                   </button>
@@ -146,7 +129,8 @@ export function HabitsPage() {
                   {/* Delete */}
                   <button
                     onClick={() => deleteHabit.mutate(habit.id)}
-                    className="opacity-0 group-hover:opacity-100 text-ink-3 hover:text-red-400 transition-all text-sm"
+                    className="opacity-0 group-hover:opacity-100 text-ink-3 hover:text-red-400 transition-all text-base w-8 flex items-center justify-center"
+                    style={{ minHeight: 44 }}
                     title="Excluir hábito"
                   >
                     ×
@@ -164,12 +148,14 @@ export function HabitsPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Novo hábito..."
-            className="flex-1 bg-bg border border-line rounded-input px-3 py-2 text-ink text-sm placeholder:text-ink-3 focus:outline-none focus:border-brand transition-colors"
+            className="flex-1 bg-bg border border-line rounded-input px-3 text-ink text-sm placeholder:text-ink-3 focus:outline-none focus:border-brand transition-colors"
+            style={{ minHeight: 44 }}
           />
           <button
             type="submit"
             disabled={!name.trim() || addHabit.isPending}
-            className="bg-brand text-white rounded-input px-4 py-2 text-sm font-semibold hover:brightness-110 active:scale-[.97] transition-all disabled:opacity-40"
+            className="bg-brand text-white rounded-input px-4 text-sm font-semibold hover:brightness-110 active:scale-[.97] transition-all disabled:opacity-40"
+            style={{ minHeight: 44 }}
           >
             Adicionar
           </button>
