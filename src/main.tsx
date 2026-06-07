@@ -7,6 +7,13 @@ import { AuthProvider } from './contexts/AuthContext'
 import App from './App'
 import './index.css'
 
+/* Register service worker */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {/* SW not critical */})
+  })
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
