@@ -8,22 +8,26 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import type { Database } from '../types/db'
 
-type Task        = Database['public']['Tables']['tasks']['Row']
-type Habit       = Database['public']['Tables']['habits']['Row']
-type HabitLog    = Database['public']['Tables']['habit_logs']['Row']
-type Project     = Database['public']['Tables']['projects']['Row']
-type Goal        = Database['public']['Tables']['goals']['Row']
-type Transaction = Database['public']['Tables']['transactions']['Row']
-type Invoice     = Database['public']['Tables']['invoices']['Row']
-type Note        = Database['public']['Tables']['notes']['Row']
-type Book        = Database['public']['Tables']['books']['Row']
-type Workout     = Database['public']['Tables']['workouts']['Row']
-type SportRace   = Database['public']['Tables']['sport_races']['Row']
+type Task     = Database['public']['Tables']['tasks']['Row']
+type Habit    = Database['public']['Tables']['habits']['Row']
+type HabitLog = Database['public']['Tables']['habit_logs']['Row']
+type Project  = Database['public']['Tables']['projects']['Row']
+type Goal     = Database['public']['Tables']['goals']['Row']
+type Note     = Database['public']['Tables']['notes']['Row']
+type Book     = Database['public']['Tables']['books']['Row']
+type Workout  = Database['public']['Tables']['workouts']['Row']
+type SportRace = Database['public']['Tables']['sport_races']['Row']
 
-/* ── Helpers ───────────────────────────────────────────────── */
+/* ── Date helpers ─────────────────────────────────────────────── */
 function monthStart(): string {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
+}
+
+function monthEnd(): string {
+  const d = new Date()
+  const last = new Date(d.getFullYear(), d.getMonth() + 1, 0)
+  return `${last.getFullYear()}-${String(last.getMonth() + 1).padStart(2, '0')}-${String(last.getDate()).padStart(2, '0')}`
 }
 
 function today(): string {
@@ -46,20 +50,23 @@ function calcStreak(logs: HabitLog[]): number {
   return streak
 }
 
-/* ── Tasks ─────────────────────────────────────────────────── */
+/* ── Tasks ────────────────────────────────────────────────────── */
 export function useDashTasks() {
   return useQuery({
-    queryKey: ['tasks'],              // shared key
+    queryKey: ['tasks'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('tasks').select('*').order('created_at', { ascending: false })
+        .from('tasks')
+        .select('*')
+        .eq('done', false)
+        .order('created_at', { ascending: false })
       if (error) throw error
       return data as Task[]
     },
   })
 }
 
-/* ── Habits ────────────────────────────────────────────────── */
+/* ── Habits ───────────────────────────────────────────────────── */
 export function useDashHabits() {
   const habits = useQuery({
     queryKey: ['habits'],
@@ -102,7 +109,7 @@ export function useDashHabits() {
   }
 }
 
-/* ── Projects ──────────────────────────────────────────────── */
+/* ── Projects ─────────────────────────────────────────────────── */
 export function useDashProjects() {
   return useQuery({
     queryKey: ['projects'],
@@ -115,7 +122,7 @@ export function useDashProjects() {
   })
 }
 
-/* ── Goals ─────────────────────────────────────────────────── */
+/* ── Goals ────────────────────────────────────────────────────── */
 export function useDashGoals() {
   return useQuery({
     queryKey: ['goals'],
@@ -128,43 +135,53 @@ export function useDashGoals() {
   })
 }
 
-/* ── Finance (current month) ───────────────────────────────── */
+/* ── Finance (current month) ──────────────────────────────────── */
 export function useDashFinance() {
   return useQuery({
     queryKey: ['dash_finance', monthStart()],
     queryFn: async () => {
+      const start = monthStart()
+      const end   = monthEnd()
+
       const { data, error } = await (supabase.from('transactions') as any)
-        .select('kind, category, amount_cents')
-        .gte('occurred_at', monthStart())
-      if (error) throw error
-      const rows = data as Pick<Transaction, 'kind' | 'category' | 'amount_cents'>[]
-      const entradas  = rows.filter((r) => r.kind === 'in')
-                            .reduce((s, r) => s + r.amount_cents, 0)
-      const saidas    = rows.filter((r) => r.kind === 'out')
-                            .reduce((s, r) => s + r.amount_cents, 0)
+        .select('kind, amount_cents')
+        .gte('occurred_at', start)
+        .lte('occurred_at', end)
+
+      if (error) {
+        console.error('[dash_finance] query error:', error)
+        throw error
+      }
+
+      // Debug: log raw rows so we can verify user_id and amounts
+      console.log('[dash_finance] period:', start, '→', end, '| rows:', data?.length ?? 0, data)
+
+      const rows = (data ?? []) as { kind: string; amount_cents: number }[]
+      const entradas  = rows.filter((r) => r.kind === 'in').reduce((s, r) => s + r.amount_cents, 0)
+      const saidas    = rows.filter((r) => r.kind === 'out').reduce((s, r) => s + r.amount_cents, 0)
       const resultado = entradas - saidas
       return { entradas, saidas, resultado }
     },
   })
 }
 
-/* ── Invoices ──────────────────────────────────────────────── */
+/* ── Invoices (pending) ───────────────────────────────────────── */
 export function useDashInvoices() {
   return useQuery({
     queryKey: ['dash_invoices'],
     queryFn: async () => {
       const { data, error } = await (supabase.from('invoices') as any)
         .select('amount_cents, status')
+        .neq('status', 'pago')
       if (error) throw error
-      const rows = data as Pick<Invoice, 'amount_cents' | 'status'>[]
-      const pending = rows.filter((r) => r.status !== 'pago')
-      const total   = pending.reduce((s, r) => s + r.amount_cents, 0)
-      return { total, count: pending.length }
+      const rows = (data ?? []) as { amount_cents: number; status: string }[]
+      const total = rows.reduce((s, r) => s + r.amount_cents, 0)
+      return { total, count: rows.length }
     },
   })
 }
 
-/* ── Sports (corrida this month + next race) ───────────────── */
+/* ── Sports (workouts this month + next race) ─────────────────── */
 export function useDashSports() {
   const workouts = useQuery({
     queryKey: ['workouts', 'corrida'],
@@ -190,11 +207,11 @@ export function useDashSports() {
     },
   })
 
-  const start = monthStart()
-  const monthWorkouts = (workouts.data ?? []).filter((w) => w.workout_date >= start)
-  const kmMonth = monthWorkouts.reduce((s, w) => s + w.distance_m, 0) / 1000
+  const start    = monthStart()
   const todayStr = today()
-  const nextRace  = (races.data ?? []).find((r) => r.race_date >= todayStr) ?? null
+  const monthWorkouts = (workouts.data ?? []).filter((w) => w.workout_date >= start)
+  const kmMonth  = monthWorkouts.reduce((s, w) => s + w.distance_m, 0) / 1000
+  const nextRace = (races.data ?? []).find((r) => r.race_date >= todayStr) ?? null
 
   return {
     isLoading: workouts.isLoading || races.isLoading,
@@ -204,20 +221,22 @@ export function useDashSports() {
   }
 }
 
-/* ── Notes ─────────────────────────────────────────────────── */
+/* ── Notes ────────────────────────────────────────────────────── */
 export function useDashNotes() {
   return useQuery({
     queryKey: ['notes'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('notes').select('id, title, updated_at').order('updated_at', { ascending: false })
+        .from('notes')
+        .select('id, title, updated_at')
+        .order('updated_at', { ascending: false })
       if (error) throw error
       return data as Pick<Note, 'id' | 'title' | 'updated_at'>[]
     },
   })
 }
 
-/* ── Books ─────────────────────────────────────────────────── */
+/* ── Books ────────────────────────────────────────────────────── */
 export function useDashBooks() {
   return useQuery({
     queryKey: ['books'],

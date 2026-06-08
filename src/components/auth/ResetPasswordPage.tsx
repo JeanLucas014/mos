@@ -1,5 +1,6 @@
 import { useState, useEffect, type FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { CheckCircle, Eye, EyeOff } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 
 export function ResetPasswordPage() {
@@ -67,7 +68,7 @@ export function ResetPasswordPage() {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center px-4">
         <div className="w-full max-w-[360px] text-center">
-          <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
+          <div className="flex justify-center mb-4"><CheckCircle size={40} className="text-ok" /></div>
           <h2
             className="mb-2"
             style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 22 }}
@@ -122,7 +123,7 @@ export function ResetPasswordPage() {
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-3 hover:text-ink transition-colors"
                 style={{ fontSize: 12 }}
               >
-                {showPw ? '🙈' : '👁'}
+                {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
               </button>
             </div>
           </div>

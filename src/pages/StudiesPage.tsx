@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { FileText, Film, Link as LinkIcon, Paperclip, GraduationCap, FolderOpen } from 'lucide-react'
 import { useStudies } from '../hooks/useStudies'
 import type { Database } from '../types/db'
 
@@ -13,16 +14,16 @@ const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> =
   concluido: { label: 'Concluído',color: '#888',    bg: 'rgba(255,255,255,.06)' },
 }
 
-const KIND_CFG: Record<string, { icon: string; color: string }> = {
-  PDF:    { icon: '📄', color: '#f87171' },
-  DOC:    { icon: '📝', color: '#60a5fa' },
-  MD:     { icon: '📃', color: '#34d399' },
-  VIDEO:  { icon: '🎬', color: '#a78bfa' },
-  LINK:   { icon: '🔗', color: '#fbbf24' },
+const KIND_CFG: Record<string, { icon: React.ReactNode; color: string }> = {
+  PDF:    { icon: <FileText size={15} />, color: '#f87171' },
+  DOC:    { icon: <FileText size={15} />, color: '#60a5fa' },
+  MD:     { icon: <FileText size={15} />, color: '#34d399' },
+  VIDEO:  { icon: <Film size={15} />,     color: '#a78bfa' },
+  LINK:   { icon: <LinkIcon size={15} />, color: '#fbbf24' },
 }
 
-function kindCfg(kind: string | null) {
-  return KIND_CFG[kind ?? ''] ?? { icon: '📎', color: '#888' }
+function kindCfg(kind: string | null): { icon: React.ReactNode; color: string } {
+  return KIND_CFG[kind ?? ''] ?? { icon: <Paperclip size={15} />, color: '#888' }
 }
 
 function timeAgo(dateStr: string): string {
@@ -119,10 +120,10 @@ function StudyRow({
         <div className="flex items-center gap-3 min-w-0 flex-1">
           {/* Icon */}
           <div
-            className="flex-shrink-0 rounded-lg flex items-center justify-center text-lg"
-            style={{ width: 38, height: 38, background: 'rgba(14,165,233,.12)', fontSize: 18 }}
+            className="flex-shrink-0 rounded-lg flex items-center justify-center text-brand"
+            style={{ width: 38, height: 38, background: 'rgba(14,165,233,.12)' }}
           >
-            🎓
+            <GraduationCap size={18} />
           </div>
           {/* Name + meta */}
           <div className="min-w-0">
@@ -196,7 +197,7 @@ function FileRow({
   const kc = kindCfg(file.kind)
   return (
     <div className="group flex items-center gap-3 px-3 py-2.5 rounded-input hover:bg-bg-3 transition-colors" style={{ minHeight: 48 }}>
-      <span style={{ fontSize: 18, flexShrink: 0 }}>{kc.icon}</span>
+      <span style={{ color: kc.color, flexShrink: 0, display: 'flex' }}>{kc.icon}</span>
       <div className="min-w-0 flex-1">
         <div className="text-sm text-ink truncate">{file.name}</div>
         <div className="flex items-center gap-2 mt-0.5">
@@ -494,7 +495,7 @@ export function StudiesPage() {
 
       {!isLoading && studies.length === 0 && files.length === 0 && (
         <div className="mt-8 flex flex-col items-center gap-3 text-ink-3 py-12">
-          <span style={{ fontSize: 40 }}>🎓</span>
+          <GraduationCap size={40} className="text-ink-3" />
           <p className="text-sm text-center">Nenhum estudo ainda.<br />Adicione o primeiro abaixo.</p>
         </div>
       )}
@@ -509,7 +510,7 @@ export function StudiesPage() {
               className="flex items-center gap-2"
               style={{ fontFamily: 'Sora, sans-serif', fontWeight: 700, fontSize: 15 }}
             >
-              <span>🎓</span> Em curso
+              <GraduationCap size={15} className="text-brand" /> Em curso
               <span className="text-ink-3 ml-auto" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, fontWeight: 400 }}>
                 {studies.length}
               </span>
@@ -542,7 +543,7 @@ export function StudiesPage() {
               className="flex items-center gap-2"
               style={{ fontFamily: 'Sora, sans-serif', fontWeight: 700, fontSize: 15 }}
             >
-              <span>📁</span> Arquivos & anotações
+              <FolderOpen size={15} className="text-ink-2" /> Arquivos & anotações
               <span className="text-ink-3 ml-auto" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, fontWeight: 400 }}>
                 {files.length}
               </span>

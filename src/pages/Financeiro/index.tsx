@@ -252,7 +252,7 @@ function MonthTab({ month, data, cartaosList, onUpdate, onAddCartao, duplicarMes
             <Stat label="Cartões" value={totC} color={C.p} />
             <Stat label="Resultado" value={totE - totF - totV - totC} color={totE - totF - totV - totC >= 0 ? C.g : C.r} />
           </div>
-          <div style={{ marginBottom: 8 }}><Btn onClick={() => duplicarMes(month)} color={C.dm} small>⟳ Copiar para próximo mês</Btn></div>
+          <div style={{ marginBottom: 8 }}><Btn onClick={() => duplicarMes(month)} color={C.dm} small>↻ Copiar para próximo mês</Btn></div>
           <div style={{ display: 'flex', gap: 4, marginBottom: 10, overflowX: 'auto' }}>
             {tabs.map(t => (
               <button key={t.id} onClick={() => setTab(t.id)} style={{ background: tab === t.id ? t.color + '18' : 'transparent', border: tab === t.id ? '1px solid ' + t.color + '40' : '1px solid transparent', color: tab === t.id ? t.color : C.dm, padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 12, minHeight: 38, fontWeight: 500, whiteSpace: 'nowrap' }}>
@@ -267,7 +267,7 @@ function MonthTab({ month, data, cartaosList, onUpdate, onAddCartao, duplicarMes
           <thead>
             <tr style={{ borderBottom: '2px solid ' + C.border }}>
               {canExp && <th style={{ padding: '8px', width: 24 }}></th>}
-              <th style={{ padding: '8px 10px', textAlign: 'center', color: C.dm2, fontSize: 10, width: 30 }}>✓</th>
+              <th style={{ padding: '8px 10px', textAlign: 'center', color: C.dm2, fontSize: 10, width: 30 }}>ok</th>
               {isCart && <th style={{ padding: '8px', textAlign: 'left', color: C.dm, fontSize: 10, width: 85 }}>Cartão</th>}
               <th style={{ padding: '8px 10px', textAlign: 'left', color: C.dm2, fontSize: 10 }}>Nome</th>
               <th style={{ padding: '8px 10px', textAlign: 'right', color: C.dm2, fontSize: 10, width: 110 }}>Valor</th>
@@ -303,8 +303,8 @@ function MonthTab({ month, data, cartaosList, onUpdate, onAddCartao, duplicarMes
                   </td>
                   <td style={{ padding: '5px 4px', textAlign: 'center' }}>
                     {canExp && <button onClick={() => addSub(cat, it.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, padding: 1, color: C.b }}>+</button>}
-                    <button onClick={() => recur(cat, it)} title="Repetir" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, padding: '4px 6px', color: C.dm }}>⟳</button>
-                    <button onClick={() => { if (window.confirm('Remover?')) rmItem(cat, it.id) }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, padding: 1, color: C.r }}>✕</button>
+                    <button onClick={() => recur(cat, it)} title="Repetir" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, padding: '4px 6px', color: C.dm }}>↻</button>
+                    <button onClick={() => { if (window.confirm('Remover?')) rmItem(cat, it.id) }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, padding: 1, color: C.r }}>×</button>
                   </td>
                 </tr>,
                 ...(canExp && isExp ? [
@@ -319,7 +319,7 @@ function MonthTab({ month, data, cartaosList, onUpdate, onAddCartao, duplicarMes
                       <td style={{ padding: '3px 8px', textAlign: 'right' }}><ENum value={sub.valor} onChange={v => upSub(cat, it.id, si, 'valor', v)} color={C.dm} w={65} /></td>
                       <td></td><td></td>
                       <td style={{ padding: '3px 4px', textAlign: 'center' }}>
-                        <button onClick={() => rmSub(cat, it.id, si)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: C.dm2 }}>✕</button>
+                        <button onClick={() => rmSub(cat, it.id, si)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: C.dm2 }}>×</button>
                       </td>
                     </tr>
                   )),
@@ -501,7 +501,7 @@ function DiarioView({ mes, months, avulsos, setAvulsos, updateMonth }: {
             <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12, color: C.tx }}>{popup.tipo === 'entrada' ? 'Entradas' : popup.tipo === 'diario' ? 'Gastos Diários' : 'Saídas'} — Dia {String(popup.dia).padStart(2,'0')}</div>
             {popup.items.map(it => (
               <div key={it.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid ' + C.border }}>
-                <div><span style={{ fontSize: 12, color: C.tx }}>{it.nome}</span><span style={{ fontSize: 9, color: it.pago ? C.g : C.dm2, marginLeft: 6 }}>{it.pago ? '✓ pago' : 'pendente'}</span></div>
+                <div><span style={{ fontSize: 12, color: C.tx }}>{it.nome}</span><span style={{ fontSize: 9, color: it.pago ? C.g : C.dm2, marginLeft: 6 }}>{it.pago ? 'pago' : 'pendente'}</span></div>
                 <ENum value={it.valor} onChange={v => { updateMensalItem(it.id, v); setPopup(null) }} color={popup.tipo === 'entrada' ? C.g : C.r} w={80} />
               </div>
             ))}
@@ -510,7 +510,7 @@ function DiarioView({ mes, months, avulsos, setAvulsos, updateMonth }: {
                 <span style={{ fontSize: 12, color: C.tx }}>{av.nome} <span style={{ fontSize: 9, color: C.a }}>avulso</span></span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span style={{ fontSize: 12, fontFamily: 'JetBrains Mono,monospace', color: C.a }}>{fmt(av.valor)}</span>
-                  <button onClick={() => { rmAvulso(av.id); setPopup(null) }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: C.dm2 }}>✕</button>
+                  <button onClick={() => { rmAvulso(av.id); setPopup(null) }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: C.dm2 }}>×</button>
                 </div>
               </div>
             ))}
@@ -711,7 +711,7 @@ export function FinancePage() {
             <button onClick={() => setAno(a => a + 1)} style={{ background: 'none', border: 'none', color: C.dm, cursor: 'pointer', fontSize: 18, padding: '0 6px', lineHeight: 1, fontWeight: 400 }}>›</button>
           </div>
         </div>
-        {saving && <span style={{ fontSize: 11, color: C.g, fontFamily: 'JetBrains Mono,monospace' }}>✓ Salvo</span>}
+        {saving && <span style={{ fontSize: 11, color: C.g, fontFamily: 'JetBrains Mono,monospace' }}>salvo</span>}
       </div>
 
       {/* Nav tabs */}
@@ -778,7 +778,7 @@ export function FinancePage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <ENum value={dv.parcela} onChange={v => { const nd = dividas.map((x,j) => j===i?{...x,parcela:v}:x); setDividas(nd); triggerSave(months,avulsos,cartaosList,metas,carteira,investimentos,nd) }} color={C.r} w={70} />
                       <span style={{ fontSize: 9, color: C.dm }}>/mês</span>
-                      <button onClick={() => { const nd = dividas.filter((_,j)=>j!==i); setDividas(nd); triggerSave(months,avulsos,cartaosList,metas,carteira,investimentos,nd) }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: C.dm2 }}>✕</button>
+                      <button onClick={() => { const nd = dividas.filter((_,j)=>j!==i); setDividas(nd); triggerSave(months,avulsos,cartaosList,metas,carteira,investimentos,nd) }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: C.dm2 }}>×</button>
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 10, fontSize: 9, color: C.dm, marginBottom: 6 }}>
@@ -852,7 +852,7 @@ export function FinancePage() {
             )
           })()}
           <div style={{ marginBottom: 8, textAlign: 'right' }}>
-            <button onClick={() => duplicarMes(diarioMes)} style={{ background: 'none', border: 'none', color: C.dm2, fontSize: 10, cursor: 'pointer', padding: '4px 8px' }}>⟳ Copiar estrutura →</button>
+            <button onClick={() => duplicarMes(diarioMes)} style={{ background: 'none', border: 'none', color: C.dm2, fontSize: 10, cursor: 'pointer', padding: '4px 8px' }}>↻ Copiar estrutura →</button>
           </div>
           {/* Sub-tabs */}
           <div style={{ display: 'flex', gap: 4, marginBottom: 14, overflowX: 'auto' }}>
@@ -883,7 +883,7 @@ export function FinancePage() {
                 <div key={mt.id} style={{ background:'rgba(255,255,255,.02)',borderRadius:10,padding:16,border:'1px solid '+C.border }}>
                   <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10 }}>
                     <EText value={mt.nome} onChange={v=>{const m=metas.map((x,j)=>j===i?{...x,nome:v}:x);setMetas(m);triggerSave(months,avulsos,cartaosList,m)}} placeholder="Nome da meta..." w={150} />
-                    <button onClick={()=>{const m=metas.filter((_,j)=>j!==i);setMetas(m);triggerSave(months,avulsos,cartaosList,m)}} style={{ background:'none',border:'none',cursor:'pointer',fontSize:12,color:C.dm2 }}>✕</button>
+                    <button onClick={()=>{const m=metas.filter((_,j)=>j!==i);setMetas(m);triggerSave(months,avulsos,cartaosList,m)}} style={{ background:'none',border:'none',cursor:'pointer',fontSize:12,color:C.dm2 }}>×</button>
                   </div>
                   <div style={{ display:'flex',justifyContent:'space-between',marginBottom:6,fontSize:11 }}>
                     <span style={{ color:C.dm }}>Atual: {fmt(atualCalc)}</span>
@@ -993,8 +993,8 @@ export function FinancePage() {
                         </div>
                         <div style={{ display:'flex',gap:4 }}>
                           <button onClick={()=>setAportePopup({invId:inv.id,valor:'',data:hoje.toISOString().slice(0,10)})} style={{ background:'none',border:'none',cursor:'pointer',fontSize:13,color:C.g }}>+</button>
-                          <button onClick={()=>setEditInv({...inv})} style={{ background:'none',border:'none',cursor:'pointer',fontSize:11,color:C.b }}>✎</button>
-                          <button onClick={()=>{if(window.confirm('Remover?')){const nc=carteira.filter(x=>x.id!==inv.id);setCarteira(nc);triggerSave(months,avulsos,cartaosList,metas,nc)}}} style={{ background:'none',border:'none',cursor:'pointer',fontSize:11,color:C.dm2 }}>✕</button>
+                          <button onClick={()=>setEditInv({...inv})} style={{ background:'none',border:'none',cursor:'pointer',fontSize:11,color:C.b }}>edit</button>
+                          <button onClick={()=>{if(window.confirm('Remover?')){const nc=carteira.filter(x=>x.id!==inv.id);setCarteira(nc);triggerSave(months,avulsos,cartaosList,metas,nc)}}} style={{ background:'none',border:'none',cursor:'pointer',fontSize:11,color:C.dm2 }}>×</button>
                         </div>
                       </div>
                       <div style={{ display:'grid',gridTemplateColumns:isRV?'1fr 1fr 1fr 1fr':'1fr 1fr 1fr',gap:8,fontSize:10 }}>
@@ -1102,7 +1102,7 @@ export function FinancePage() {
               <div style={{ display:'flex',gap:6,flexWrap:'wrap' as const }}>
                 {cartaosList.map((c,i)=><span key={c} style={{ padding:'3px 10px',background:PC[i%PC.length]+'18',border:'1px solid '+PC[i%PC.length]+'40',borderRadius:6,fontSize:10,color:PC[i%PC.length],display:'inline-flex',alignItems:'center',gap:4 }}>
                   {c}
-                  <button onClick={()=>{const nl=cartaosList.filter(x=>x!==c);setCartaosList(nl);triggerSave(months,avulsos,nl)}} style={{ background:'none',border:'none',cursor:'pointer',fontSize:8,color:PC[i%PC.length],padding:0 }}>✕</button>
+                  <button onClick={()=>{const nl=cartaosList.filter(x=>x!==c);setCartaosList(nl);triggerSave(months,avulsos,nl)}} style={{ background:'none',border:'none',cursor:'pointer',fontSize:8,color:PC[i%PC.length],padding:0 }}>×</button>
                 </span>)}
               </div>
             </div>}

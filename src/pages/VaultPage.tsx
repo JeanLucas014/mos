@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { Eye, EyeOff, Lock } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useVaultStore } from '../stores/useVaultStore'
 import { useVaultItems, type VaultItem } from '../hooks/useVaultItems'
@@ -253,7 +254,7 @@ function VaultModal({
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-3 hover:text-ink transition-colors"
                 style={{ fontSize: 14 }}
               >
-                {showPw ? '🙈' : '👁'}
+                {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
               </button>
             </div>
           </div>
@@ -357,7 +358,7 @@ function VaultRow({
       <div className="flex items-center gap-1 flex-shrink-0">
         {decryptError && (
           <span style={{ fontSize: 10, color: '#f87171' }}>
-            🔐 Senha incorreta
+            Senha incorreta
           </span>
         )}
         {!decryptError && (
@@ -521,7 +522,7 @@ function UnlockScreen({
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-3 hover:text-ink transition-colors"
                 style={{ fontSize: 14 }}
               >
-                {showPw ? '🙈' : '👁'}
+                {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
               </button>
             </div>
           </div>
@@ -545,7 +546,7 @@ function UnlockScreen({
           </button>
 
           <p className="text-ink-3 text-center" style={{ fontSize: 11 }}>
-            🔐 O master password nunca é enviado ao servidor.
+            O master password nunca é enviado ao servidor.
           </p>
         </form>
       </div>
@@ -703,7 +704,7 @@ export function VaultPage() {
       {/* Empty state */}
       {!isLoading && filtered.length === 0 && (
         <div className="flex flex-col items-center gap-3 py-16 text-ink-3">
-          <span style={{ fontSize: 36 }}>🔐</span>
+          <Lock size={36} className="text-ink-3" />
           <p className="text-sm text-center">
             {items.length === 0
               ? 'Nenhuma senha salva.\nAdicione sua primeira credencial.'
@@ -740,7 +741,7 @@ export function VaultPage() {
         className="text-ink-3 text-center mt-6"
         style={{ fontSize: 11 }}
       >
-        🔐 Senhas criptografadas com AES-GCM · chave nunca sai do dispositivo
+        Senhas criptografadas com AES-GCM · chave nunca sai do dispositivo
       </p>
 
       {/* Modal */}

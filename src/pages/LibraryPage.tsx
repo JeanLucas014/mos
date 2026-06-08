@@ -1,4 +1,5 @@
 import { useState, type FormEvent, type ChangeEvent } from 'react'
+import { BookOpen, Heart, Star, Camera } from 'lucide-react'
 import { useBooks, type AddBookInput } from '../hooks/useBooks'
 import type { Database } from '../types/db'
 
@@ -12,10 +13,10 @@ const STATUS_CFG: Record<BookStatus, { label: string; color: string; bg: string 
   quero_ler: { label: 'Quero ler', color: '#888',    bg: 'rgba(255,255,255,.06)' },
 }
 
-const SECTIONS: { key: BookStatus; label: string; icon: string }[] = [
-  { key: 'lendo',     label: 'Lendo',     icon: '📖' },
-  { key: 'quero_ler', label: 'Quero ler', icon: '📋' },
-  { key: 'lido',      label: 'Lidos',     icon: '✅' },
+const SECTIONS: { key: BookStatus; label: string; color: string }[] = [
+  { key: 'lendo',     label: 'Lendo',     color: '#0EA5E9' },
+  { key: 'quero_ler', label: 'Quero ler', color: '#888' },
+  { key: 'lido',      label: 'Lidos',     color: '#34d399' },
 ]
 
 const FORMAT_OPTIONS = ['Físico', 'Kindle', 'PDF', 'Audiobook']
@@ -48,7 +49,7 @@ function Stars({ value }: { value: number | null }) {
   return (
     <div style={{ display: 'flex', gap: 1, lineHeight: 1 }}>
       {[1, 2, 3, 4, 5].map((i) => (
-        <span key={i} style={{ fontSize: 9, color: i <= value ? '#fbbf24' : '#333' }}>★</span>
+        <Star key={i} size={9} fill={i <= value ? '#fbbf24' : 'transparent'} color={i <= value ? '#fbbf24' : '#444'} />
       ))}
     </div>
   )
@@ -64,8 +65,6 @@ function StarPicker({ value, onChange }: { value: number; onChange: (v: number) 
           type="button"
           onClick={() => onChange(value === i ? 0 : i)}
           style={{
-            fontSize: 22,
-            color: i <= value ? '#fbbf24' : '#333',
             background: 'none',
             border: 'none',
             cursor: 'pointer',
@@ -76,10 +75,9 @@ function StarPicker({ value, onChange }: { value: number; onChange: (v: number) 
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            transition: 'color 0.1s',
           }}
         >
-          ★
+          <Star size={22} fill={i <= value ? '#fbbf24' : 'transparent'} color={i <= value ? '#fbbf24' : '#444'} />
         </button>
       ))}
     </div>
@@ -145,7 +143,7 @@ function BookCard({
               padding: '12px 10px', gap: 8,
             }}
           >
-            <span style={{ fontSize: 26, lineHeight: 1 }}>📚</span>
+            <BookOpen size={26} color="rgba(255,255,255,.8)" />
             <span style={{
               fontFamily: 'Sora, sans-serif', fontWeight: 700,
               fontSize: 11, color: 'rgba(255,255,255,.9)',
@@ -167,7 +165,7 @@ function BookCard({
           }}
           title={book.favorite ? 'Remover dos favoritos' : 'Favoritar'}
         >
-          ♥
+          <Heart size={14} fill={book.favorite ? '#f87171' : 'none'} color={book.favorite ? '#f87171' : 'rgba(255,255,255,.3)'} />
         </button>
 
         {/* Delete */}
@@ -236,9 +234,9 @@ function BookCard({
             fontFamily: 'Manrope, sans-serif',
           }}
         >
-          <option value="lendo">📖 Lendo</option>
-          <option value="lido">✅ Lido</option>
-          <option value="quero_ler">📋 Quero ler</option>
+          <option value="lendo">Lendo</option>
+          <option value="lido">Lido</option>
+          <option value="quero_ler">Quero ler</option>
         </select>
 
         {/* Progress — for 'lendo' */}
@@ -330,9 +328,9 @@ function BookFormFields({
             className={inputCls}
             style={inputH}
           >
-            <option value="quero_ler">📋 Quero ler</option>
-            <option value="lendo">📖 Lendo</option>
-            <option value="lido">✅ Lido</option>
+            <option value="quero_ler">Quero ler</option>
+            <option value="lendo">Lendo</option>
+            <option value="lido">Lido</option>
           </select>
         </div>
         <div>
@@ -445,7 +443,7 @@ function BookFormFields({
             className="flex-1 flex items-center justify-center gap-2 rounded-input border border-dashed border-line text-ink-2 hover:text-ink hover:bg-bg-3 transition-colors cursor-pointer text-sm"
             style={{ minHeight: 44 }}
           >
-            📷 Escolher imagem
+            <Camera size={14} className="mr-1.5" /> Escolher imagem
             <input
               type="file"
               accept="image/*"
@@ -771,9 +769,9 @@ export function LibraryPage() {
           style={{ minHeight: 36, fontFamily: 'Manrope, sans-serif' }}
         >
           <option value="all">Todos os status</option>
-          <option value="lendo">📖 Lendo</option>
-          <option value="lido">✅ Lidos</option>
-          <option value="quero_ler">📋 Quero ler</option>
+          <option value="lendo">Lendo</option>
+          <option value="lido">Lidos</option>
+          <option value="quero_ler">Quero ler</option>
         </select>
 
         {/* Year filter */}
@@ -809,7 +807,7 @@ export function LibraryPage() {
             fontFamily: 'Manrope, sans-serif',
           }}
         >
-          ♥ Favoritos
+          <Heart size={12} className="mr-1 inline" /> Favoritos
         </button>
       </div>
 
@@ -822,7 +820,7 @@ export function LibraryPage() {
       {/* Empty state */}
       {!isLoading && filtered.length === 0 && (
         <div className="mt-8 flex flex-col items-center gap-3 text-ink-3 py-12">
-          <span style={{ fontSize: 40 }}>📚</span>
+          <BookOpen size={40} className="text-ink-3" />
           <p className="text-sm text-center">
             {total === 0
               ? 'Nenhum livro ainda.\nAdicione o primeiro à sua estante.'
@@ -842,13 +840,13 @@ export function LibraryPage() {
       {/* Grid or sectioned */}
       {!isLoading && filtered.length > 0 && (
         useGroups ? (
-          SECTIONS.map(({ key, label, icon }) => {
+          SECTIONS.map(({ key, label, color }) => {
             const section = filtered.filter((b) => b.status === key)
             if (section.length === 0) return null
             return (
               <div key={key} className="mt-6">
                 <div className="flex items-center gap-2 mb-3">
-                  <span style={{ fontSize: 16 }}>{icon}</span>
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: color }} />
                   <h2 style={{ fontFamily: 'Sora, sans-serif', fontWeight: 700, fontSize: 15 }}>{label}</h2>
                   <span className="text-ink-3 ml-1" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11 }}>
                     {section.length}

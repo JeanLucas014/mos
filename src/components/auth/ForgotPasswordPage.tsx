@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
+import { Mail } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 
 const REDIRECT_URL = 'https://app.jlmos.com.br/nova-senha'
@@ -48,7 +49,7 @@ export function ForgotPasswordPage() {
             className="rounded-xl border border-ok/30 p-5 text-center"
             style={{ background: 'rgba(52,211,153,.07)' }}
           >
-            <div style={{ fontSize: 32, marginBottom: 8 }}>📬</div>
+            <div className="flex justify-center mb-3"><Mail size={32} className="text-ok" /></div>
             <p className="text-ok font-semibold" style={{ fontSize: 14 }}>
               E-mail enviado!
             </p>

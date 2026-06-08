@@ -200,7 +200,7 @@ export function NotesPage() {
                     className="text-brand flex-shrink-0"
                     style={{ fontSize: 11, fontFamily: 'JetBrains Mono, monospace' }}
                   >
-                    ✓ salvo
+                    salvo
                   </span>
                 )}
               </div>

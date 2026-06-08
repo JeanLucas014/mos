@@ -1,5 +1,8 @@
 import { useState, type FormEvent } from 'react'
-import { ChevronDown } from 'lucide-react'
+import {
+  ChevronDown, Activity, Target, Trophy, ShoppingBag,
+  Calendar, MapPin, Check, Circle, Dumbbell,
+} from 'lucide-react'
 import { useWorkouts } from '../hooks/useWorkouts'
 import { useSportGoals } from '../hooks/useSportGoals'
 import { useSportRaces } from '../hooks/useSportRaces'
@@ -70,7 +73,7 @@ function Section({
   defaultOpen = true,
 }: {
   title: string
-  icon: string
+  icon: React.ReactNode
   count?: number | string
   children: React.ReactNode
   defaultOpen?: boolean
@@ -84,7 +87,7 @@ function Section({
         style={{ minHeight: 56 }}
       >
         <div className="flex items-center gap-2.5">
-          <span style={{ fontSize: 18 }}>{icon}</span>
+          <span className="text-ink-2">{icon}</span>
           <span style={{ fontFamily: 'Sora, sans-serif', fontWeight: 700, fontSize: 14 }}>
             {title}
           </span>
@@ -195,7 +198,7 @@ function WorkoutsSection({ sport }: { sport: Sport }) {
   }
 
   return (
-    <Section title="Treinos" icon="🏃" count={workouts.length}>
+    <Section title="Treinos" icon={<Activity size={16} />} count={workouts.length}>
       {/* Monthly tiles */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
         <StatTile label="km no mês" value={totalKm.toFixed(1)} color="#0EA5E9" />
@@ -349,7 +352,7 @@ function GoalsSection({ sport }: { sport: Sport }) {
   }
 
   return (
-    <Section title="Metas" icon="🎯" count={goals.length} defaultOpen={false}>
+    <Section title="Metas" icon={<Target size={16} />} count={goals.length} defaultOpen={false}>
       {isLoading ? (
         <div className="space-y-2">
           {[1, 2].map((i) => <div key={i} className="h-10 bg-bg-3 rounded-input animate-pulse" />)}
@@ -383,7 +386,7 @@ function GoalsSection({ sport }: { sport: Sport }) {
                 {(g.target || g.target_date) && (
                   <div className="text-ink-3 flex gap-3" style={{ fontSize: 10, fontFamily: 'JetBrains Mono, monospace' }}>
                     {g.target && <span>{g.target}</span>}
-                    {g.target_date && <span>📅 {fmtDate(g.target_date)}</span>}
+                    {g.target_date && <span className="flex items-center gap-0.5"><Calendar size={9} />{fmtDate(g.target_date)}</span>}
                   </div>
                 )}
               </div>
@@ -482,7 +485,7 @@ function RacesSection({ sport }: { sport: Sport }) {
   }
 
   return (
-    <Section title="Próximas Provas" icon="🏆" count={races.length} defaultOpen={false}>
+    <Section title="Próximas Provas" icon={<Trophy size={16} />} count={races.length} defaultOpen={false}>
       {isLoading ? (
         <div className="space-y-2">
           {[1, 2].map((i) => <div key={i} className="h-16 bg-bg-3 rounded-input animate-pulse" />)}
@@ -519,9 +522,9 @@ function RacesSection({ sport }: { sport: Sport }) {
                     )}
                   </div>
                   <div className="flex items-center gap-3 mt-0.5 flex-wrap" style={{ fontSize: 10, color: '#888', fontFamily: 'JetBrains Mono, monospace' }}>
-                    <span>📅 {fmtDate(r.race_date)}</span>
-                    {r.location && <span>📍 {r.location}</span>}
-                    {r.distance && <span>📏 {r.distance}</span>}
+                    <span className="flex items-center gap-0.5"><Calendar size={9} />{fmtDate(r.race_date)}</span>
+                    {r.location && <span className="flex items-center gap-0.5"><MapPin size={9} />{r.location}</span>}
+                    {r.distance && <span>{r.distance}</span>}
                     {r.goal_time && <span>⏱ {r.goal_time}</span>}
                   </div>
                 </div>
@@ -532,7 +535,7 @@ function RacesSection({ sport }: { sport: Sport }) {
                     title={r.registered ? 'Desmarcar inscrito' : 'Marcar inscrito'}
                     style={{ fontSize: 14 }}
                   >
-                    {r.registered ? '✓' : '○'}
+                    {r.registered ? <Check size={14} /> : <Circle size={14} />}
                   </button>
                   <button
                     onClick={() => deleteRace.mutate(r.id)}
@@ -606,7 +609,7 @@ function SportShoppingSection({ sport }: { sport: Sport }) {
   }
 
   return (
-    <Section title="Lista de Compras" icon="🛍️" count={items.filter((i) => !i.done).length + '/' + items.length} defaultOpen={false}>
+    <Section title="Lista de Compras" icon={<ShoppingBag size={16} />} count={items.filter((i) => !i.done).length + '/' + items.length} defaultOpen={false}>
       {isLoading ? (
         <div className="space-y-2">
           {[1, 2].map((i) => <div key={i} className="h-10 bg-bg-3 rounded-input animate-pulse" />)}
@@ -672,9 +675,9 @@ function SportShoppingSection({ sport }: { sport: Sport }) {
 /* ══════════════════════════════════════════════════════════════════
    PAGE
 ══════════════════════════════════════════════════════════════════ */
-const SPORTS: { key: Sport; label: string; icon: string }[] = [
-  { key: 'corrida',   label: 'Corrida',   icon: '🏃' },
-  { key: 'triathlon', label: 'Triathlon', icon: '🏊' },
+const SPORTS: { key: Sport; label: string; icon: React.ReactNode }[] = [
+  { key: 'corrida',   label: 'Corrida',   icon: <Activity size={14} /> },
+  { key: 'triathlon', label: 'Triathlon', icon: <Dumbbell size={14} /> },
 ]
 
 export function SportsPage() {

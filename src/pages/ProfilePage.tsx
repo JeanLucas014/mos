@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { CheckCircle, Eye, EyeOff, Shield } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useProfile, useAllProfiles } from '../hooks/useProfile'
 import { supabase } from '../lib/supabase'
@@ -69,7 +70,7 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
       >
         {success ? (
           <div className="text-center py-6">
-            <div style={{ fontSize: 40, marginBottom: 10 }}>✅</div>
+            <div className="flex justify-center mb-3"><CheckCircle size={40} className="text-ok" /></div>
             <p className="text-ok font-semibold" style={{ fontSize: 15 }}>Senha alterada com sucesso!</p>
             <button
               onClick={onClose}
@@ -111,7 +112,7 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
                     type="button"
                     onClick={() => setShowPw((v) => !v)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-3 hover:text-ink transition-colors text-xs"
-                  >{showPw ? '🙈' : '👁'}</button>
+                  >{showPw ? <EyeOff size={14} /> : <Eye size={14} />}</button>
                 </div>
               </div>
 
@@ -216,7 +217,7 @@ function AdminSection() {
       style={{ background: '#111111' }}
     >
       <div className="flex items-center gap-2">
-        <span style={{ fontSize: 15 }}>🛡️</span>
+        <Shield size={15} className="text-ink-2" />
         <h3 style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 14 }}>
           Administração
         </h3>
@@ -419,7 +420,7 @@ export function ProfilePage() {
                   className="bg-bg-3 text-ink-2 rounded-input px-3 text-sm hover:text-ink transition-colors"
                   style={{ minHeight: 40 }}
                 >
-                  ✕
+                  ×
                 </button>
               </form>
             ) : (

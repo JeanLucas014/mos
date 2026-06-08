@@ -392,7 +392,7 @@ export function HabitsPage() {
                 <div key={h.id} className="flex items-center gap-1.5">
                   <span className="text-ink-2" style={{ fontSize: 11 }}>{h.name}</span>
                   <span className="text-brand font-semibold" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11 }}>
-                    {h.streak}🔥
+                    {h.streak > 0 ? `${h.streak}d` : '—'}
                   </span>
                 </div>
               ))}
@@ -534,7 +534,7 @@ export function HabitsPage() {
                         {h.name}
                       </span>
                       <span className="text-brand text-xs font-semibold" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
-                        {h.streak > 0 ? `${h.streak}🔥` : ''}
+                        {h.streak > 0 ? `${h.streak}d` : ''}
                       </span>
                     </div>
                   ))}
