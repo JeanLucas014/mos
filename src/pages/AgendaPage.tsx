@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChevronLeft, ChevronRight, RefreshCw, Plus, X, Unplug, CalendarDays } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
@@ -30,14 +30,14 @@ const MONTHS = [
 ]
 const WEEKDAYS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']
 
-/* ── Category colors ─────────────────────────────────────────── */
+/* ── Category config ──────────────────────────────────────────── */
 type Category = 'treino' | 'reuniao' | 'estudo' | 'geral'
 
 const CAT: Record<string, { color: string; bg: string; label: string }> = {
-  treino:  { color: C.g,  bg: 'rgba(52,211,153,.85)',  label: 'Treino'  },
-  reuniao: { color: C.b,  bg: 'rgba(14,165,233,.85)',  label: 'Reunião' },
-  estudo:  { color: C.a,  bg: 'rgba(251,191,36,.85)',  label: 'Estudo'  },
-  geral:   { color: C.dm, bg: 'rgba(136,136,136,.75)', label: 'Geral'   },
+  treino:  { color: '#22c55e', bg: 'rgba(34,197,94,.85)',   label: 'Treino'  },
+  reuniao: { color: '#0EA5E9', bg: 'rgba(14,165,233,.85)',  label: 'Reunião' },
+  estudo:  { color: '#f59e0b', bg: 'rgba(245,158,11,.85)',  label: 'Estudo'  },
+  geral:   { color: '#71717a', bg: 'rgba(113,113,122,.75)', label: 'Geral'   },
 }
 function catCfg(c: string) { return CAT[c] ?? CAT.geral }
 
@@ -73,6 +73,31 @@ function monthRange(year: number, month: number): { timeMin: string; timeMax: st
   return { timeMin: first.toISOString(), timeMax: last.toISOString() }
 }
 
+/* ── Week helpers ─────────────────────────────────────────────── */
+const HOUR_H = 56 // px per hour
+
+function getWeekSunday(d: Date): Date {
+  const s = new Date(d)
+  s.setDate(d.getDate() - d.getDay())
+  s.setHours(0, 0, 0, 0)
+  return s
+}
+
+function buildWeekDays(sunday: Date): Date[] {
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(sunday)
+    d.setDate(d.getDate() + i)
+    return d
+  })
+}
+
+function weekRange(sunday: Date): { timeMin: string; timeMax: string } {
+  const end = new Date(sunday)
+  end.setDate(end.getDate() + 6)
+  end.setHours(23, 59, 59, 999)
+  return { timeMin: sunday.toISOString(), timeMax: end.toISOString() }
+}
+
 /* ── Hooks ────────────────────────────────────────────────────── */
 function useGCalIntegration() {
   return useQuery({
@@ -88,10 +113,9 @@ function useGCalIntegration() {
   })
 }
 
-function useEvents(year: number, month: number) {
-  const { timeMin, timeMax } = monthRange(year, month)
+function useEventsRange(timeMin: string, timeMax: string) {
   return useQuery({
-    queryKey: ['events', year, month],
+    queryKey: ['events', timeMin, timeMax],
     queryFn: async () => {
       const { data, error } = await (supabase.from('events') as any)
         .select('*')
@@ -104,19 +128,91 @@ function useEvents(year: number, month: number) {
   })
 }
 
+/* ── EventCard (with category edit) ──────────────────────────── */
+function EventCard({ ev }: { ev: Event }) {
+  const qc              = useQueryClient()
+  const [cat, setCat]   = useState(ev.category ?? 'geral')
+  const [saving, setSaving] = useState(false)
+
+  async function updateCategory(newCat: string) {
+    setCat(newCat)
+    setSaving(true)
+    await (supabase.from('events') as any).update({ category: newCat }).eq('id', ev.id)
+    setSaving(false)
+    qc.invalidateQueries({ queryKey: ['events'] })
+  }
+
+  const cfg    = catCfg(cat)
+  const allDay = isAllDay(ev)
+
+  return (
+    <div style={{
+      background:C.card2, borderRadius:10, padding:'12px 14px',
+      border:`1px solid ${C.border}`,
+      borderLeft:`3px solid ${cfg.color}`,
+    }}>
+      <div style={{ fontSize:13, fontWeight:600, color:C.tx, marginBottom:6 }}>{ev.title}</div>
+
+      <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap', marginBottom:6 }}>
+        <span style={{ fontSize:11, color:C.dm }}>
+          {allDay ? 'Dia inteiro' : `${fmtTime(ev.starts_at)}${ev.ends_at ? ' – ' + fmtTime(ev.ends_at) : ''}`}
+        </span>
+        {ev.source === 'gcal' && (
+          <span style={{ fontSize:9, color:C.dm2, marginLeft:'auto' }}>Google</span>
+        )}
+      </div>
+
+      {/* Category badge + edit dropdown */}
+      <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+        <span style={{
+          padding:'2px 8px', borderRadius:20, fontSize:10, fontWeight:600,
+          background: cfg.color + '20', color: cfg.color, whiteSpace:'nowrap',
+        }}>
+          {cfg.label}
+        </span>
+        <select
+          value={cat}
+          onChange={e => updateCategory(e.target.value)}
+          disabled={saving}
+          style={{
+            background:C.card2, border:`1px solid ${C.border}`,
+            borderRadius:6, color:C.dm, fontSize:10,
+            padding:'2px 6px', cursor:'pointer', outline:'none',
+            opacity: saving ? 0.5 : 1,
+          }}
+        >
+          {Object.entries(CAT).map(([k, v]) => (
+            <option key={k} value={k}>{v.label}</option>
+          ))}
+        </select>
+      </div>
+
+      {ev.description && (
+        <div style={{ marginTop:8, fontSize:11, color:C.dm, lineHeight:1.5 }}>{ev.description}</div>
+      )}
+    </div>
+  )
+}
+
 /* ── AddEventModal ────────────────────────────────────────────── */
 function AddEventModal({
-  defaultDate, onClose,
+  defaultDate, defaultStartTime, onClose,
 }: {
-  defaultDate?: Date; onClose: () => void
+  defaultDate?: Date; defaultStartTime?: string; onClose: () => void
 }) {
-  const qc = useQueryClient()
+  const qc       = useQueryClient()
   const isMobile = window.innerWidth < 640
 
   const [title,     setTitle]     = useState('')
   const [date,      setDate]      = useState(defaultDate ? toDateKey(defaultDate) : toDateKey(new Date()))
-  const [startTime, setStartTime] = useState('09:00')
-  const [endTime,   setEndTime]   = useState('10:00')
+  const [startTime, setStartTime] = useState(defaultStartTime ?? '09:00')
+  const [endTime,   setEndTime]   = useState(() => {
+    if (defaultStartTime) {
+      const h = parseInt(defaultStartTime.split(':')[0], 10)
+      return `${String(Math.min(h + 1, 23)).padStart(2,'0')}:00`
+    }
+    return '10:00'
+  })
   const [category,  setCategory]  = useState<Category>('geral')
   const [saving,    setSaving]    = useState(false)
   const [err,       setErr]       = useState('')
@@ -281,33 +377,7 @@ function DayPanel({
         </div>
       ) : (
         <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-          {events.map(ev => {
-            const cfg    = catCfg(ev.category)
-            const allDay = isAllDay(ev)
-            return (
-              <div key={ev.id} style={{
-                background:C.card2, borderRadius:10, padding:'12px 14px',
-                border:`1px solid ${C.border}`,
-                borderLeft:`3px solid ${cfg.color}`,
-              }}>
-                <div style={{ fontSize:13, fontWeight:600, color:C.tx, marginBottom:4 }}>{ev.title}</div>
-                <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
-                  <span style={{ padding:'2px 8px', borderRadius:20, fontSize:10, fontWeight:600, background:cfg.color+'20', color:cfg.color }}>
-                    {cfg.label}
-                  </span>
-                  <span style={{ fontSize:11, color:C.dm }}>
-                    {allDay ? 'Dia inteiro' : `${fmtTime(ev.starts_at)}${ev.ends_at ? ' – ' + fmtTime(ev.ends_at) : ''}`}
-                  </span>
-                  {ev.source === 'gcal' && (
-                    <span style={{ fontSize:9, color:C.dm2, marginLeft:'auto' }}>Google</span>
-                  )}
-                </div>
-                {ev.description && (
-                  <div style={{ marginTop:8, fontSize:11, color:C.dm, lineHeight:1.5 }}>{ev.description}</div>
-                )}
-              </div>
-            )
-          })}
+          {events.map(ev => <EventCard key={ev.id} ev={ev} />)}
         </div>
       )}
     </div>
@@ -319,6 +389,203 @@ function DayPanel({
       <div onClick={onClose} style={{ position:'fixed', inset:0, zIndex:299, background:'rgba(0,0,0,.6)' }} />
       {content}
     </>
+  )
+}
+
+/* ── WeekView ─────────────────────────────────────────────────── */
+function WeekView({
+  days, events, todayKey, isMobile, onSlotClick,
+}: {
+  days: Date[]
+  events: Event[]
+  todayKey: string
+  isMobile: boolean
+  onSlotClick: (date: Date, hour: number) => void
+}) {
+  const scrollRef  = useRef<HTMLDivElement>(null)
+  const now        = useMemo(() => new Date(), [])
+  const nowTop     = ((now.getHours() * 60 + now.getMinutes()) / (24 * 60)) * HOUR_H * 24
+
+  const LABEL_W = 44
+  const DAY_W   = isMobile
+    ? Math.floor((window.innerWidth - LABEL_W - 8) / 3)
+    : undefined
+
+  // Group events by day key
+  const byDay = useMemo(() => {
+    const map: Record<string, Event[]> = {}
+    days.forEach(d => { map[toDateKey(d)] = [] })
+    events.forEach(ev => {
+      const k = toDateKey(new Date(ev.starts_at))
+      if (map[k]) map[k].push(ev)
+    })
+    return map
+  }, [days, events])
+
+  // Scroll to ~7 AM on mount
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = Math.max(7 * HOUR_H - 60, 0)
+    }
+  }, [])
+
+  const minWidth = isMobile ? `${LABEL_W + 7 * (DAY_W ?? 100)}px` : '100%'
+
+  return (
+    <div
+      ref={scrollRef}
+      style={{
+        overflowY: 'auto',
+        overflowX: isMobile ? 'auto' : 'hidden',
+        maxHeight: 560,
+        border: `1px solid ${C.border}`,
+        borderRadius: 10,
+      }}
+    >
+      <div style={{ minWidth }}>
+        {/* Sticky day-header row */}
+        <div style={{
+          position:'sticky', top:0, zIndex:20,
+          display:'flex', background:C.bg,
+          borderBottom:`1px solid ${C.border}`,
+        }}>
+          <div style={{ width:LABEL_W, flexShrink:0 }} />
+          {days.map((d, i) => {
+            const k       = toDateKey(d)
+            const isToday = k === todayKey
+            return (
+              <div key={i} style={{
+                flex: DAY_W ? `0 0 ${DAY_W}px` : 1,
+                textAlign:'center', padding:'6px 4px',
+                background: isToday ? 'rgba(14,165,233,.06)' : 'transparent',
+              }}>
+                <div style={{ fontSize:9, color:C.dm, fontWeight:600, letterSpacing:'.06em', textTransform:'uppercase' }}>
+                  {WEEKDAYS[d.getDay()]}
+                </div>
+                <div style={{
+                  fontSize:15, fontWeight: isToday ? 700 : 400,
+                  color: isToday ? '#fff' : C.dm,
+                  width:28, height:28, borderRadius:'50%',
+                  background: isToday ? C.b : 'transparent',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  margin:'2px auto 0',
+                }}>
+                  {d.getDate()}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Time grid */}
+        <div style={{ display:'flex' }}>
+          {/* Hour labels */}
+          <div style={{ width:LABEL_W, flexShrink:0, borderRight:`1px solid ${C.border}` }}>
+            {Array.from({ length: 24 }, (_, h) => (
+              <div key={h} style={{
+                height:HOUR_H, boxSizing:'border-box',
+                borderBottom:`1px solid ${C.border}`,
+                display:'flex', alignItems:'flex-start',
+                justifyContent:'flex-end',
+                paddingTop:3, paddingRight:6,
+                fontSize:9, color:C.dm2,
+              }}>
+                {h === 0 ? '' : `${h.toString().padStart(2,'0')}:00`}
+              </div>
+            ))}
+          </div>
+
+          {/* Day columns */}
+          {days.map((d, di) => {
+            const k       = toDateKey(d)
+            const isToday = k === todayKey
+            const dayEvs  = byDay[k] ?? []
+
+            return (
+              <div key={di} style={{
+                flex: DAY_W ? `0 0 ${DAY_W}px` : 1,
+                position:'relative',
+                height: HOUR_H * 24,
+                borderLeft: `1px solid ${C.border}`,
+                background: isToday ? 'rgba(14,165,233,.02)' : 'transparent',
+                boxSizing:'border-box',
+              }}>
+                {/* Clickable hour slots + grid lines */}
+                {Array.from({ length: 24 }, (_, h) => (
+                  <div key={h} style={{
+                    position:'absolute', left:0, right:0,
+                    top: h * HOUR_H, height: HOUR_H,
+                    borderBottom:`1px solid ${C.border}`,
+                    boxSizing:'border-box', cursor:'pointer',
+                  }}
+                    onClick={() => onSlotClick(d, h)}
+                  />
+                ))}
+
+                {/* Half-hour marks */}
+                {Array.from({ length: 24 }, (_, h) => (
+                  <div key={`h${h}`} style={{
+                    position:'absolute', left:0, right:0,
+                    top: h * HOUR_H + HOUR_H / 2,
+                    height:1, background:C.border, opacity:0.4,
+                    pointerEvents:'none',
+                  }} />
+                ))}
+
+                {/* Events */}
+                {dayEvs.filter(ev => !isAllDay(ev)).map(ev => {
+                  const s   = new Date(ev.starts_at)
+                  const e   = ev.ends_at ? new Date(ev.ends_at) : new Date(s.getTime() + 3_600_000)
+                  const sm  = s.getHours() * 60 + s.getMinutes()
+                  const em  = Math.min(e.getHours() * 60 + e.getMinutes() || 24 * 60, 24 * 60)
+                  const dur = Math.max(em - sm, 15)
+                  const top    = (sm / (24 * 60)) * HOUR_H * 24
+                  const height = Math.max((dur / (24 * 60)) * HOUR_H * 24, 18)
+                  const cfg    = catCfg(ev.category)
+
+                  return (
+                    <div key={ev.id} title={ev.title} style={{
+                      position:'absolute',
+                      top: top + 1, left: 2, right: 2,
+                      height: height - 2,
+                      background: cfg.color + '22',
+                      borderLeft: `3px solid ${cfg.color}`,
+                      borderRadius: 4,
+                      padding: '2px 4px',
+                      overflow: 'hidden',
+                      cursor: 'default',
+                      zIndex: 5,
+                    }}>
+                      <div style={{ fontSize:10, fontWeight:700, color:cfg.color, lineHeight:1.3, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+                        {ev.title}
+                      </div>
+                      {height > 32 && (
+                        <div style={{ fontSize:9, color:cfg.color + 'aa' }}>
+                          {fmtTime(ev.starts_at)}{ev.ends_at ? ' – ' + fmtTime(ev.ends_at) : ''}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+
+                {/* Current time indicator */}
+                {isToday && (
+                  <div style={{
+                    position:'absolute', left:0, right:0, top: nowTop,
+                    height:2, background:C.r, zIndex:10, pointerEvents:'none',
+                  }}>
+                    <div style={{
+                      position:'absolute', left:-4, top:-4,
+                      width:8, height:8, borderRadius:'50%', background:C.r,
+                    }} />
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -395,15 +662,27 @@ function CalendarView({ onDisconnect }: { onDisconnect: () => void }) {
   const today    = useMemo(() => new Date(), [])
   const isMobile = window.innerWidth < 640
 
-  const [year,        setYear]        = useState(today.getFullYear())
-  const [month,       setMonth]       = useState(today.getMonth())
-  const [selectedDay, setSelectedDay] = useState<Date | null>(null)
-  const [addModal,    setAddModal]    = useState(false)
-  const [addDate,     setAddDate]     = useState<Date | undefined>()
-  const [syncing,     setSyncing]     = useState(false)
+  const [viewMode,      setViewMode]      = useState<'month' | 'week'>('month')
+  const [year,          setYear]          = useState(today.getFullYear())
+  const [month,         setMonth]         = useState(today.getMonth())
+  const [weekSunday,    setWeekSunday]    = useState(() => getWeekSunday(today))
+  const [selectedDay,   setSelectedDay]   = useState<Date | null>(null)
+  const [addModal,      setAddModal]      = useState(false)
+  const [addDate,       setAddDate]       = useState<Date | undefined>()
+  const [addStartTime,  setAddStartTime]  = useState<string | undefined>()
+  const [syncing,       setSyncing]       = useState(false)
 
-  const { data: events = [], isLoading } = useEvents(year, month)
+  const todayKey = useMemo(() => toDateKey(today), [today])
 
+  /* Dynamic query range — month or week */
+  const { timeMin, timeMax } = useMemo(() => {
+    if (viewMode === 'week') return weekRange(weekSunday)
+    return monthRange(year, month)
+  }, [viewMode, weekSunday, year, month])
+
+  const { data: events = [], isLoading } = useEventsRange(timeMin, timeMax)
+
+  /* Month-view data */
   const days = useMemo(() => calendarGrid(year, month), [year, month])
 
   const byDay = useMemo(() => {
@@ -417,18 +696,62 @@ function CalendarView({ onDisconnect }: { onDisconnect: () => void }) {
 
   const selectedDayEvents = useMemo(() => {
     if (!selectedDay) return []
-    return (byDay[toDateKey(selectedDay)] ?? []).sort((a,b) => a.starts_at.localeCompare(b.starts_at))
+    return (byDay[toDateKey(selectedDay)] ?? []).sort((a, b) => a.starts_at.localeCompare(b.starts_at))
   }, [byDay, selectedDay])
 
-  function prevMonth() { month === 0 ? (setMonth(11), setYear(y=>y-1)) : setMonth(m=>m-1) }
-  function nextMonth() { month === 11 ? (setMonth(0), setYear(y=>y+1)) : setMonth(m=>m+1) }
-  function goToday()   { setYear(today.getFullYear()); setMonth(today.getMonth()) }
+  /* Week-view days */
+  const weekDaysArr = useMemo(() => buildWeekDays(weekSunday), [weekSunday])
 
+  /* Navigation */
+  function prevPeriod() {
+    if (viewMode === 'month') {
+      month === 0 ? (setMonth(11), setYear(y => y - 1)) : setMonth(m => m - 1)
+    } else {
+      setWeekSunday(s => { const d = new Date(s); d.setDate(d.getDate() - 7); return d })
+    }
+  }
+  function nextPeriod() {
+    if (viewMode === 'month') {
+      month === 11 ? (setMonth(0), setYear(y => y + 1)) : setMonth(m => m + 1)
+    } else {
+      setWeekSunday(s => { const d = new Date(s); d.setDate(d.getDate() + 7); return d })
+    }
+  }
+  function goToday() {
+    setYear(today.getFullYear()); setMonth(today.getMonth())
+    setWeekSunday(getWeekSunday(today))
+  }
+
+  function switchView(v: 'month' | 'week') {
+    if (v === 'week' && viewMode === 'month') {
+      const isCurrent = year === today.getFullYear() && month === today.getMonth()
+      setWeekSunday(getWeekSunday(isCurrent ? today : new Date(year, month, 1)))
+    } else if (v === 'month' && viewMode === 'week') {
+      const mid = new Date(weekSunday); mid.setDate(mid.getDate() + 3)
+      setYear(mid.getFullYear()); setMonth(mid.getMonth())
+    }
+    setSelectedDay(null)
+    setViewMode(v)
+  }
+
+  const isCurrentPeriod = viewMode === 'month'
+    ? (year === today.getFullYear() && month === today.getMonth())
+    : toDateKey(weekSunday) === toDateKey(getWeekSunday(today))
+
+  const periodLabel = useMemo(() => {
+    if (viewMode === 'month') return `${MONTHS[month]} ${year}`
+    const last = weekDaysArr[6]
+    if (weekSunday.getMonth() === last.getMonth()) {
+      return `${weekSunday.getDate()} – ${last.getDate()} de ${MONTHS[weekSunday.getMonth()].substring(0,3)} ${weekSunday.getFullYear()}`
+    }
+    return `${weekSunday.getDate()} ${MONTHS[weekSunday.getMonth()].substring(0,3)} – ${last.getDate()} ${MONTHS[last.getMonth()].substring(0,3)} ${last.getFullYear()}`
+  }, [viewMode, month, year, weekSunday, weekDaysArr])
+
+  /* Sync */
   async function handleSync() {
     setSyncing(true)
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      const { timeMin, timeMax } = monthRange(year, month)
       const resp = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gcal-events`,
         {
@@ -445,7 +768,7 @@ function CalendarView({ onDisconnect }: { onDisconnect: () => void }) {
     } catch (e) {
       console.error('[gcal-events]', e)
     }
-    qc.invalidateQueries({ queryKey: ['events', year, month] })
+    qc.invalidateQueries({ queryKey: ['events'] })
     setSyncing(false)
   }
 
@@ -456,6 +779,12 @@ function CalendarView({ onDisconnect }: { onDisconnect: () => void }) {
       .eq('provider', 'gcal')
     qc.invalidateQueries({ queryKey: ['integration', 'gcal'] })
     onDisconnect()
+  }
+
+  function handleSlotClick(date: Date, hour: number) {
+    setAddDate(date)
+    setAddStartTime(`${hour.toString().padStart(2,'0')}:00`)
+    setAddModal(true)
   }
 
   const MAX_VISIBLE = isMobile ? 0 : 3
@@ -470,8 +799,25 @@ function CalendarView({ onDisconnect }: { onDisconnect: () => void }) {
           Agenda
         </h1>
         <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
+          {/* View toggle */}
+          <div style={{ display:'flex', gap:2, padding:3, background:C.card2, borderRadius:9, border:`1px solid ${C.border}` }}>
+            {(['month','week'] as const).map(v => (
+              <button
+                key={v} onClick={() => switchView(v)}
+                style={{
+                  padding:'5px 14px', borderRadius:7, border:'none', cursor:'pointer', fontSize:12, fontWeight:600,
+                  background: viewMode === v ? C.b : 'transparent',
+                  color:      viewMode === v ? '#fff' : C.dm,
+                  transition:'background .15s',
+                }}
+              >
+                {v === 'month' ? 'Mês' : 'Semana'}
+              </button>
+            ))}
+          </div>
+
           <button
-            onClick={() => { setAddDate(undefined); setAddModal(true) }}
+            onClick={() => { setAddDate(undefined); setAddStartTime(undefined); setAddModal(true) }}
             style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'8px 14px', background:'linear-gradient(135deg,#0EA5E9,#0284c7)', border:'none', borderRadius:9, color:'#fff', fontSize:12, fontWeight:600, cursor:'pointer' }}
           >
             <Plus size={14} /> Novo evento
@@ -492,42 +838,49 @@ function CalendarView({ onDisconnect }: { onDisconnect: () => void }) {
         </div>
       </div>
 
-      {/* ── Month navigator ── */}
+      {/* ── Period navigator ── */}
       <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:16 }}>
-        <button onClick={prevMonth} style={navBtn}><ChevronLeft size={18}/></button>
-        <span style={{ fontFamily:'Sora,sans-serif', fontSize:18, fontWeight:700, color:C.tx, minWidth:190, textAlign:'center' }}>
-          {MONTHS[month]} {year}
+        <button onClick={prevPeriod} style={navBtn}><ChevronLeft size={18}/></button>
+        <span style={{ fontFamily:'Sora,sans-serif', fontSize:17, fontWeight:700, color:C.tx, minWidth: viewMode==='month' ? 190 : 220, textAlign:'center' }}>
+          {periodLabel}
         </span>
-        <button onClick={nextMonth} style={navBtn}><ChevronRight size={18}/></button>
-        {(year !== today.getFullYear() || month !== today.getMonth()) && (
+        <button onClick={nextPeriod} style={navBtn}><ChevronRight size={18}/></button>
+        {!isCurrentPeriod && (
           <button onClick={goToday} style={{ marginLeft:6, padding:'5px 12px', background:'rgba(14,165,233,.1)', border:`1px solid rgba(14,165,233,.25)`, borderRadius:8, color:C.b, fontSize:11, cursor:'pointer' }}>
             Hoje
           </button>
         )}
       </div>
 
-      {/* ── Calendar + optional side panel ── */}
-      <div style={{ display:'flex', gap:12, alignItems:'flex-start' }}>
+      {isLoading ? (
+        <div style={{ textAlign:'center', padding:'48px 24px', color:C.dm, fontSize:13 }}>Carregando...</div>
+      ) : viewMode === 'week' ? (
+        /* ── Week view ── */
+        <WeekView
+          days={weekDaysArr}
+          events={events}
+          todayKey={todayKey}
+          isMobile={isMobile}
+          onSlotClick={handleSlotClick}
+        />
+      ) : (
+        /* ── Month view ── */
+        <div style={{ display:'flex', gap:12, alignItems:'flex-start' }}>
+          <div style={{ flex:1, minWidth:0 }}>
+            {/* Weekday headers */}
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', marginBottom:4 }}>
+              {WEEKDAYS.map(d => (
+                <div key={d} style={{ textAlign:'center', fontSize:10, fontWeight:600, color:C.dm2, padding:'4px 0', letterSpacing:'.05em' }}>
+                  {d}
+                </div>
+              ))}
+            </div>
 
-        {/* Grid */}
-        <div style={{ flex:1, minWidth:0 }}>
-          {/* Weekday headers */}
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', marginBottom:4 }}>
-            {WEEKDAYS.map(d => (
-              <div key={d} style={{ textAlign:'center', fontSize:10, fontWeight:600, color:C.dm2, padding:'4px 0', letterSpacing:'.05em' }}>
-                {d}
-              </div>
-            ))}
-          </div>
-
-          {isLoading ? (
-            <div style={{ textAlign:'center', padding:'48px 24px', color:C.dm, fontSize:13 }}>Carregando...</div>
-          ) : (
             <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:2 }}>
               {days.map((day, idx) => {
                 const key        = toDateKey(day)
                 const inMonth    = day.getMonth() === month
-                const isToday    = key === toDateKey(today)
+                const isToday    = key === todayKey
                 const isSelected = selectedDay ? key === toDateKey(selectedDay) : false
                 const dayEvs     = byDay[key] ?? []
 
@@ -548,7 +901,6 @@ function CalendarView({ onDisconnect }: { onDisconnect: () => void }) {
                       cursor:'pointer', overflow:'hidden', transition:'background .1s',
                     }}
                   >
-                    {/* Day number */}
                     <div style={{
                       fontSize: isMobile ? 11 : 12, fontWeight: isToday ? 700 : 400,
                       color: isToday ? C.b : inMonth ? C.tx : C.dm2,
@@ -558,16 +910,20 @@ function CalendarView({ onDisconnect }: { onDisconnect: () => void }) {
                     </div>
 
                     {/* Desktop: event bars */}
-                    {!isMobile && dayEvs.slice(0, MAX_VISIBLE).map(ev => (
-                      <div key={ev.id} style={{
-                        background: catCfg(ev.category).bg,
-                        borderRadius:3, padding:'2px 5px', marginBottom:2,
-                        fontSize:10, color:'#fff', fontWeight:600,
-                        overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', lineHeight:1.5,
-                      }}>
-                        {ev.title}
-                      </div>
-                    ))}
+                    {!isMobile && dayEvs.slice(0, MAX_VISIBLE).map(ev => {
+                      const cfg = catCfg(ev.category)
+                      return (
+                        <div key={ev.id} style={{
+                          background: cfg.color + '22',
+                          borderLeft: `2px solid ${cfg.color}`,
+                          borderRadius:3, padding:'2px 5px', marginBottom:2,
+                          fontSize:10, color:cfg.color, fontWeight:600,
+                          overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', lineHeight:1.5,
+                        }}>
+                          {ev.title}
+                        </div>
+                      )
+                    })}
                     {!isMobile && dayEvs.length > MAX_VISIBLE && (
                       <div style={{ fontSize:9, color:C.dm }}>+{dayEvs.length - MAX_VISIBLE} mais</div>
                     )}
@@ -585,27 +941,27 @@ function CalendarView({ onDisconnect }: { onDisconnect: () => void }) {
                 )
               })}
             </div>
+          </div>
+
+          {/* Desktop side panel */}
+          {!isMobile && selectedDay && (
+            <div style={{ width:300, flexShrink:0 }}>
+              <DayPanel
+                day={selectedDay} events={selectedDayEvents} isMobile={false}
+                onClose={() => setSelectedDay(null)}
+                onAdd={() => { setAddDate(selectedDay); setAddStartTime(undefined); setAddModal(true) }}
+              />
+            </div>
           )}
         </div>
+      )}
 
-        {/* Desktop side panel */}
-        {!isMobile && selectedDay && (
-          <div style={{ width:300, flexShrink:0 }}>
-            <DayPanel
-              day={selectedDay} events={selectedDayEvents} isMobile={false}
-              onClose={() => setSelectedDay(null)}
-              onAdd={() => { setAddDate(selectedDay); setAddModal(true) }}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* Mobile full-screen panel */}
-      {isMobile && selectedDay && (
+      {/* Mobile month-view day panel */}
+      {viewMode === 'month' && isMobile && selectedDay && (
         <DayPanel
           day={selectedDay} events={selectedDayEvents} isMobile={true}
           onClose={() => setSelectedDay(null)}
-          onAdd={() => { setAddDate(selectedDay); setAddModal(true) }}
+          onAdd={() => { setAddDate(selectedDay); setAddStartTime(undefined); setAddModal(true) }}
         />
       )}
 
@@ -613,7 +969,8 @@ function CalendarView({ onDisconnect }: { onDisconnect: () => void }) {
       {addModal && (
         <AddEventModal
           defaultDate={addDate}
-          onClose={() => { setAddModal(false); setAddDate(undefined) }}
+          defaultStartTime={addStartTime}
+          onClose={() => { setAddModal(false); setAddDate(undefined); setAddStartTime(undefined) }}
         />
       )}
     </div>

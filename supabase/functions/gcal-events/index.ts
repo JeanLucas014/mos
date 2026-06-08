@@ -71,23 +71,15 @@ async function refreshAccessToken(
 
 /* ── Category inference from Google event ─────────────────────── */
 
-function inferCategory(summary: string, colorId?: string): string {
+function inferCategory(summary: string, _colorId?: string): string {
   const lower = (summary ?? '').toLowerCase()
 
-  // Keyword heuristics
-  if (/treino|corrida|academia|musculação|pilates|natação|bike|swim|run/.test(lower)) return 'treino'
-  if (/reunião|meeting|call|sync|review|standap|standup|apresentação|entrevista/.test(lower)) return 'reuniao'
-  if (/estudo|aula|curso|prova|faculdade|livro|leitura|estudio/.test(lower)) return 'estudo'
+  // Conservative keyword matching — only clear, unambiguous terms
+  if (/\b(treino|corrida|academia|natação|nata|ciclismo|bike\b|triathlon|musculação|fortalecimento)\b/.test(lower)) return 'treino'
+  if (/\b(reunião|meeting|call\b|sync\b|apresentação)\b/.test(lower)) return 'reuniao'
+  if (/\b(estudo|curso\b|aula\b|aprender)\b/.test(lower)) return 'estudo'
 
-  // Google colorId fallback
-  const colorMap: Record<string, string> = {
-    '5': 'treino',  // Sage
-    '6': 'treino',  // Basil
-    '4': 'estudo',  // Banana
-    '7': 'reuniao', // Peacock
-    '8': 'reuniao', // Blueberry
-  }
-  return colorMap[colorId ?? ''] ?? 'geral'
+  return 'geral'
 }
 
 /* ── Main handler ──────────────────────────────────────────────── */
