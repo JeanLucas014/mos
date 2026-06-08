@@ -201,6 +201,28 @@ export function useDashNotes() {
   })
 }
 
+/* ── Upcoming events ──────────────────────────────────────────── */
+export function useDashEvents() {
+  return useQuery({
+    queryKey: ['dash_events'],
+    queryFn: async () => {
+      const { data, error } = await (supabase.from('events') as any)
+        .select('id, title, starts_at, ends_at, category')
+        .gte('starts_at', new Date().toISOString())
+        .order('starts_at', { ascending: true })
+        .limit(3)
+      if (error) throw error
+      return (data ?? []) as {
+        id: string
+        title: string
+        starts_at: string
+        ends_at: string | null
+        category: string
+      }[]
+    },
+  })
+}
+
 /* ── Books ────────────────────────────────────────────────────── */
 export function useDashBooks() {
   return useQuery({

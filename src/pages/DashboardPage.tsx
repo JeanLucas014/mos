@@ -1,7 +1,7 @@
 import {
   CheckSquare, Flame, FolderOpen, Target,
   Receipt, Activity, FileText, BookOpen, Zap,
-  ArrowRight,
+  ArrowRight, CalendarDays,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
@@ -15,6 +15,7 @@ import {
   useDashSports,
   useDashNotes,
   useDashBooks,
+  useDashEvents,
 } from '../hooks/useDashboard'
 
 /* ══════════════════════════════════════════════════════════════════
@@ -174,6 +175,95 @@ function HabitsWidget() {
             </div>
           </div>
         </>
+      )}
+    </Widget>
+  )
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   WIDGET — AGENDA (próximos eventos)
+══════════════════════════════════════════════════════════════════ */
+
+const EVENT_CAT_COLOR: Record<string, string> = {
+  treino:  '#22c55e',
+  reuniao: '#0EA5E9',
+  estudo:  '#f59e0b',
+  geral:   '#71717a',
+}
+
+const EVENT_CAT_LABEL: Record<string, string> = {
+  treino:  'Treino',
+  reuniao: 'Reunião',
+  estudo:  'Estudo',
+  geral:   'Geral',
+}
+
+function fmtEventTime(iso: string): string {
+  const ev   = new Date(iso)
+  const now  = new Date()
+  const todayStr = now.toISOString().slice(0, 10)
+  const evStr    = ev.toISOString().slice(0, 10)
+  const tmw = new Date(now); tmw.setDate(now.getDate() + 1)
+  const tmwStr   = tmw.toISOString().slice(0, 10)
+  const hhmm = `${String(ev.getHours()).padStart(2,'0')}:${String(ev.getMinutes()).padStart(2,'0')}`
+  if (evStr === todayStr) return `Hoje, ${hhmm}`
+  if (evStr === tmwStr)   return `Amanhã, ${hhmm}`
+  const weekday = ev.toLocaleDateString('pt-BR', { weekday: 'short' })
+    .replace('.', '').replace(/^\w/, c => c.toUpperCase())
+  const day   = String(ev.getDate()).padStart(2, '0')
+  const month = String(ev.getMonth() + 1).padStart(2, '0')
+  return `${weekday}, ${day}/${month}, ${hhmm}`
+}
+
+function AgendaWidget() {
+  const { data, isLoading } = useDashEvents()
+  const events = data ?? []
+
+  return (
+    <Widget icon={<CalendarDays size={14} />} title="Agenda" to="/agenda">
+      {isLoading ? (
+        <div className="space-y-2.5">
+          <Sk w="w-full" h="h-10" />
+          <Sk w="w-4/5" h="h-10" />
+          <Sk w="w-full" h="h-10" />
+        </div>
+      ) : events.length === 0 ? (
+        <p className="text-ink-3 text-xs mt-1">Nenhum evento próximo.</p>
+      ) : (
+        <ul className="space-y-2">
+          {events.map(ev => {
+            const color = EVENT_CAT_COLOR[ev.category] ?? EVENT_CAT_COLOR.geral
+            const label = EVENT_CAT_LABEL[ev.category] ?? 'Geral'
+            return (
+              <li
+                key={ev.id}
+                className="rounded-xl px-3 py-2 bg-bg"
+                style={{ borderLeft: `3px solid ${color}` }}
+              >
+                <div
+                  className="text-ink text-xs font-semibold truncate mb-1"
+                  style={{ fontFamily: 'Sora, sans-serif' }}
+                >
+                  {ev.title}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span
+                    style={{
+                      fontSize: 9, fontWeight: 700, padding: '1px 7px',
+                      borderRadius: 20, background: color + '20', color,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {label}
+                  </span>
+                  <span className="text-ink-3" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10 }}>
+                    {fmtEventTime(ev.starts_at)}
+                  </span>
+                </div>
+              </li>
+            )
+          })}
+        </ul>
       )}
     </Widget>
   )
@@ -532,6 +622,7 @@ export function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         <TasksWidget />
         <HabitsWidget />
+        <AgendaWidget />
         <ProjectsWidget />
         <GoalsWidget />
         <InvoicesWidget />
