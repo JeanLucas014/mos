@@ -24,11 +24,6 @@ function monthStart(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
 }
 
-function monthEnd(): string {
-  const d = new Date()
-  const last = new Date(d.getFullYear(), d.getMonth() + 1, 0)
-  return `${last.getFullYear()}-${String(last.getMonth() + 1).padStart(2, '0')}-${String(last.getDate()).padStart(2, '0')}`
-}
 
 function today(): string {
   return new Date().toISOString().slice(0, 10)
@@ -131,36 +126,6 @@ export function useDashGoals() {
         .from('goals').select('*').order('created_at', { ascending: false })
       if (error) throw error
       return data as Goal[]
-    },
-  })
-}
-
-/* ── Finance (current month) ──────────────────────────────────── */
-export function useDashFinance() {
-  return useQuery({
-    queryKey: ['dash_finance', monthStart()],
-    queryFn: async () => {
-      const start = monthStart()
-      const end   = monthEnd()
-
-      const { data, error } = await (supabase.from('transactions') as any)
-        .select('kind, amount_cents')
-        .gte('occurred_at', start)
-        .lte('occurred_at', end)
-
-      if (error) {
-        console.error('[dash_finance] query error:', error)
-        throw error
-      }
-
-      // Debug: log raw rows so we can verify user_id and amounts
-      console.log('[dash_finance] period:', start, '→', end, '| rows:', data?.length ?? 0, data)
-
-      const rows = (data ?? []) as { kind: string; amount_cents: number }[]
-      const entradas  = rows.filter((r) => r.kind === 'in').reduce((s, r) => s + r.amount_cents, 0)
-      const saidas    = rows.filter((r) => r.kind === 'out').reduce((s, r) => s + r.amount_cents, 0)
-      const resultado = entradas - saidas
-      return { entradas, saidas, resultado }
     },
   })
 }

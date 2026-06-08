@@ -1,5 +1,5 @@
 import {
-  CheckSquare, Flame, FolderOpen, Target, DollarSign,
+  CheckSquare, Flame, FolderOpen, Target,
   Receipt, Activity, FileText, BookOpen, Zap,
   ArrowRight,
 } from 'lucide-react'
@@ -11,7 +11,6 @@ import {
   useDashHabits,
   useDashProjects,
   useDashGoals,
-  useDashFinance,
   useDashInvoices,
   useDashSports,
   useDashNotes,
@@ -283,43 +282,6 @@ function GoalsWidget() {
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   WIDGET 5 — FINANCEIRO
-══════════════════════════════════════════════════════════════════ */
-function FinanceWidget() {
-  const { data, isLoading } = useDashFinance()
-
-  function tile(label: string, val: number, color: string) {
-    return (
-      <div className="bg-bg rounded-xl px-3 py-2.5">
-        <div style={{ fontSize: 9, color: '#555', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 4 }}>
-          {label}
-        </div>
-        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 12, fontWeight: 800, color }}>
-          {fmtBRL(val)}
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <Widget icon={<DollarSign size={14} />} title="Financeiro" to="/financeiro">
-      {isLoading ? (
-        <div className="grid grid-cols-3 gap-2">
-          <Sk h="h-12" /><Sk h="h-12" /><Sk h="h-12" />
-        </div>
-      ) : (
-        <div className="grid grid-cols-3 gap-2">
-          {tile('Entradas', data?.entradas ?? 0, '#34d399')}
-          {tile('Saidas',   data?.saidas   ?? 0, '#f87171')}
-          {tile('Resultado', data?.resultado ?? 0,
-            (data?.resultado ?? 0) >= 0 ? '#34d399' : '#f87171')}
-        </div>
-      )}
-    </Widget>
-  )
-}
-
-/* ══════════════════════════════════════════════════════════════════
    WIDGET 6 — FATURAMENTO
 ══════════════════════════════════════════════════════════════════ */
 function InvoicesWidget() {
@@ -572,7 +534,6 @@ export function DashboardPage() {
         <HabitsWidget />
         <ProjectsWidget />
         <GoalsWidget />
-        <FinanceWidget />
         <InvoicesWidget />
         <SportsWidget />
         <NotesWidget />
