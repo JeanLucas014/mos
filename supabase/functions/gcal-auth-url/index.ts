@@ -3,7 +3,6 @@
  *
  * Required Supabase secrets (set with `supabase secrets set`):
  *   GOOGLE_CLIENT_ID
- *   TOKEN_ENCRYPTION_KEY  (any long random string, used to sign the state)
  *
  * Called by the frontend (authenticated).
  * Returns: { url: string }
@@ -24,22 +23,9 @@ const SCOPES = [
   'https://www.googleapis.com/auth/calendar.events.readonly',
 ].join(' ')
 
-/** HMAC-sign userId so the callback can verify + recover userId safely. */
-async function signState(userId: string, secret: string): Promise<string> {
-  const msg = `${userId}:${Date.now()}`
-  const key = await crypto.subtle.importKey(
-    'raw',
-    new TextEncoder().encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign'],
-  )
-  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(msg))
-  const sigHex = Array.from(new Uint8Array(sig))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('')
-  // state = base64(msg) + "." + hex(hmac)
-  return btoa(msg) + '.' + sigHex
+/** Encode userId in state so the public callback can identify the user. */
+function buildState(userId: string): string {
+  return btoa(JSON.stringify({ userId, returnUrl: '/agenda' }))
 }
 
 Deno.serve(async (req: Request) => {
@@ -71,14 +57,13 @@ Deno.serve(async (req: Request) => {
 
     /* ── Build OAuth URL ── */
     const clientId = Deno.env.get('GOOGLE_CLIENT_ID')
-    const encKey   = Deno.env.get('TOKEN_ENCRYPTION_KEY')
-    if (!clientId || !encKey) {
+    if (!clientId) {
       return new Response(JSON.stringify({ error: 'Server not configured' }), {
         status: 500, headers: { ...CORS, 'Content-Type': 'application/json' },
       })
     }
 
-    const state = await signState(user.id, encKey)
+    const state = buildState(user.id)
 
     const params = new URLSearchParams({
       client_id:     clientId,

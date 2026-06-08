@@ -1,0 +1,2 @@
+[functions.gcal-callback]
+verify_jwt = false
