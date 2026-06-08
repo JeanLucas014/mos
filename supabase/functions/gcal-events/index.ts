@@ -1,7 +1,7 @@
 /**
  * gcal-events — fetch Google Calendar events and upsert into `events` table.
  *
- * Called by frontend (authenticated) via supabase.functions.invoke('gcal-events').
+ * Called by frontend (authenticated) via fetch with Authorization: Bearer <jwt>.
  * Body: { timeMin: string; timeMax: string }   (ISO 8601)
  *
  * Required Supabase secrets:

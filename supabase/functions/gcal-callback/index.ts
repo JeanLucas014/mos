@@ -15,6 +15,12 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+}
+
 const REDIRECT_URI   = 'https://fuykgxogvqvfwzqfigxz.supabase.co/functions/v1/gcal-callback'
 const APP_BASE       = 'https://app.jlmos.com.br/agenda'
 const TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token'
@@ -60,6 +66,10 @@ async function verifyState(state: string, secret: string): Promise<string | null
 }
 
 Deno.serve(async (req: Request) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: CORS })
+  }
+
   const url    = new URL(req.url)
   const code   = url.searchParams.get('code')
   const state  = url.searchParams.get('state')

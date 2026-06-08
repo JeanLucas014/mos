@@ -329,13 +329,31 @@ function ConnectCard() {
 
   async function connect() {
     setLoading(true); setErr('')
-    const { data, error } = await supabase.functions.invoke('gcal-auth-url')
-    if (error || !data?.url) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gcal-auth-url`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${session?.access_token ?? ''}`,
+            'Content-Type': 'application/json',
+            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+        },
+      )
+      if (!resp.ok) {
+        const msg = await resp.text()
+        throw new Error(msg)
+      }
+      const data = await resp.json()
+      if (!data?.url) throw new Error('URL não retornada pela função')
+      window.location.href = data.url
+    } catch (e) {
       setErr('Não foi possível iniciar a autorização. Verifique se as Edge Functions estão publicadas.')
+      console.error('[gcal-auth-url]', e)
       setLoading(false)
-      return
     }
-    window.location.href = data.url
   }
 
   return (
@@ -408,9 +426,25 @@ function CalendarView({ onDisconnect }: { onDisconnect: () => void }) {
 
   async function handleSync() {
     setSyncing(true)
-    const { timeMin, timeMax } = monthRange(year, month)
-    const { error } = await supabase.functions.invoke('gcal-events', { body: { timeMin, timeMax } })
-    if (error) console.error('[gcal-events]', error)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const { timeMin, timeMax } = monthRange(year, month)
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gcal-events`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${session?.access_token ?? ''}`,
+            'Content-Type': 'application/json',
+            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({ timeMin, timeMax }),
+        },
+      )
+      if (!resp.ok) console.error('[gcal-events]', await resp.text())
+    } catch (e) {
+      console.error('[gcal-events]', e)
+    }
     qc.invalidateQueries({ queryKey: ['events', year, month] })
     setSyncing(false)
   }
