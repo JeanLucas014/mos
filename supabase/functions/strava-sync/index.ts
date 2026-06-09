@@ -35,11 +35,20 @@ async function encrypt(plaintext: string, secret: string): Promise<string> {
 }
 
 /* ── Mapping ───────────────────────────────────────────────────── */
-function mapActivityType(type: string): { sport: string; kind: string } | null {
+function mapActivityType(type: string): { sport: string; kind: string } {
   const t = type.toLowerCase()
+  // Running variants
   if (['run', 'virtualrun', 'trailrun'].includes(t)) return { sport: 'corrida', kind: 'easy' }
-  if (['triathlon', 'virtualride', 'swim', 'ride'].includes(t)) return { sport: 'triathlon', kind: 'tijolo' }
-  return null
+  // Swimming
+  if (t === 'swim') return { sport: 'triathlon', kind: 'natação' }
+  // Cycling
+  if (['ride', 'virtualride', 'mountainbikeride', 'ebikeride', 'handcycle'].includes(t)) return { sport: 'triathlon', kind: 'bike' }
+  // Triathlon
+  if (t === 'triathlon') return { sport: 'triathlon', kind: 'tijolo' }
+  // Strength / cross-training → log as corrida/easy so they appear in the list
+  if (['weighttraining', 'workout', 'crossfit', 'yoga', 'pilates', 'elliptical', 'stairstepper'].includes(t)) return { sport: 'corrida', kind: 'easy' }
+  // Catch-all: import everything so nothing is silently dropped
+  return { sport: 'corrida', kind: 'easy' }
 }
 
 function calcPace(distance_m: number, duration_s: number): string {
@@ -128,8 +137,20 @@ Deno.serve(async (req: Request) => {
       type: string
       distance: number       // metres
       moving_time: number    // seconds
-      start_date_local: string // ISO 8601
+      start_date_local: string // ISO 8601 local time
     }>
+
+    // DEBUG: log first 3 activities to verify mapping + dates
+    console.log('[strava-sync] first 3 activities:',
+      activities.slice(0, 3).map(a => ({
+        id: a.id,
+        name: a.name,
+        type: a.type,
+        date: a.start_date_local?.slice(0, 10),
+        dist: a.distance,
+        mapped: mapActivityType(a.type),
+      }))
+    )
 
     /* Get existing strava notes to avoid duplicates */
     const { data: existing } = await admin
@@ -145,9 +166,9 @@ Deno.serve(async (req: Request) => {
     const toInsert = activities
       .map(a => {
         const mapped = mapActivityType(a.type)
-        if (!mapped) return null
         if (existingIds.has(String(a.id))) return null
-        const workout_date = a.start_date_local.slice(0, 10)
+        // workout_date: use start_date_local (local timezone, YYYY-MM-DD)
+        const workout_date = (a.start_date_local ?? '').slice(0, 10) || new Date().toISOString().slice(0, 10)
         return {
           user_id:      user.id,
           sport:        mapped.sport,
@@ -163,8 +184,18 @@ Deno.serve(async (req: Request) => {
 
     if (toInsert.length > 0) {
       const { error: insertErr } = await admin.from('workouts').insert(toInsert)
-      if (insertErr) console.error('[strava-sync] insert error:', insertErr)
+      if (insertErr) {
+        console.error('[strava-sync] insert error:', insertErr)
+        return json({ error: `DB insert failed: ${insertErr.message}` }, 500)
+      }
     }
+
+    // DEBUG: verify what's now in workouts table for this user
+    const { data: sample } = await admin
+      .from('workouts').select('sport, kind, workout_date, distance_m, notes')
+      .eq('user_id', user.id).like('notes', 'strava:%')
+      .order('workout_date', { ascending: false }).limit(3)
+    console.log('[strava-sync] sample workouts after insert:', sample)
 
     return json({ imported: toInsert.length })
   } catch (err) {
