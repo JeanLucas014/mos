@@ -412,19 +412,54 @@ function WorkoutsSection({ sport }: { sport: Sport }) {
 /* ══════════════════════════════════════════════════════════════════
    SECTION 2 — METAS
 ══════════════════════════════════════════════════════════════════ */
+/* pace calculator helpers */
+function paceToSec(pace: string): number {
+  // "4:30/km" → 270
+  const m = pace.match(/^(\d+):(\d{2})/)
+  if (!m) return 0
+  return parseInt(m[1]) * 60 + parseInt(m[2])
+}
+function secToPace(s: number): string {
+  return `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}/km`
+}
+
 function GoalsSection({ sport }: { sport: Sport }) {
   const { data: goals = [], isLoading, addGoal, toggleGoal, deleteGoal } = useSportGoals(sport)
+  const { data: races = [] } = useSportRaces(sport)
   const [showModal, setShowModal] = useState(false)
   const [gName, setGName] = useState('')
   const [gTarget, setGTarget] = useState('')
   const [gDate, setGDate] = useState('')
+  const [gDistKm, setGDistKm] = useState('')
+  const [gDurStr, setGDurStr] = useState('')
+  const [gPace, setGPace] = useState('')
+  const [gLinkedRace, setGLinkedRace] = useState('')
+
+  function computeThird(changed: 'dist' | 'dur' | 'pace', val: string) {
+    const dist = changed === 'dist' ? parseFloat(val) : parseFloat(gDistKm)
+    const dur  = changed === 'dur'  ? parseDuration(val) : parseDuration(gDurStr)
+    const pSec = changed === 'pace' ? paceToSec(val)     : paceToSec(gPace)
+    if (changed !== 'dist' && dur > 0 && pSec > 0) {
+      setGDistKm(String(Math.round((dur / pSec) * 10) / 10))
+    } else if (changed !== 'dur' && dist > 0 && pSec > 0) {
+      const totalSec = Math.round(dist * pSec)
+      setGDurStr(fmtDuration(totalSec))
+    } else if (changed !== 'pace' && dist > 0 && dur > 0) {
+      setGPace(secToPace(dur / dist))
+    }
+  }
 
   function handleAdd(e: FormEvent) {
     e.preventDefault()
     if (!gName.trim()) return
+    const distNum = parseFloat(gDistKm) || null
+    const durNum  = parseDuration(gDurStr) || null
     addGoal.mutate(
-      { name: gName.trim(), target: gTarget.trim() || undefined, target_date: gDate || undefined },
-      { onSuccess: () => { setShowModal(false); setGName(''); setGTarget(''); setGDate('') } },
+      {
+        name: gName.trim(), target: gTarget.trim() || undefined, target_date: gDate || undefined,
+        distance_km: distNum, duration_s: durNum, linked_race_id: gLinkedRace || null,
+      },
+      { onSuccess: () => { setShowModal(false); setGName(''); setGTarget(''); setGDate(''); setGDistKm(''); setGDurStr(''); setGPace(''); setGLinkedRace('') } },
     )
   }
 
@@ -499,6 +534,41 @@ function GoalsSection({ sport }: { sport: Sport }) {
                 style={inputH}
               />
             </Field>
+
+            {/* Pace calculator — 3 interlinked fields */}
+            <div style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,.06)', background: 'rgba(255,255,255,.02)' }}>
+              <div className="text-ink-3 mb-2" style={{ fontSize: 11, fontWeight: 600 }}>Calculadora de pace (opcional)</div>
+              <div className="grid grid-cols-3 gap-2">
+                <Field label="Distância (km)">
+                  <input
+                    value={gDistKm}
+                    onChange={(e) => { setGDistKm(e.target.value); computeThird('dist', e.target.value) }}
+                    placeholder="42.2"
+                    className={inputCls}
+                    style={{ minHeight: 36, fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}
+                  />
+                </Field>
+                <Field label="Tempo (h:mm:ss)">
+                  <input
+                    value={gDurStr}
+                    onChange={(e) => { setGDurStr(e.target.value); computeThird('dur', e.target.value) }}
+                    placeholder="3:00:00"
+                    className={inputCls}
+                    style={{ minHeight: 36, fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}
+                  />
+                </Field>
+                <Field label="Pace (/km)">
+                  <input
+                    value={gPace}
+                    onChange={(e) => { setGPace(e.target.value); computeThird('pace', e.target.value) }}
+                    placeholder="4:16/km"
+                    className={inputCls}
+                    style={{ minHeight: 36, fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}
+                  />
+                </Field>
+              </div>
+            </div>
+
             <Field label="Target (ex: 3:00:00, 200km)">
               <input
                 value={gTarget}
@@ -511,6 +581,25 @@ function GoalsSection({ sport }: { sport: Sport }) {
             <Field label="Data alvo (opcional)">
               <input type="date" value={gDate} onChange={(e) => setGDate(e.target.value)} className={inputCls} style={inputH} />
             </Field>
+
+            {/* Linked race dropdown */}
+            {races.length > 0 && (
+              <Field label="Vincular à prova (opcional)">
+                <select value={gLinkedRace} onChange={(e) => setGLinkedRace(e.target.value)} className={inputCls} style={inputH}>
+                  <option value="">— nenhuma —</option>
+                  {races.map(r => (
+                    <option key={r.id} value={r.id}>{r.name} ({fmtDate(r.race_date)})</option>
+                  ))}
+                </select>
+              </Field>
+            )}
+
+            {/* Garmin Em breve */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,.06)', opacity: 0.5 }}>
+              <span style={{ fontSize: 11, color: '#888' }}>⌚</span>
+              <span style={{ fontSize: 11, color: '#888' }}>Sincronização Garmin — Em breve</span>
+            </div>
+
             <div className="flex gap-3 pt-1">
               <button
                 type="submit"
@@ -676,13 +765,18 @@ function RacesSection({ sport }: { sport: Sport }) {
 function SportShoppingSection({ sport }: { sport: Sport }) {
   const { data: items = [], isLoading, addItem, toggleItem, deleteItem } = useSportShopping(sport)
   const [draft, setDraft] = useState('')
+  const [addErr, setAddErr] = useState<string | null>(null)
 
   const sorted = [...items].sort((a, b) => (a.done === b.done ? 0 : a.done ? 1 : -1))
 
   function handleAdd(e: FormEvent) {
     e.preventDefault()
     if (!draft.trim()) return
-    addItem.mutate(draft.trim(), { onSuccess: () => setDraft('') })
+    setAddErr(null)
+    addItem.mutate(draft.trim(), {
+      onSuccess: () => setDraft(''),
+      onError: (err) => setAddErr((err as Error).message ?? 'Erro ao adicionar item'),
+    })
   }
 
   return (
@@ -728,6 +822,11 @@ function SportShoppingSection({ sport }: { sport: Sport }) {
         </div>
       )}
 
+      {addErr && (
+        <div style={{ marginBottom: 8, padding: '6px 12px', borderRadius: 8, background: 'rgba(248,113,113,.1)', border: '1px solid rgba(248,113,113,.3)', fontSize: 12, color: '#f87171' }}>
+          {addErr}
+        </div>
+      )}
       <form onSubmit={handleAdd} className="flex gap-2">
         <input
           value={draft}

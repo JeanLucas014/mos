@@ -723,10 +723,11 @@ export function FinancePage() {
     const entradas = md.entradas.reduce((a, b) => a + b.valor, 0)
     const fixas    = md.fixas.reduce((a, b) => a + b.valor, 0)
     const variaveis = md.variaveis.reduce((a, b) => a + b.valor, 0)
+               + (avulsos[mes] || []).filter(a => a.tipo !== 'entrada').reduce((a, b) => a + b.valor, 0)
     const cartao   = md.cartoes_itens.reduce((a, b) => a + b.valor, 0)
     const resultado = entradas - fixas - variaveis - cartao
     return { mes, entradas, fixas, variaveis, cartao, resultado }
-  }), [months])
+  }), [months, avulsos])
 
   const filteredOverview = useMemo(() => {
     const ranges: Record<string, number[]> = {

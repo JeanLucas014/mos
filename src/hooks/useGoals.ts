@@ -21,9 +21,9 @@ export function useGoals() {
   })
 
   const addGoal = useMutation({
-    mutationFn: async (g: { name: string; label?: string; progress?: number }) => {
+    mutationFn: async (g: { name: string; label?: string; progress?: number; area?: string | null }) => {
       const { data, error } = await (supabase.from('goals') as any)
-        .insert({ name: g.name, label: g.label ?? null, progress: g.progress ?? 0 })
+        .insert({ name: g.name, label: g.label ?? null, progress: g.progress ?? 0, area: g.area ?? null })
         .select()
         .single()
       if (error) throw error

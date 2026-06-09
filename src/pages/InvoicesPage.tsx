@@ -27,11 +27,11 @@ const C = {
 type Status = 'enviado' | 'em dev' | 'aprovado' | 'recorrente' | 'pago'
 
 const STATUS_CFG: Record<Status, { label: string; color: string; bg: string }> = {
-  'enviado':    { label: 'Enviado',    color: C.b, bg: 'rgba(14,165,233,.15)'  },
-  'em dev':     { label: 'Em dev',     color: C.a, bg: 'rgba(251,191,36,.15)'  },
-  'aprovado':   { label: 'Aprovado',   color: C.g, bg: 'rgba(52,211,153,.15)'  },
-  'recorrente': { label: 'Recorrente', color: C.p, bg: 'rgba(167,139,250,.15)' },
-  'pago':       { label: 'Pago',       color: C.dm, bg: 'rgba(136,136,136,.15)' },
+  'enviado':    { label: 'Enviado',    color: '#7dd3fc', bg: '#0c1e2b' },
+  'em dev':     { label: 'Em dev',     color: '#fcd34d', bg: '#1f1508' },
+  'aprovado':   { label: 'Aprovado',   color: '#6ee7b7', bg: '#0a1f14' },
+  'recorrente': { label: 'Recorrente', color: '#c4b5fd', bg: '#14112a' },
+  'pago':       { label: 'Pago',       color: '#9ca3af', bg: '#141414' },
 }
 
 const ALL_STATUSES: Status[] = ['enviado', 'em dev', 'aprovado', 'recorrente', 'pago']

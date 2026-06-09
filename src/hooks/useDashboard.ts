@@ -141,7 +141,7 @@ export function useDashInvoices() {
       if (error) throw error
       const rows = (data ?? []) as { amount_cents: number; status: string }[]
       const total = rows.reduce((s, r) => s + r.amount_cents, 0)
-      return { total, count: rows.length }
+      return { total: total / 100, count: rows.length }
     },
   })
 }

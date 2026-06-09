@@ -36,6 +36,7 @@ export interface Database {
           project: string | null
           done: boolean
           due_date: string | null
+          priority: string | null
           position: number
           created_at: string
           updated_at: string
@@ -47,6 +48,7 @@ export interface Database {
           project?: string | null
           done?: boolean
           due_date?: string | null
+          priority?: string | null
           position?: number
           created_at?: string
           updated_at?: string
@@ -58,6 +60,7 @@ export interface Database {
           project?: string | null
           done?: boolean
           due_date?: string | null
+          priority?: string | null
           position?: number
           created_at?: string
           updated_at?: string
@@ -109,6 +112,7 @@ export interface Database {
           user_id: string
           name: string
           meta: string | null
+          notes: string | null
           status: string
           progress: number
           delivered: boolean
@@ -120,6 +124,7 @@ export interface Database {
           user_id?: string
           name: string
           meta?: string | null
+          notes?: string | null
           status?: string
           progress?: number
           delivered?: boolean
@@ -131,6 +136,7 @@ export interface Database {
           user_id?: string
           name?: string
           meta?: string | null
+          notes?: string | null
           status?: string
           progress?: number
           delivered?: boolean
@@ -138,11 +144,41 @@ export interface Database {
           updated_at?: string
         }
       }
+      project_checklist: {
+        Row: {
+          id: string
+          user_id: string
+          project_id: string
+          text: string
+          done: boolean
+          position: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string
+          project_id: string
+          text: string
+          done?: boolean
+          position?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          project_id?: string
+          text?: string
+          done?: boolean
+          position?: number
+          created_at?: string
+        }
+      }
       goals: {
         Row: {
           id: string
           user_id: string
           name: string
+          area: string | null
           progress: number
           label: string | null
           created_at: string
@@ -151,6 +187,7 @@ export interface Database {
           id?: string
           user_id?: string
           name: string
+          area?: string | null
           progress?: number
           label?: string | null
           created_at?: string
@@ -159,9 +196,56 @@ export interface Database {
           id?: string
           user_id?: string
           name?: string
+          area?: string | null
           progress?: number
           label?: string | null
           created_at?: string
+        }
+      }
+      goal_items: {
+        Row: {
+          id: string
+          user_id: string
+          goal_id: string
+          text: string
+          done: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string
+          goal_id: string
+          text: string
+          done?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          goal_id?: string
+          text?: string
+          done?: boolean
+          created_at?: string
+        }
+      }
+      habit_exceptions: {
+        Row: {
+          id: string
+          user_id: string
+          habit_id: string
+          exception_date: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string
+          habit_id: string
+          exception_date: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          habit_id?: string
+          exception_date?: string
         }
       }
       shopping_items: {
@@ -379,6 +463,9 @@ export interface Database {
           name: string
           target: string | null
           target_date: string | null
+          distance_km: number | null
+          duration_s: number | null
+          linked_race_id: string | null
           done: boolean
           created_at: string
         }
@@ -389,6 +476,9 @@ export interface Database {
           name: string
           target?: string | null
           target_date?: string | null
+          distance_km?: number | null
+          duration_s?: number | null
+          linked_race_id?: string | null
           done?: boolean
           created_at?: string
         }
@@ -399,6 +489,9 @@ export interface Database {
           name?: string
           target?: string | null
           target_date?: string | null
+          distance_km?: number | null
+          duration_s?: number | null
+          linked_race_id?: string | null
           done?: boolean
           created_at?: string
         }

@@ -662,7 +662,7 @@ function CalendarView({ onDisconnect }: { onDisconnect: () => void }) {
   const today    = useMemo(() => new Date(), [])
   const isMobile = window.innerWidth < 640
 
-  const [viewMode,      setViewMode]      = useState<'month' | 'week'>('month')
+  const [viewMode,      setViewMode]      = useState<'month' | 'week' | 'year'>('month')
   const [year,          setYear]          = useState(today.getFullYear())
   const [month,         setMonth]         = useState(today.getMonth())
   const [weekSunday,    setWeekSunday]    = useState(() => getWeekSunday(today))
@@ -674,9 +674,13 @@ function CalendarView({ onDisconnect }: { onDisconnect: () => void }) {
 
   const todayKey = useMemo(() => toDateKey(today), [today])
 
-  /* Dynamic query range — month or week */
+  /* Dynamic query range — month, week, or year */
   const { timeMin, timeMax } = useMemo(() => {
     if (viewMode === 'week') return weekRange(weekSunday)
+    if (viewMode === 'year') return {
+      timeMin: new Date(year, 0, 1).toISOString(),
+      timeMax: new Date(year, 11, 31, 23, 59, 59).toISOString(),
+    }
     return monthRange(year, month)
   }, [viewMode, weekSunday, year, month])
 
@@ -704,14 +708,16 @@ function CalendarView({ onDisconnect }: { onDisconnect: () => void }) {
 
   /* Navigation */
   function prevPeriod() {
-    if (viewMode === 'month') {
+    if (viewMode === 'year') { setYear(y => y - 1) }
+    else if (viewMode === 'month') {
       month === 0 ? (setMonth(11), setYear(y => y - 1)) : setMonth(m => m - 1)
     } else {
       setWeekSunday(s => { const d = new Date(s); d.setDate(d.getDate() - 7); return d })
     }
   }
   function nextPeriod() {
-    if (viewMode === 'month') {
+    if (viewMode === 'year') { setYear(y => y + 1) }
+    else if (viewMode === 'month') {
       month === 11 ? (setMonth(0), setYear(y => y + 1)) : setMonth(m => m + 1)
     } else {
       setWeekSunday(s => { const d = new Date(s); d.setDate(d.getDate() + 7); return d })
@@ -722,7 +728,7 @@ function CalendarView({ onDisconnect }: { onDisconnect: () => void }) {
     setWeekSunday(getWeekSunday(today))
   }
 
-  function switchView(v: 'month' | 'week') {
+  function switchView(v: 'month' | 'week' | 'year') {
     if (v === 'week' && viewMode === 'month') {
       const isCurrent = year === today.getFullYear() && month === today.getMonth()
       setWeekSunday(getWeekSunday(isCurrent ? today : new Date(year, month, 1)))
@@ -734,11 +740,14 @@ function CalendarView({ onDisconnect }: { onDisconnect: () => void }) {
     setViewMode(v)
   }
 
-  const isCurrentPeriod = viewMode === 'month'
+  const isCurrentPeriod = viewMode === 'year'
+    ? year === today.getFullYear()
+    : viewMode === 'month'
     ? (year === today.getFullYear() && month === today.getMonth())
     : toDateKey(weekSunday) === toDateKey(getWeekSunday(today))
 
   const periodLabel = useMemo(() => {
+    if (viewMode === 'year')  return String(year)
     if (viewMode === 'month') return `${MONTHS[month]} ${year}`
     const last = weekDaysArr[6]
     if (weekSunday.getMonth() === last.getMonth()) {
@@ -801,9 +810,9 @@ function CalendarView({ onDisconnect }: { onDisconnect: () => void }) {
         <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
           {/* View toggle */}
           <div style={{ display:'flex', gap:2, padding:3, background:C.card2, borderRadius:9, border:`1px solid ${C.border}` }}>
-            {(['month','week'] as const).map(v => (
+            {([['month','Mês'],['week','Semana'],['year','Ano']] as const).map(([v, label]) => (
               <button
-                key={v} onClick={() => switchView(v)}
+                key={v} onClick={() => switchView(v as 'month' | 'week' | 'year')}
                 style={{
                   padding:'5px 14px', borderRadius:7, border:'none', cursor:'pointer', fontSize:12, fontWeight:600,
                   background: viewMode === v ? C.b : 'transparent',
@@ -811,7 +820,7 @@ function CalendarView({ onDisconnect }: { onDisconnect: () => void }) {
                   transition:'background .15s',
                 }}
               >
-                {v === 'month' ? 'Mês' : 'Semana'}
+                {label}
               </button>
             ))}
           </div>
@@ -863,6 +872,78 @@ function CalendarView({ onDisconnect }: { onDisconnect: () => void }) {
           isMobile={isMobile}
           onSlotClick={handleSlotClick}
         />
+      ) : viewMode === 'year' ? (
+        /* ── Year view ── */
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
+          {MONTHS.map((mName, mIdx) => {
+            const firstDay  = new Date(year, mIdx, 1)
+            const lastDay   = new Date(year, mIdx + 1, 0)
+            const startSun  = new Date(firstDay); startSun.setDate(1 - firstDay.getDay())
+            const miniDays: (Date | null)[] = []
+            const cur = new Date(startSun)
+            while (cur <= lastDay || miniDays.length % 7 !== 0) {
+              miniDays.push(cur <= lastDay && cur >= firstDay ? new Date(cur) : null)
+              cur.setDate(cur.getDate() + 1)
+              if (miniDays.length > 42) break
+            }
+            const isCurrentMonth = year === today.getFullYear() && mIdx === today.getMonth()
+            return (
+              <div
+                key={mIdx}
+                onClick={() => { setMonth(mIdx); setYear(year); switchView('month') }}
+                style={{
+                  background: C.card, border: `1px solid ${isCurrentMonth ? C.b + '60' : C.border}`,
+                  borderRadius:10, padding:'10px 10px 8px', cursor:'pointer',
+                  transition:'border-color .15s',
+                }}
+              >
+                <div style={{ fontSize:11, fontWeight:700, color: isCurrentMonth ? C.b : C.tx, marginBottom:6 }}>
+                  {mName}
+                </div>
+                {/* Mini weekday headers */}
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', marginBottom:2 }}>
+                  {['D','S','T','Q','Q','S','S'].map((d, i) => (
+                    <div key={i} style={{ textAlign:'center', fontSize:7, color:C.dm2 }}>{d}</div>
+                  ))}
+                </div>
+                {/* Mini day grid */}
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:1 }}>
+                  {miniDays.map((day, di) => {
+                    if (!day) return <div key={`e${di}`} />
+                    const dk      = toDateKey(day)
+                    const isToday = dk === todayKey
+                    const dayEvs  = byDay[dk] ?? []
+                    const dotColors = dayEvs.slice(0, 3).map(ev => catCfg(ev.category).color)
+                    return (
+                      <div key={di} style={{
+                        display:'flex', flexDirection:'column', alignItems:'center',
+                        padding:'1px 0',
+                      }}>
+                        <div style={{
+                          fontSize:8, lineHeight:'14px',
+                          color: isToday ? '#fff' : C.dm,
+                          background: isToday ? C.b : 'transparent',
+                          borderRadius: isToday ? '50%' : 0,
+                          width:14, height:14, textAlign:'center',
+                          fontWeight: isToday ? 700 : 400,
+                        }}>
+                          {day.getDate()}
+                        </div>
+                        {dotColors.length > 0 && (
+                          <div style={{ display:'flex', gap:1, marginTop:1 }}>
+                            {dotColors.map((c, ci) => (
+                              <div key={ci} style={{ width:3, height:3, borderRadius:'50%', background:c }} />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })}
+        </div>
       ) : (
         /* ── Month view ── */
         <div style={{ display:'flex', gap:12, alignItems:'flex-start' }}>

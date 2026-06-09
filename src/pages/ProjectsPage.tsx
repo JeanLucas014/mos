@@ -1,5 +1,6 @@
-import { useState, type FormEvent } from 'react'
+import { useState, useEffect, useRef, type FormEvent } from 'react'
 import { useProjects } from '../hooks/useProjects'
+import { useProjectChecklist } from '../hooks/useProjectChecklist'
 import type { Database } from '../types/db'
 
 type Project = Database['public']['Tables']['projects']['Row']
@@ -58,6 +59,96 @@ function Skeleton() {
   )
 }
 
+/* ── ChecklistSection ──────────────────────────────────────────── */
+function ChecklistSection({
+  projectId,
+  onProgressChange,
+}: {
+  projectId: string
+  onProgressChange: (p: number) => void
+}) {
+  const { data: items = [], addItem, toggleItem, deleteItem, progress, totalCount } =
+    useProjectChecklist(projectId)
+  const [newText, setNewText] = useState('')
+  const prevProgress = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (totalCount > 0 && prevProgress.current !== progress) {
+      prevProgress.current = progress
+      onProgressChange(progress)
+    }
+  }, [progress, totalCount, onProgressChange])
+
+  function handleAdd(e: FormEvent) {
+    e.preventDefault()
+    if (!newText.trim()) return
+    addItem.mutate(newText.trim(), { onSuccess: () => setNewText('') })
+  }
+
+  return (
+    <div style={{ marginTop: 10 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, color: '#888', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.06em' }}>
+        Checklist {totalCount > 0 && <span style={{ fontWeight: 400 }}>· {progress}%</span>}
+      </div>
+      {items.map((item) => (
+        <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+          <button
+            onClick={() => toggleItem.mutate({ id: item.id, done: !item.done })}
+            style={{
+              width: 16, height: 16, borderRadius: 4, flexShrink: 0,
+              border: `1.5px solid ${item.done ? '#34d399' : '#333'}`,
+              background: item.done ? 'rgba(52,211,153,.18)' : 'transparent',
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            {item.done && (
+              <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
+                <path d="M1.5 5l2.5 2.5L8.5 2" stroke="#34d399" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
+          </button>
+          <span style={{
+            flex: 1, fontSize: 12, color: item.done ? '#555' : '#aaa',
+            textDecoration: item.done ? 'line-through' : 'none',
+            fontFamily: 'Manrope, sans-serif',
+          }}>
+            {item.text}
+          </span>
+          <button
+            onClick={() => deleteItem.mutate(item.id)}
+            style={{ color: '#444', fontSize: 14, cursor: 'pointer', background: 'none', border: 'none', lineHeight: 1, padding: '0 2px' }}
+          >
+            ×
+          </button>
+        </div>
+      ))}
+      <form onSubmit={handleAdd} style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+        <input
+          value={newText}
+          onChange={(e) => setNewText(e.target.value)}
+          placeholder="Adicionar item..."
+          style={{
+            flex: 1, background: 'rgba(255,255,255,.04)', border: '1px solid #222',
+            borderRadius: 6, padding: '5px 8px', color: '#ccc', fontSize: 12,
+            fontFamily: 'Manrope, sans-serif', outline: 'none',
+          }}
+        />
+        <button
+          type="submit"
+          disabled={!newText.trim() || addItem.isPending}
+          style={{
+            background: 'rgba(14,165,233,.15)', border: '1px solid rgba(14,165,233,.3)',
+            borderRadius: 6, padding: '5px 10px', color: '#7dd3fc', fontSize: 11,
+            cursor: 'pointer', fontWeight: 600, flexShrink: 0,
+          }}
+        >
+          +
+        </button>
+      </form>
+    </div>
+  )
+}
+
 /* ── ProjectCard ───────────────────────────────────────────────── */
 function ProjectCard({
   project,
@@ -69,18 +160,36 @@ function ProjectCard({
   onDelete: (id: string) => void
 }) {
   const [editStatus, setEditStatus] = useState(false)
+  const [expanded, setExpanded] = useState(false)
+  const [notes, setNotes] = useState(project.notes ?? '')
+
+  function handleNotesBlur() {
+    const cur = project.notes ?? ''
+    if (notes !== cur) {
+      onUpdate(project.id, { notes })
+    }
+  }
 
   return (
     <div className="group bg-bg-2 border border-line rounded-card p-5 hover:border-white/10 transition-colors flex flex-col gap-3">
       {/* Top row: name + pill + delete */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <div
-            className="text-ink font-bold truncate"
-            style={{ fontFamily: 'Sora, sans-serif', fontSize: 15 }}
+          <button
+            onClick={() => setExpanded((v) => !v)}
+            className="text-left w-full"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
           >
-            {project.name}
-          </div>
+            <div
+              className="text-ink font-bold truncate"
+              style={{ fontFamily: 'Sora, sans-serif', fontSize: 15 }}
+            >
+              {project.name}
+              <span style={{ fontSize: 9, marginLeft: 6, color: '#555', verticalAlign: 'middle' }}>
+                {expanded ? '▲' : '▼'}
+              </span>
+            </div>
+          </button>
           {project.meta && (
             <div
               className="text-ink-2 truncate mt-0.5"
@@ -92,7 +201,6 @@ function ProjectCard({
         </div>
 
         <div className="flex items-center gap-1.5 flex-shrink-0">
-          {/* Status — click pill to open select */}
           {editStatus ? (
             <select
               autoFocus
@@ -127,7 +235,7 @@ function ProjectCard({
         </div>
       </div>
 
-      {/* Progress (only for active/non-delivered) */}
+      {/* Progress bar */}
       {!project.delivered && (
         <div>
           <div className="flex justify-between mb-1">
@@ -139,7 +247,6 @@ function ProjectCard({
               {project.progress}%
             </span>
           </div>
-          {/* Visual bar + draggable range overlay */}
           <div style={{ position: 'relative', height: 6, background: 'rgba(255,255,255,.07)', borderRadius: 4 }}>
             <div
               style={{
@@ -163,6 +270,37 @@ function ProjectCard({
               }}
             />
           </div>
+        </div>
+      )}
+
+      {/* Expanded: notes + checklist */}
+      {expanded && (
+        <div style={{ borderTop: '1px solid #1a1a1a', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {/* Notes */}
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#888', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '.06em' }}>
+              Notas
+            </div>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              onBlur={handleNotesBlur}
+              placeholder="Anotações, links, contexto..."
+              rows={3}
+              style={{
+                width: '100%', background: 'rgba(255,255,255,.03)', border: '1px solid #222',
+                borderRadius: 8, padding: '8px 10px', color: '#bbb', fontSize: 12,
+                fontFamily: 'Manrope, sans-serif', resize: 'vertical', outline: 'none',
+                lineHeight: 1.5,
+              }}
+            />
+          </div>
+
+          {/* Checklist */}
+          <ChecklistSection
+            projectId={project.id}
+            onProgressChange={(p) => onUpdate(project.id, { progress: p })}
+          />
         </div>
       )}
 

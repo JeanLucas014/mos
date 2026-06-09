@@ -1,5 +1,49 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useHabits } from '../hooks/useHabits'
+
+/* ── Context menu ─────────────────────────────────────────────── */
+interface CtxMenuState { x: number; y: number; habitId: string; date: string }
+
+function CtxMenu({
+  state, onException, onClose,
+}: {
+  state: CtxMenuState
+  onException: () => void
+  onClose: () => void
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose()
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [onClose])
+
+  return (
+    <>
+      <div className="fixed inset-0 z-40" onClick={onClose} />
+      <div
+        ref={ref}
+        className="fixed z-50 rounded-xl border border-line overflow-hidden"
+        style={{ top: state.y, left: state.x, background: '#161616', minWidth: 200, boxShadow: '0 8px 24px rgba(0,0,0,.6)' }}
+      >
+        <button
+          onClick={() => { onException(); onClose() }}
+          className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-ink-2 hover:text-ink hover:bg-bg-3 transition-colors text-left"
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <circle cx="7" cy="7" r="5.5" stroke="#fbbf24" strokeWidth="1.4" />
+            <path d="M7 4.5V7.5" stroke="#fbbf24" strokeWidth="1.4" strokeLinecap="round" />
+            <circle cx="7" cy="9.5" r=".7" fill="#fbbf24" />
+          </svg>
+          <span>Não se aplica hoje</span>
+        </button>
+      </div>
+    </>
+  )
+}
 
 /* ── date helpers ─────────────────────────────────────────────── */
 function toDateStr(d: Date) {
@@ -45,7 +89,25 @@ function firstDayOffset(year: number, month: number) {
 
 /* ── main component ───────────────────────────────────────────── */
 export function HabitsPage() {
-  const { habits, isLoading, isError, error, toggleDay, addHabit, deleteHabit } = useHabits()
+  const { habits, isLoading, isError, error, toggleDay, addHabit, deleteHabit, toggleException, isException } = useHabits()
+  const [ctxMenu, setCtxMenu] = useState<CtxMenuState | null>(null)
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const handleContextMenu = useCallback((e: React.MouseEvent, habitId: string, date: string) => {
+    e.preventDefault()
+    setCtxMenu({ x: Math.min(e.clientX, window.innerWidth - 220), y: Math.min(e.clientY, window.innerHeight - 80), habitId, date })
+  }, [])
+
+  const startLongPress = useCallback((habitId: string, date: string, e: React.TouchEvent) => {
+    const touch = e.touches[0]
+    longPressTimer.current = setTimeout(() => {
+      setCtxMenu({ x: Math.min(touch.clientX, window.innerWidth - 220), y: Math.min(touch.clientY, window.innerHeight - 80), habitId, date })
+    }, 500)
+  }, [])
+
+  const cancelLongPress = useCallback(() => {
+    if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null }
+  }, [])
 
   // view: 'week' | 'month'
   const [view, setView] = useState<'week' | 'month'>('week')
@@ -272,29 +334,44 @@ export function HabitsPage() {
                               className="group flex items-center gap-1.5 px-1 py-1 rounded-[5px] hover:bg-bg-3 transition-colors"
                             >
                               {/* checkbox */}
-                              <button
-                                onClick={() => toggleDay.mutate({ habitId: habit.id, date: ds })}
-                                className={[
-                                  'w-4 h-4 rounded-[3px] border flex-shrink-0 flex items-center justify-center transition-colors',
-                                  done
-                                    ? 'bg-brand border-brand'
-                                    : 'border-ink-3 hover:border-ink-2',
-                                ].join(' ')}
-                                style={{ minWidth: 16 }}
-                                aria-label={done ? 'Desmarcar' : 'Marcar'}
-                              >
-                                {done && (
-                                  <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
-                                    <path d="M2 5l2.5 2.5L8 3" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                                  </svg>
-                                )}
-                              </button>
+                              {isException(habit.id, ds) ? (
+                                <button
+                                  onContextMenu={(e) => handleContextMenu(e, habit.id, ds)}
+                                  onTouchStart={(e) => startLongPress(habit.id, ds, e)}
+                                  onTouchEnd={cancelLongPress}
+                                  onClick={() => toggleException.mutate({ habitId: habit.id, date: ds })}
+                                  className="w-4 h-4 rounded-[3px] border flex-shrink-0 flex items-center justify-center transition-colors border-amber-500/40"
+                                  style={{ minWidth: 16, background: 'rgba(251,191,36,.1)' }}
+                                  title="Exceção — clique para remover"
+                                >
+                                  <span style={{ fontSize: 8, color: '#fbbf24', lineHeight: 1 }}>—</span>
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => toggleDay.mutate({ habitId: habit.id, date: ds })}
+                                  onContextMenu={(e) => handleContextMenu(e, habit.id, ds)}
+                                  onTouchStart={(e) => startLongPress(habit.id, ds, e)}
+                                  onTouchEnd={cancelLongPress}
+                                  className={[
+                                    'w-4 h-4 rounded-[3px] border flex-shrink-0 flex items-center justify-center transition-colors',
+                                    done ? 'bg-brand border-brand' : 'border-ink-3 hover:border-ink-2',
+                                  ].join(' ')}
+                                  style={{ minWidth: 16 }}
+                                  aria-label={done ? 'Desmarcar' : 'Marcar'}
+                                >
+                                  {done && (
+                                    <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
+                                      <path d="M2 5l2.5 2.5L8 3" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                  )}
+                                </button>
+                              )}
 
                               {/* name */}
                               <span
                                 className={[
                                   'flex-1 truncate leading-tight',
-                                  done ? 'text-ink-3 line-through' : 'text-ink',
+                                  done ? 'text-ink-3 line-through' : isException(habit.id, ds) ? 'text-ink-3 italic' : 'text-ink',
                                 ].join(' ')}
                                 style={{ fontSize: 12 }}
                               >
@@ -512,32 +589,47 @@ export function HabitsPage() {
                 <p className="text-ink-3 text-sm text-center py-4">Nenhum hábito cadastrado.</p>
               ) : (
                 <div className="space-y-1">
-                  {modalHabits.map(h => (
+                  {modalHabits.map(h => {
+                    const isExc = isException(h.id, modalDay!)
+                    return (
                     <div
                       key={h.id}
                       className="flex items-center gap-2.5 px-2 py-1.5 rounded-input hover:bg-bg-3 transition-colors"
+                      onContextMenu={(e) => handleContextMenu(e, h.id, modalDay!)}
                     >
-                      <button
-                        onClick={() => toggleDay.mutate({ habitId: h.id, date: modalDay })}
-                        className={[
-                          'w-[18px] h-[18px] rounded-[4px] border flex-shrink-0 flex items-center justify-center transition-colors',
-                          h.done ? 'bg-brand border-brand' : 'border-ink-3 hover:border-ink-2',
-                        ].join(' ')}
-                      >
-                        {h.done && (
-                          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                            <path d="M2 5l2.5 2.5L8 3" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        )}
-                      </button>
-                      <span className={['flex-1 text-sm', h.done ? 'text-ink-3 line-through' : 'text-ink'].join(' ')}>
+                      {isExc ? (
+                        <button
+                          onClick={() => toggleException.mutate({ habitId: h.id, date: modalDay! })}
+                          className="w-[18px] h-[18px] rounded-[4px] border flex-shrink-0 flex items-center justify-center"
+                          style={{ borderColor: 'rgba(251,191,36,.4)', background: 'rgba(251,191,36,.1)' }}
+                          title="Exceção"
+                        >
+                          <span style={{ fontSize: 10, color: '#fbbf24', lineHeight: 1 }}>—</span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => toggleDay.mutate({ habitId: h.id, date: modalDay! })}
+                          className={[
+                            'w-[18px] h-[18px] rounded-[4px] border flex-shrink-0 flex items-center justify-center transition-colors',
+                            h.done ? 'bg-brand border-brand' : 'border-ink-3 hover:border-ink-2',
+                          ].join(' ')}
+                        >
+                          {h.done && (
+                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                              <path d="M2 5l2.5 2.5L8 3" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          )}
+                        </button>
+                      )}
+                      <span className={['flex-1 text-sm', h.done ? 'text-ink-3 line-through' : isExc ? 'text-ink-3 italic' : 'text-ink'].join(' ')}>
                         {h.name}
                       </span>
                       <span className="text-brand text-xs font-semibold" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
                         {h.streak > 0 ? `${h.streak}d` : ''}
                       </span>
                     </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </div>
@@ -586,6 +678,15 @@ export function HabitsPage() {
             )}
           </div>
         </div>
+      )}
+
+      {/* Context menu */}
+      {ctxMenu && (
+        <CtxMenu
+          state={ctxMenu}
+          onException={() => toggleException.mutate({ habitId: ctxMenu.habitId, date: ctxMenu.date })}
+          onClose={() => setCtxMenu(null)}
+        />
       )}
     </div>
   )

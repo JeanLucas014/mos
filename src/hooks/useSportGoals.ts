@@ -21,9 +21,15 @@ export function useSportGoals(sport: string) {
   })
 
   const addGoal = useMutation({
-    mutationFn: async (g: { name: string; target?: string; target_date?: string }) => {
+    mutationFn: async (g: { name: string; target?: string; target_date?: string; distance_km?: number | null; duration_s?: number | null; linked_race_id?: string | null }) => {
       const { data, error } = await (supabase.from('sport_goals') as any)
-        .insert({ sport, name: g.name, target: g.target ?? null, target_date: g.target_date ?? null, done: false })
+        .insert({
+          sport, name: g.name,
+          target: g.target ?? null, target_date: g.target_date ?? null,
+          distance_km: g.distance_km ?? null, duration_s: g.duration_s ?? null,
+          linked_race_id: g.linked_race_id ?? null,
+          done: false,
+        })
         .select()
         .single()
       if (error) throw error
