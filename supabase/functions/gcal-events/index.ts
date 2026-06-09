@@ -74,12 +74,14 @@ async function refreshAccessToken(
 function inferCategory(summary: string, _colorId?: string): string {
   const lower = (summary ?? '').toLowerCase()
 
-  // Conservative keyword matching — only clear, unambiguous terms
-  if (/\b(treino|corrida|academia|natação|nata|ciclismo|bike\b|triathlon|musculação|fortalecimento)\b/.test(lower)) return 'treino'
-  if (/\b(reunião|meeting|call\b|sync\b|apresentação)\b/.test(lower)) return 'reuniao'
-  if (/\b(estudo|curso\b|aula\b|aprender)\b/.test(lower)) return 'estudo'
+  if (/nata/.test(lower)) return 'nata'
+  if (/moto/.test(lower)) return 'moto'
+  if (/treino|corrida|bike|ciclismo|triathlon|musculação|academia/.test(lower)) return 'treino'
+  if (/estudo|curso|aula|aprender/.test(lower)) return 'estudos'
+  if (/limpar|casa|lavar|faxina|arrumar/.test(lower)) return 'casa'
+  if (/jogo|festa|lazer|cinema|bar|pizza|churrasco/.test(lower)) return 'lazer'
 
-  return 'geral'
+  return 'outros'
 }
 
 /* ── Main handler ──────────────────────────────────────────────── */

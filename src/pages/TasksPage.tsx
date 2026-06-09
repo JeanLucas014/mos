@@ -299,7 +299,7 @@ export function TasksPage() {
                   {task.project && (
                     <button
                       onClick={() => setFilter(task.project!)}
-                      className="text-ink-3 hover:text-ink-2 capitalize hidden sm:inline transition-colors"
+                      className="text-ink-2 hover:text-brand capitalize hidden sm:inline transition-colors"
                       style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10 }}
                     >
                       {task.project}
@@ -309,7 +309,7 @@ export function TasksPage() {
                   {/* Edit button */}
                   <button
                     onClick={() => setEditTask(task)}
-                    className="opacity-0 group-hover:opacity-100 text-ink-3 hover:text-brand transition-all w-7 flex items-center justify-center"
+                    className="text-ink-2 hover:text-brand transition-colors w-7 flex items-center justify-center"
                     style={{ minHeight: 44, fontSize: 12 }}
                     title="Editar"
                   >
@@ -319,7 +319,7 @@ export function TasksPage() {
                   {/* Delete */}
                   <button
                     onClick={() => deleteTask.mutate(task.id)}
-                    className="opacity-0 group-hover:opacity-100 text-ink-3 hover:text-red-400 transition-all w-7 flex items-center justify-center text-base flex-shrink-0"
+                    className="text-ink-2 hover:text-red-400 transition-colors w-7 flex items-center justify-center text-base flex-shrink-0"
                     style={{ minHeight: 44 }}
                     title="Excluir"
                   >

@@ -723,6 +723,108 @@ export interface Database {
           created_at?: string
         }
       }
+      moto_revenue: {
+        Row: {
+          id: string
+          user_id: string
+          record_date: string
+          type: string
+          category: string
+          description: string
+          amount_cents: number
+          notes: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string
+          record_date: string
+          type: string
+          category: string
+          description: string
+          amount_cents: number
+          notes?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          record_date?: string
+          type?: string
+          category?: string
+          description?: string
+          amount_cents?: number
+          notes?: string | null
+          created_at?: string
+        }
+      }
+      systems: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          description: string | null
+          category: string
+          status: string
+          url: string | null
+          stack: string[] | null
+          thumbnail_url: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string
+          name: string
+          description?: string | null
+          category?: string
+          status?: string
+          url?: string | null
+          stack?: string[] | null
+          thumbnail_url?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          description?: string | null
+          category?: string
+          status?: string
+          url?: string | null
+          stack?: string[] | null
+          thumbnail_url?: string | null
+          created_at?: string
+        }
+      }
+      system_files: {
+        Row: {
+          id: string
+          user_id: string
+          system_id: string
+          name: string
+          type: string
+          url: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string
+          system_id: string
+          name: string
+          type?: string
+          url: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          system_id?: string
+          name?: string
+          type?: string
+          url?: string
+          created_at?: string
+        }
+      }
       integrations: {
         Row: {
           id: string

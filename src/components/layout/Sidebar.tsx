@@ -155,6 +155,17 @@ const GROUPS = [
           </svg>
         ),
       },
+      {
+        path: '/sistemas',
+        label: 'Sistemas',
+        icon: (
+          <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
+            <rect x="1.5" y="2.5" width="13" height="9" rx="1.4" stroke="currentColor" strokeWidth="1.3" />
+            <path d="M5.5 13.5h5M8 11.5v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+            <path d="M4.5 6h2M4.5 8h7" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+          </svg>
+        ),
+      },
     ],
   },
   {

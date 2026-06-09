@@ -79,10 +79,16 @@ function ChecklistSection({
     }
   }, [progress, totalCount, onProgressChange])
 
+  const [addErr, setAddErr] = useState<string | null>(null)
+
   function handleAdd(e: FormEvent) {
     e.preventDefault()
     if (!newText.trim()) return
-    addItem.mutate(newText.trim(), { onSuccess: () => setNewText('') })
+    setAddErr(null)
+    addItem.mutate(newText.trim(), {
+      onSuccess: () => setNewText(''),
+      onError: (err) => setAddErr((err as Error).message ?? 'Erro ao adicionar item'),
+    })
   }
 
   return (
@@ -90,6 +96,7 @@ function ChecklistSection({
       <div style={{ fontSize: 10, fontWeight: 700, color: '#888', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.06em' }}>
         Checklist {totalCount > 0 && <span style={{ fontWeight: 400 }}>· {progress}%</span>}
       </div>
+      {addErr && <div style={{ fontSize: 10, color: '#f87171', marginBottom: 6 }}>{addErr}</div>}
       {items.map((item) => (
         <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
           <button

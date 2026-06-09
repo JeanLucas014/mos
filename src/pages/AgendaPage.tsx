@@ -31,15 +31,23 @@ const MONTHS = [
 const WEEKDAYS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']
 
 /* ── Category config ──────────────────────────────────────────── */
-type Category = 'treino' | 'reuniao' | 'estudo' | 'geral'
+type Category = 'nata' | 'moto' | 'treino' | 'estudos' | 'casa' | 'lazer' | 'tarefas' | 'outros'
 
 const CAT: Record<string, { color: string; bg: string; label: string }> = {
+  nata:    { color: '#0EA5E9', bg: 'rgba(14,165,233,.85)',  label: 'Nata'    },
+  moto:    { color: '#ef4444', bg: 'rgba(239,68,68,.85)',   label: 'Moto'    },
   treino:  { color: '#22c55e', bg: 'rgba(34,197,94,.85)',   label: 'Treino'  },
+  estudos: { color: '#eab308', bg: 'rgba(234,179,8,.85)',   label: 'Estudos' },
+  casa:    { color: '#f97316', bg: 'rgba(249,115,22,.85)',  label: 'Casa'    },
+  lazer:   { color: '#ec4899', bg: 'rgba(236,72,153,.85)',  label: 'Lazer'   },
+  tarefas: { color: '#71717a', bg: 'rgba(113,113,122,.75)', label: 'Tarefas' },
+  outros:  { color: '#52525b', bg: 'rgba(82,82,91,.75)',    label: 'Outros'  },
+  // legacy fallbacks for old events
   reuniao: { color: '#0EA5E9', bg: 'rgba(14,165,233,.85)',  label: 'Reunião' },
-  estudo:  { color: '#f59e0b', bg: 'rgba(245,158,11,.85)',  label: 'Estudo'  },
-  geral:   { color: '#71717a', bg: 'rgba(113,113,122,.75)', label: 'Geral'   },
+  estudo:  { color: '#eab308', bg: 'rgba(234,179,8,.85)',   label: 'Estudo'  },
+  geral:   { color: '#52525b', bg: 'rgba(82,82,91,.75)',    label: 'Geral'   },
 }
-function catCfg(c: string) { return CAT[c] ?? CAT.geral }
+function catCfg(c: string) { return CAT[c] ?? CAT.outros }
 
 /* ── Helpers ──────────────────────────────────────────────────── */
 function toDateKey(d: Date): string {
@@ -213,7 +221,7 @@ function AddEventModal({
     }
     return '10:00'
   })
-  const [category,  setCategory]  = useState<Category>('geral')
+  const [category,  setCategory]  = useState<Category>('outros')
   const [saving,    setSaving]    = useState(false)
   const [err,       setErr]       = useState('')
 

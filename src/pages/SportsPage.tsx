@@ -11,21 +11,26 @@ import { useSportShopping } from '../hooks/useSportShopping'
 import { supabase } from '../lib/supabase'
 import type { Database } from '../types/db'
 
-type Sport = 'corrida' | 'triathlon'
+type Sport = 'corrida' | 'triathlon' | 'musculacao'
 type SportRace = Database['public']['Tables']['sport_races']['Row']
 
 /* ── Sport config ──────────────────────────────────────────────── */
 const SPORT_KINDS: Record<Sport, string[]> = {
-  corrida:   ['easy', 'long', 'tempo', 'interval'],
-  triathlon: ['natação', 'bike', 'corrida', 'tijolo'],
+  corrida:    ['easy', 'long', 'tempo', 'interval'],
+  triathlon:  ['natação', 'bike', 'corrida', 'tijolo'],
+  musculacao: ['superior', 'inferior', 'full_body', 'cardio', 'alongamento'],
 }
 const KIND_LABELS: Record<string, string> = {
   easy: 'Fácil', long: 'Longo', tempo: 'Tempo', interval: 'Intervalo',
   natação: 'Natação', bike: 'Bike', corrida: 'Corrida', tijolo: 'Tijolo',
+  superior: 'Superior', inferior: 'Inferior', full_body: 'Full Body',
+  cardio: 'Cardio', alongamento: 'Alongamento',
 }
 const KIND_COLORS: Record<string, string> = {
   easy: '#34d399', long: '#0EA5E9', tempo: '#fbbf24', interval: '#f87171',
   natação: '#60a5fa', bike: '#f59e0b', corrida: '#34d399', tijolo: '#a78bfa',
+  superior: '#f87171', inferior: '#0EA5E9', full_body: '#a78bfa',
+  cardio: '#fbbf24', alongamento: '#34d399',
 }
 
 /* ── Helpers ───────────────────────────────────────────────────── */
@@ -215,10 +220,13 @@ function WorkoutsSection({ sport }: { sport: Sport }) {
         },
       )
       const data = await resp.json()
+      console.log('[strava-sync] response:', data)
       if (!resp.ok) throw new Error(data.error)
       setSyncMsg(`${data.imported} treino${data.imported !== 1 ? 's' : ''} importado${data.imported !== 1 ? 's' : ''}`)
       qc.invalidateQueries({ queryKey: ['workouts'] })
-    } catch {
+      qc.invalidateQueries({ queryKey: ['workouts', sport] })
+    } catch (err) {
+      console.error('[strava-sync] error:', err)
       setSyncMsg('Erro ao sincronizar com Strava')
     }
     setSyncing(false)
@@ -236,13 +244,20 @@ function WorkoutsSection({ sport }: { sport: Sport }) {
   const totalS  = monthly.reduce((a, w) => a + w.duration_s, 0)
   const avgPace = totalKm > 0 ? calcPace(totalKm * 1000, totalS) : '—'
 
+  // Musculação: most frequent kind this month
+  const kindFreq = monthly.reduce<Record<string, number>>((acc, w) => {
+    acc[w.kind] = (acc[w.kind] ?? 0) + 1; return acc
+  }, {})
+  const topKind = Object.entries(kindFreq).sort((a, b) => b[1] - a[1])[0]?.[0] ?? '—'
+
   function handleAdd(e: FormEvent) {
     e.preventDefault()
-    const dist = parseFloat(wDist.replace(',', '.'))
     const dur = parseDuration(wDur)
-    if (!dist || !dur || !wDate) return
+    if (!dur || !wDate) return
+    if (sport !== 'musculacao' && !wDist.trim()) return
+    const dist = parseFloat(wDist.replace(',', '.')) || 0
     const dist_m = Math.round(dist * 1000)
-    const pace = calcPace(dist_m, dur)
+    const pace = sport !== 'musculacao' && dist_m > 0 ? calcPace(dist_m, dur) : null
     addWorkout.mutate(
       { sport, kind: wKind, distance_m: dist_m, duration_s: dur, pace_label: pace, workout_date: wDate, notes: wNotes || null },
       { onSuccess: () => { setShowModal(false); setWDist(''); setWDur(''); setWNotes('') } },
@@ -254,7 +269,7 @@ function WorkoutsSection({ sport }: { sport: Sport }) {
       title="Treinos"
       icon={<Activity size={16} />}
       count={workouts.length}
-      extra={sport === 'corrida' && stravaConnected ? (
+      extra={sport !== 'musculacao' && stravaConnected ? (
         <button
           onClick={handleStravaSync}
           disabled={syncing}
@@ -278,10 +293,21 @@ function WorkoutsSection({ sport }: { sport: Sport }) {
       )}
       {/* Monthly tiles */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-        <StatTile label="km no mês" value={totalKm.toFixed(1)} color="#0EA5E9" />
-        <StatTile label="tempo total" value={fmtDuration(totalS)} color="#34d399" />
-        <StatTile label="treinos" value={String(monthly.length)} color="#a78bfa" />
-        <StatTile label="pace médio" value={avgPace} color="#fbbf24" />
+        {sport === 'musculacao' ? (
+          <>
+            <StatTile label="tempo total" value={fmtDuration(totalS)} color="#34d399" />
+            <StatTile label="treinos" value={String(monthly.length)} color="#a78bfa" />
+            <StatTile label="mais frequente" value={KIND_LABELS[topKind] ?? topKind} color="#fbbf24" />
+            <StatTile label="este mês" value={monthly.length > 0 ? `${Math.round(totalS / monthly.length / 60)}min avg` : '—'} color="#0EA5E9" />
+          </>
+        ) : (
+          <>
+            <StatTile label="km no mês" value={totalKm.toFixed(1)} color="#0EA5E9" />
+            <StatTile label="tempo total" value={fmtDuration(totalS)} color="#34d399" />
+            <StatTile label="treinos" value={String(monthly.length)} color="#a78bfa" />
+            <StatTile label="pace médio" value={avgPace} color="#fbbf24" />
+          </>
+        )}
       </div>
 
       {/* List */}
@@ -310,11 +336,13 @@ function WorkoutsSection({ sport }: { sport: Sport }) {
                 {KIND_LABELS[w.kind] ?? w.kind}
               </span>
               <span className="text-ink text-sm flex-1 truncate" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}>
-                {(w.distance_m / 1000).toFixed(1)} km · {fmtDuration(w.duration_s)}
+                {sport !== 'musculacao' && w.distance_m > 0 ? `${(w.distance_m / 1000).toFixed(1)} km · ` : ''}{fmtDuration(w.duration_s)}
               </span>
-              <span className="text-ink-2 flex-shrink-0" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11 }}>
-                {w.pace_label ?? calcPace(w.distance_m, w.duration_s)}
-              </span>
+              {sport !== 'musculacao' && (
+                <span className="text-ink-2 flex-shrink-0" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11 }}>
+                  {w.pace_label ?? calcPace(w.distance_m, w.duration_s)}
+                </span>
+              )}
               <span className="text-ink-3 flex-shrink-0" style={{ fontSize: 10 }}>
                 {fmtDate(w.workout_date)}
               </span>
@@ -355,16 +383,18 @@ function WorkoutsSection({ sport }: { sport: Sport }) {
                 ))}
               </select>
             </Field>
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Distância (km)">
-                <input
-                  value={wDist}
-                  onChange={(e) => setWDist(e.target.value)}
-                  placeholder="Ex: 10.5"
-                  className={inputCls}
-                  style={inputH}
-                />
-              </Field>
+            <div className={sport === 'musculacao' ? '' : 'grid grid-cols-2 gap-3'}>
+              {sport !== 'musculacao' && (
+                <Field label="Distância (km)">
+                  <input
+                    value={wDist}
+                    onChange={(e) => setWDist(e.target.value)}
+                    placeholder="Ex: 10.5"
+                    className={inputCls}
+                    style={inputH}
+                  />
+                </Field>
+              )}
               <Field label="Duração (hh:mm:ss)">
                 <input
                   value={wDur}
@@ -387,7 +417,7 @@ function WorkoutsSection({ sport }: { sport: Sport }) {
             <div className="flex gap-3 pt-1">
               <button
                 type="submit"
-                disabled={!wDist || !wDur || addWorkout.isPending}
+                disabled={(sport !== 'musculacao' && !wDist) || !wDur || addWorkout.isPending}
                 className="flex-1 bg-brand text-white rounded-input font-semibold text-sm hover:brightness-110 disabled:opacity-40 transition-all"
                 style={inputH}
               >
@@ -852,8 +882,9 @@ function SportShoppingSection({ sport }: { sport: Sport }) {
    PAGE
 ══════════════════════════════════════════════════════════════════ */
 const SPORTS: { key: Sport; label: string; icon: React.ReactNode }[] = [
-  { key: 'corrida',   label: 'Corrida',   icon: <Activity size={14} /> },
-  { key: 'triathlon', label: 'Triathlon', icon: <Dumbbell size={14} /> },
+  { key: 'corrida',    label: 'Corrida',    icon: <Activity size={14} /> },
+  { key: 'triathlon',  label: 'Triathlon',  icon: <Dumbbell size={14} /> },
+  { key: 'musculacao', label: 'Musculação', icon: <Dumbbell size={14} /> },
 ]
 
 export function SportsPage() {

@@ -18,6 +18,7 @@ import { LibraryPage } from './pages/LibraryPage'
 import { StudiesPage } from './pages/StudiesPage'
 import { VaultPage } from './pages/VaultPage'
 import { SportsPage } from './pages/SportsPage'
+import SistemasPage from './pages/SistemasPage'
 import { IntegrationsPage } from './pages/IntegrationsPage'
 import { ProfilePage } from './pages/ProfilePage'
 
@@ -49,6 +50,7 @@ export default function App() {
         <Route path="estudos" element={<StudiesPage />} />
         <Route path="senhas" element={<VaultPage />} />
         <Route path="esportes" element={<SportsPage />} />
+        <Route path="sistemas" element={<SistemasPage />} />
         <Route path="integracoes" element={<IntegrationsPage />} />
         <Route path="perfil" element={<ProfilePage />} />
       </Route>

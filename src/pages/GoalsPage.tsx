@@ -43,6 +43,7 @@ function Skeleton() {
 function GoalItemsList({ goalId, onProgressChange }: { goalId: string; onProgressChange?: (p: number) => void }) {
   const { data: items = [], isLoading, addItem, toggleItem, deleteItem, autoProgress } = useGoalItems(goalId)
   const [draft, setDraft] = useState('')
+  const [addErr, setAddErr] = useState<string | null>(null)
 
   // Notify parent of progress changes
   const prevProg = useRef<number | null>(null)
@@ -54,7 +55,11 @@ function GoalItemsList({ goalId, onProgressChange }: { goalId: string; onProgres
   function handleAdd(e: FormEvent) {
     e.preventDefault()
     if (!draft.trim()) return
-    addItem.mutate(draft.trim(), { onSuccess: () => setDraft('') })
+    setAddErr(null)
+    addItem.mutate(draft.trim(), {
+      onSuccess: () => setDraft(''),
+      onError: (err) => setAddErr((err as Error).message ?? 'Erro ao adicionar submeta'),
+    })
   }
 
   return (
@@ -96,6 +101,9 @@ function GoalItemsList({ goalId, onProgressChange }: { goalId: string; onProgres
           ))}
         </div>
       )}
+      {addErr && (
+        <div style={{ fontSize: 10, color: '#f87171', marginBottom: 4 }}>{addErr}</div>
+      )}
       <form onSubmit={handleAdd} className="flex gap-1.5">
         <input
           value={draft}
@@ -109,7 +117,7 @@ function GoalItemsList({ goalId, onProgressChange }: { goalId: string; onProgres
           disabled={!draft.trim() || addItem.isPending}
           className="bg-brand text-white rounded-[6px] px-2.5 text-xs font-semibold disabled:opacity-40 flex-shrink-0"
           style={{ minHeight: 30 }}
-        >+</button>
+        >{addItem.isPending ? '…' : '+'}</button>
       </form>
     </div>
   )
