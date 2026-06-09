@@ -1,12 +1,14 @@
 import { useState, type FormEvent } from 'react'
 import {
   ChevronDown, Activity, Target, Trophy, ShoppingBag,
-  Calendar, MapPin, Check, Circle, Dumbbell,
+  Calendar, MapPin, Check, Circle, Dumbbell, RefreshCw,
 } from 'lucide-react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useWorkouts } from '../hooks/useWorkouts'
 import { useSportGoals } from '../hooks/useSportGoals'
 import { useSportRaces } from '../hooks/useSportRaces'
 import { useSportShopping } from '../hooks/useSportShopping'
+import { supabase } from '../lib/supabase'
 import type { Database } from '../types/db'
 
 type Sport = 'corrida' | 'triathlon'
@@ -71,37 +73,41 @@ function Section({
   count,
   children,
   defaultOpen = true,
+  extra,
 }: {
   title: string
   icon: React.ReactNode
   count?: number | string
   children: React.ReactNode
   defaultOpen?: boolean
+  extra?: React.ReactNode
 }) {
   const [open, setOpen] = useState(defaultOpen)
   return (
     <div className="bg-bg-2 border border-line rounded-card overflow-hidden">
-      <button
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-5 py-4 hover:bg-bg-3 transition-colors"
-        style={{ minHeight: 56 }}
-      >
-        <div className="flex items-center gap-2.5">
-          <span className="text-ink-2">{icon}</span>
-          <span style={{ fontFamily: 'Sora, sans-serif', fontWeight: 700, fontSize: 14 }}>
-            {title}
-          </span>
-          {count !== undefined && (
-            <span className="text-ink-3" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11 }}>
-              {count}
+      <div className="flex items-center pr-4" style={{ minHeight: 56 }}>
+        <button
+          onClick={() => setOpen(!open)}
+          className="flex-1 flex items-center justify-between px-5 py-4 hover:bg-bg-3 transition-colors"
+        >
+          <div className="flex items-center gap-2.5">
+            <span className="text-ink-2">{icon}</span>
+            <span style={{ fontFamily: 'Sora, sans-serif', fontWeight: 700, fontSize: 14 }}>
+              {title}
             </span>
-          )}
-        </div>
-        <ChevronDown
-          size={16}
-          className={`text-ink-3 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-        />
-      </button>
+            {count !== undefined && (
+              <span className="text-ink-3" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11 }}>
+                {count}
+              </span>
+            )}
+          </div>
+          <ChevronDown
+            size={16}
+            className={`text-ink-3 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+          />
+        </button>
+        {extra && <div style={{ flexShrink: 0 }}>{extra}</div>}
+      </div>
       {open && <div className="px-5 pb-5">{children}</div>}
     </div>
   )
@@ -166,12 +172,58 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 const inputCls = 'w-full bg-bg border border-line rounded-input px-3 text-ink text-sm placeholder:text-ink-3 focus:outline-none focus:border-brand transition-colors'
 const inputH = { minHeight: 44 }
 
+/* ── Strava sync hook ──────────────────────────────────────────── */
+function useStravaConnected() {
+  return useQuery({
+    queryKey: ['integration', 'strava'],
+    queryFn: async () => {
+      const { data } = await (supabase.from('integrations') as any)
+        .select('connected')
+        .eq('provider', 'strava')
+        .eq('connected', true)
+        .maybeSingle()
+      return !!data
+    },
+  })
+}
+
 /* ══════════════════════════════════════════════════════════════════
    SECTION 1 — TREINOS
 ══════════════════════════════════════════════════════════════════ */
 function WorkoutsSection({ sport }: { sport: Sport }) {
   const { data: workouts = [], isLoading, addWorkout, deleteWorkout } = useWorkouts(sport)
+  const qc = useQueryClient()
+  const { data: stravaConnected } = useStravaConnected()
+  const [syncing, setSyncing] = useState(false)
+  const [syncMsg, setSyncMsg] = useState<string | null>(null)
   const [showModal, setShowModal] = useState(false)
+
+  async function handleStravaSync() {
+    setSyncing(true)
+    setSyncMsg(null)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/strava-sync`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${session?.access_token ?? ''}`,
+            'Content-Type': 'application/json',
+            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+        },
+      )
+      const data = await resp.json()
+      if (!resp.ok) throw new Error(data.error)
+      setSyncMsg(`${data.imported} treino${data.imported !== 1 ? 's' : ''} importado${data.imported !== 1 ? 's' : ''}`)
+      qc.invalidateQueries({ queryKey: ['workouts'] })
+    } catch {
+      setSyncMsg('Erro ao sincronizar com Strava')
+    }
+    setSyncing(false)
+    setTimeout(() => setSyncMsg(null), 4000)
+  }
   const [wDate, setWDate] = useState(new Date().toISOString().slice(0, 10))
   const [wKind, setWKind] = useState(SPORT_KINDS[sport][0])
   const [wDist, setWDist] = useState('')
@@ -198,7 +250,32 @@ function WorkoutsSection({ sport }: { sport: Sport }) {
   }
 
   return (
-    <Section title="Treinos" icon={<Activity size={16} />} count={workouts.length}>
+    <Section
+      title="Treinos"
+      icon={<Activity size={16} />}
+      count={workouts.length}
+      extra={sport === 'corrida' && stravaConnected ? (
+        <button
+          onClick={handleStravaSync}
+          disabled={syncing}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 5,
+            padding: '4px 10px', borderRadius: 8, fontSize: 11, fontWeight: 600,
+            background: 'rgba(252,76,2,.12)', border: '1px solid rgba(252,76,2,.3)',
+            color: '#FC4C02', cursor: syncing ? 'not-allowed' : 'pointer', opacity: syncing ? 0.7 : 1,
+          }}
+        >
+          <RefreshCw size={11} style={{ animation: syncing ? 'spin 1s linear infinite' : 'none' }} />
+          {syncing ? 'Sincronizando...' : 'Sincronizar Strava'}
+        </button>
+      ) : undefined}
+    >
+      {/* Sync message */}
+      {syncMsg && (
+        <div style={{ marginBottom: 12, padding: '6px 12px', borderRadius: 8, background: syncMsg.startsWith('Erro') ? 'rgba(248,113,113,.1)' : 'rgba(52,211,153,.1)', border: `1px solid ${syncMsg.startsWith('Erro') ? 'rgba(248,113,113,.3)' : 'rgba(52,211,153,.3)'}`, fontSize: 12, color: syncMsg.startsWith('Erro') ? '#f87171' : '#34d399' }}>
+          {syncMsg}
+        </div>
+      )}
       {/* Monthly tiles */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
         <StatTile label="km no mês" value={totalKm.toFixed(1)} color="#0EA5E9" />
@@ -685,6 +762,7 @@ export function SportsPage() {
 
   return (
     <div>
+      <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
       {/* Header */}
       <h1
         className="text-2xl lg:text-[30px]"

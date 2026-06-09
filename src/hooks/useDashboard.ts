@@ -223,6 +223,38 @@ export function useDashEvents() {
   })
 }
 
+/* ── Vercel deploys ───────────────────────────────────────────── */
+export function useDashVercel() {
+  return useQuery({
+    queryKey: ['dash_vercel'],
+    queryFn: async () => {
+      // first check if vercel integration is connected
+      const { data: int } = await (supabase.from('integrations') as any)
+        .select('connected')
+        .eq('provider', 'vercel')
+        .eq('connected', true)
+        .maybeSingle()
+      if (!int) return null
+
+      const { data: { session } } = await supabase.auth.getSession()
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/vercel-data`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${session?.access_token ?? ''}`,
+            'Content-Type': 'application/json',
+            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+        },
+      )
+      if (!resp.ok) return null
+      const data = await resp.json()
+      return (data.deployments ?? []) as { id: string; name: string; url: string; state: string; createdAt: number }[]
+    },
+  })
+}
+
 /* ── Books ────────────────────────────────────────────────────── */
 export function useDashBooks() {
   return useQuery({
