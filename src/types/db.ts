@@ -417,16 +417,16 @@ export interface Database {
           created_at?: string
         }
       }
-      workouts: {
+      sports: {
         Row: {
           id: string
           user_id: string
           sport: string
           kind: string
-          distance_m: number
+          distance_m: number | null
           duration_s: number
           pace_label: string | null
-          workout_date: string
+          sport_date: string
           notes: string | null
           created_at: string
         }
@@ -435,10 +435,10 @@ export interface Database {
           user_id?: string
           sport: string
           kind: string
-          distance_m: number
+          distance_m?: number | null
           duration_s: number
           pace_label?: string | null
-          workout_date?: string
+          sport_date?: string
           notes?: string | null
           created_at?: string
         }
@@ -447,10 +447,10 @@ export interface Database {
           user_id?: string
           sport?: string
           kind?: string
-          distance_m?: number
+          distance_m?: number | null
           duration_s?: number
           pace_label?: string | null
-          workout_date?: string
+          sport_date?: string
           notes?: string | null
           created_at?: string
         }
@@ -493,6 +493,45 @@ export interface Database {
           duration_s?: number | null
           linked_race_id?: string | null
           done?: boolean
+          created_at?: string
+        }
+      }
+      // Legacy alias kept for backward compat
+      workouts: {
+        Row: {
+          id: string
+          user_id: string
+          sport: string
+          kind: string
+          distance_m: number | null
+          duration_s: number
+          pace_label: string | null
+          sport_date: string
+          notes: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string
+          sport: string
+          kind: string
+          distance_m?: number | null
+          duration_s: number
+          pace_label?: string | null
+          sport_date?: string
+          notes?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          sport?: string
+          kind?: string
+          distance_m?: number | null
+          duration_s?: number
+          pace_label?: string | null
+          sport_date?: string
+          notes?: string | null
           created_at?: string
         }
       }
@@ -539,7 +578,7 @@ export interface Database {
           id: string
           user_id: string
           sport: string
-          name: string
+          title: string
           done: boolean
           created_at: string
         }
@@ -547,7 +586,7 @@ export interface Database {
           id?: string
           user_id?: string
           sport: string
-          name: string
+          title: string
           done?: boolean
           created_at?: string
         }
@@ -555,7 +594,7 @@ export interface Database {
           id?: string
           user_id?: string
           sport?: string
-          name?: string
+          title?: string
           done?: boolean
           created_at?: string
         }
@@ -802,9 +841,9 @@ export interface Database {
           user_id: string
           system_id: string
           name: string
-          type: string
+          file_type: string
           file_url: string
-          is_download: boolean
+          is_download: boolean | null
           created_at: string
         }
         Insert: {
@@ -812,9 +851,9 @@ export interface Database {
           user_id?: string
           system_id: string
           name: string
-          type?: string
+          file_type?: string
           file_url: string
-          is_download?: boolean
+          is_download?: boolean | null
           created_at?: string
         }
         Update: {
@@ -822,9 +861,9 @@ export interface Database {
           user_id?: string
           system_id?: string
           name?: string
-          type?: string
+          file_type?: string
           file_url?: string
-          is_download?: boolean
+          is_download?: boolean | null
           created_at?: string
         }
       }

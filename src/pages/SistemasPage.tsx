@@ -37,9 +37,9 @@ interface SystemFile {
   id: string
   system_id: string
   name: string
-  type: string
+  file_type: string
   file_url: string
-  is_download: boolean
+  is_download: boolean | null
 }
 
 const CATEGORIES = ['App', 'API', 'Site', 'Dashboard', 'CLI', 'Library', 'Automação', 'Outro']
@@ -133,7 +133,7 @@ function useSystemFiles(systemId: string) {
     },
   })
 
-  const add = useMutation<void, Error, { name: string; type: string; file_url: string; is_download: boolean }>({
+  const add = useMutation<void, Error, { name: string; file_type: string; file_url: string; is_download: boolean }>({
     mutationFn: async (payload) => {
       const { error } = await (supabase.from('system_files') as any).insert({ ...payload, system_id: systemId })
       if (error) throw error
@@ -176,7 +176,12 @@ function SystemModal({
   const [category,     setCategory]     = useState(initial?.category ?? 'App')
   const [status,       setStatus]       = useState(initial?.status ?? 'Ativo')
   const [url,          setUrl]          = useState(initial?.url ?? '')
-  const [techStackRaw, setTechStackRaw] = useState((initial?.tech_stack ?? []).join(', '))
+  const [techStackRaw, setTechStackRaw] = useState(() => {
+    const ts = initial?.tech_stack
+    if (!ts) return ''
+    if (Array.isArray(ts)) return ts.join(', ')
+    return String(ts)
+  })
   const [thumbUrl,     setThumbUrl]     = useState(initial?.thumbnail_url ?? '')
   const [uploading,    setUploading]    = useState(false)
   const [err,          setErr]          = useState<string | null>(null)
@@ -359,7 +364,7 @@ function FilesSection({ systemId }: { systemId: string }) {
     try {
       const publicUrl = await uploadToStorage(file, 'files')
       const autoName  = name.trim() || file.name
-      add.mutate({ name: autoName, type: fileType, file_url: publicUrl, is_download: true }, {
+      add.mutate({ name: autoName, file_type: fileType, file_url: publicUrl, is_download: true }, {
         onSuccess: () => { setName(''); setFileUrl(''); if (uploadRef.current) uploadRef.current.value = '' },
         onError: (ex) => setErr((ex as Error).message),
       })
@@ -374,7 +379,7 @@ function FilesSection({ systemId }: { systemId: string }) {
     e.preventDefault()
     if (!name.trim() || !fileUrl.trim()) return
     setErr(null)
-    add.mutate({ name: name.trim(), file_url: fileUrl.trim(), type: fileType, is_download: false }, {
+    add.mutate({ name: name.trim(), file_url: fileUrl.trim(), file_type: fileType, is_download: false }, {
       onSuccess: () => { setName(''); setFileUrl('') },
       onError: (ex) => setErr((ex as Error).message),
     })
@@ -401,7 +406,7 @@ function FilesSection({ systemId }: { systemId: string }) {
               padding: '6px 0', borderBottom: '1px solid ' + C.border,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 }}>
-                <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 6, background: C.card2, color: C.dm2, flexShrink: 0 }}>{f.type}</span>
+                <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 6, background: C.card2, color: C.dm2, flexShrink: 0 }}>{f.file_type}</span>
                 <span style={{ fontSize: 12, color: C.ink2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
               </div>
               <div style={{ display: 'flex', gap: 6, flexShrink: 0, marginLeft: 8 }}>
@@ -478,7 +483,11 @@ function FilesSection({ systemId }: { systemId: string }) {
 
 /* ── System Card ─────────────────────────────────────────────────── */
 function SystemCard({ sys, onEdit, onDelete }: { sys: System; onEdit: () => void; onDelete: () => void }) {
-  const techStack = sys.tech_stack ?? []
+  const techStack: string[] = Array.isArray(sys.tech_stack)
+    ? sys.tech_stack
+    : typeof sys.tech_stack === 'string' && sys.tech_stack
+      ? (sys.tech_stack as string).split(',').map((s: string) => s.trim()).filter(Boolean)
+      : []
 
   return (
     <div style={{

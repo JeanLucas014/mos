@@ -15,7 +15,7 @@ type Project  = Database['public']['Tables']['projects']['Row']
 type Goal     = Database['public']['Tables']['goals']['Row']
 type Note     = Database['public']['Tables']['notes']['Row']
 type Book     = Database['public']['Tables']['books']['Row']
-type Workout  = Database['public']['Tables']['workouts']['Row']
+type Workout  = Database['public']['Tables']['sports']['Row']
 type SportRace = Database['public']['Tables']['sport_races']['Row']
 
 /* ── Date helpers ─────────────────────────────────────────────── */
@@ -153,10 +153,10 @@ export function useDashSports() {
   const workouts = useQuery({
     queryKey: ['workouts', 'corrida'],
     queryFn: async () => {
-      const { data, error } = await (supabase.from('workouts') as any)
+      const { data, error } = await (supabase.from('sports') as any)
         .select('*')
         .eq('sport', 'corrida')
-        .order('workout_date', { ascending: false })
+        .order('sport_date', { ascending: false })
       if (error) throw error
       return data as Workout[]
     },
@@ -176,8 +176,8 @@ export function useDashSports() {
 
   const start    = monthStart()
   const todayStr = today()
-  const monthWorkouts = (workouts.data ?? []).filter((w) => w.workout_date >= start)
-  const kmMonth  = monthWorkouts.reduce((s, w) => s + w.distance_m, 0) / 1000
+  const monthWorkouts = (workouts.data ?? []).filter((w) => w.sport_date >= start)
+  const kmMonth  = monthWorkouts.reduce((s, w) => s + (w.distance_m ?? 0), 0) / 1000
   const nextRace = (races.data ?? []).find((r) => r.race_date >= todayStr) ?? null
 
   return {

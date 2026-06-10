@@ -223,8 +223,8 @@ function WorkoutsSection({ sport }: { sport: Sport }) {
       console.log('[strava-sync] response:', data)
       if (!resp.ok) throw new Error(data.error)
       setSyncMsg(`${data.imported} treino${data.imported !== 1 ? 's' : ''} importado${data.imported !== 1 ? 's' : ''}`)
-      qc.invalidateQueries({ queryKey: ['workouts'] })
-      qc.invalidateQueries({ queryKey: ['workouts', sport] })
+      qc.invalidateQueries({ queryKey: ['sports'] })
+      qc.invalidateQueries({ queryKey: ['sports', sport] })
     } catch (err) {
       console.error('[strava-sync] error:', err)
       setSyncMsg('Erro ao sincronizar com Strava')
@@ -239,8 +239,8 @@ function WorkoutsSection({ sport }: { sport: Sport }) {
   const [wNotes, setWNotes] = useState('')
 
   /* monthly stats */
-  const monthly = workouts.filter((w) => isThisMonth(w.workout_date))
-  const totalKm = monthly.reduce((a, w) => a + w.distance_m, 0) / 1000
+  const monthly = workouts.filter((w) => isThisMonth(w.sport_date))
+  const totalKm = monthly.reduce((a, w) => a + (w.distance_m ?? 0), 0) / 1000
   const totalS  = monthly.reduce((a, w) => a + w.duration_s, 0)
   const avgPace = totalKm > 0 ? calcPace(totalKm * 1000, totalS) : '—'
 
@@ -259,7 +259,7 @@ function WorkoutsSection({ sport }: { sport: Sport }) {
     const dist_m = Math.round(dist * 1000)
     const pace = sport !== 'musculacao' && dist_m > 0 ? calcPace(dist_m, dur) : null
     addWorkout.mutate(
-      { sport, kind: wKind, distance_m: dist_m, duration_s: dur, pace_label: pace, workout_date: wDate, notes: wNotes || null },
+      { sport, kind: wKind, distance_m: dist_m || null, duration_s: dur, pace_label: pace, sport_date: wDate, notes: wNotes || null },
       { onSuccess: () => { setShowModal(false); setWDist(''); setWDur(''); setWNotes('') } },
     )
   }
@@ -336,15 +336,15 @@ function WorkoutsSection({ sport }: { sport: Sport }) {
                 {KIND_LABELS[w.kind] ?? w.kind}
               </span>
               <span className="text-ink text-sm flex-1 truncate" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}>
-                {sport !== 'musculacao' && w.distance_m > 0 ? `${(w.distance_m / 1000).toFixed(1)} km · ` : ''}{fmtDuration(w.duration_s)}
+                {sport !== 'musculacao' && (w.distance_m ?? 0) > 0 ? `${((w.distance_m ?? 0) / 1000).toFixed(1)} km · ` : ''}{fmtDuration(w.duration_s)}
               </span>
               {sport !== 'musculacao' && (
                 <span className="text-ink-2 flex-shrink-0" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11 }}>
-                  {w.pace_label ?? calcPace(w.distance_m, w.duration_s)}
+                  {w.pace_label ?? calcPace(w.distance_m ?? 0, w.duration_s)}
                 </span>
               )}
               <span className="text-ink-3 flex-shrink-0" style={{ fontSize: 10 }}>
-                {fmtDate(w.workout_date)}
+                {fmtDate(w.sport_date)}
               </span>
               <button
                 onClick={() => deleteWorkout.mutate(w.id)}
@@ -464,18 +464,56 @@ function GoalsSection({ sport }: { sport: Sport }) {
   const [gDurStr, setGDurStr] = useState('')
   const [gPace, setGPace] = useState('')
   const [gLinkedRace, setGLinkedRace] = useState('')
+  // Track which fields the user has manually typed (vs auto-computed)
+  const [paceUserFields, setPaceUserFields] = useState<Set<'dist' | 'dur' | 'pace'>>(new Set())
 
-  function computeThird(changed: 'dist' | 'dur' | 'pace', val: string) {
-    const dist = changed === 'dist' ? parseFloat(val) : parseFloat(gDistKm)
-    const dur  = changed === 'dur'  ? parseDuration(val) : parseDuration(gDurStr)
-    const pSec = changed === 'pace' ? paceToSec(val)     : paceToSec(gPace)
-    if (changed !== 'dist' && dur > 0 && pSec > 0) {
-      setGDistKm(String(Math.round((dur / pSec) * 10) / 10))
-    } else if (changed !== 'dur' && dist > 0 && pSec > 0) {
-      const totalSec = Math.round(dist * pSec)
-      setGDurStr(fmtDuration(totalSec))
-    } else if (changed !== 'pace' && dist > 0 && dur > 0) {
-      setGPace(secToPace(dur / dist))
+  // The derived (readonly) field is whichever of the 3 is NOT in paceUserFields once 2 are entered
+  const paceComputedField: 'dist' | 'dur' | 'pace' | null = (() => {
+    const u = paceUserFields
+    if (u.has('dist') && u.has('dur')) return 'pace'
+    if (u.has('dist') && u.has('pace')) return 'dur'
+    if (u.has('dur') && u.has('pace')) return 'dist'
+    return null
+  })()
+
+  function handlePaceInput(field: 'dist' | 'dur' | 'pace', val: string) {
+    const newUserFields = new Set(paceUserFields)
+
+    if (!val.trim()) {
+      newUserFields.delete(field)
+      // Also clear the previously computed field so the user gets a clean slate
+      if (paceComputedField && paceComputedField !== field) {
+        if (paceComputedField === 'dist') setGDistKm('')
+        else if (paceComputedField === 'dur') setGDurStr('')
+        else setGPace('')
+      }
+    } else {
+      newUserFields.add(field)
+    }
+
+    // Update the field the user changed
+    if (field === 'dist') setGDistKm(val)
+    else if (field === 'dur') setGDurStr(val)
+    else setGPace(val)
+
+    setPaceUserFields(newUserFields)
+
+    // Values after this update
+    const distStr = field === 'dist' ? val : gDistKm
+    const durStr  = field === 'dur'  ? val : gDurStr
+    const paceStr = field === 'pace' ? val : gPace
+
+    const dist = parseFloat(distStr.replace(',', '.'))
+    const dur  = parseDuration(durStr)
+    const pSec = paceToSec(paceStr)
+
+    // Compute the third field based on which two are user-entered
+    if (newUserFields.has('dist') && newUserFields.has('dur')) {
+      if (dist > 0 && dur > 0) setGPace(secToPace(dur / dist))
+    } else if (newUserFields.has('dist') && newUserFields.has('pace')) {
+      if (dist > 0 && pSec > 0) setGDurStr(fmtDuration(Math.round(dist * pSec)))
+    } else if (newUserFields.has('dur') && newUserFields.has('pace')) {
+      if (dur > 0 && pSec > 0) setGDistKm(String(Math.round((dur / pSec) * 10) / 10))
     }
   }
 
@@ -489,7 +527,7 @@ function GoalsSection({ sport }: { sport: Sport }) {
         name: gName.trim(), target: gTarget.trim() || undefined, target_date: gDate || undefined,
         distance_km: distNum, duration_s: durNum, linked_race_id: gLinkedRace || null,
       },
-      { onSuccess: () => { setShowModal(false); setGName(''); setGTarget(''); setGDate(''); setGDistKm(''); setGDurStr(''); setGPace(''); setGLinkedRace('') } },
+      { onSuccess: () => { setShowModal(false); setGName(''); setGTarget(''); setGDate(''); setGDistKm(''); setGDurStr(''); setGPace(''); setGLinkedRace(''); setPaceUserFields(new Set()) } },
     )
   }
 
@@ -572,28 +610,40 @@ function GoalsSection({ sport }: { sport: Sport }) {
                 <Field label="Distância (km)">
                   <input
                     value={gDistKm}
-                    onChange={(e) => { setGDistKm(e.target.value); computeThird('dist', e.target.value) }}
+                    readOnly={paceComputedField === 'dist'}
+                    onChange={(e) => handlePaceInput('dist', e.target.value)}
                     placeholder="42.2"
                     className={inputCls}
-                    style={{ minHeight: 36, fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}
+                    style={{
+                      minHeight: 36, fontFamily: 'JetBrains Mono, monospace', fontSize: 12,
+                      ...(paceComputedField === 'dist' ? { background: '#1e1e1e', color: '#666', cursor: 'default' } : {}),
+                    }}
                   />
                 </Field>
                 <Field label="Tempo (h:mm:ss)">
                   <input
                     value={gDurStr}
-                    onChange={(e) => { setGDurStr(e.target.value); computeThird('dur', e.target.value) }}
+                    readOnly={paceComputedField === 'dur'}
+                    onChange={(e) => handlePaceInput('dur', e.target.value)}
                     placeholder="3:00:00"
                     className={inputCls}
-                    style={{ minHeight: 36, fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}
+                    style={{
+                      minHeight: 36, fontFamily: 'JetBrains Mono, monospace', fontSize: 12,
+                      ...(paceComputedField === 'dur' ? { background: '#1e1e1e', color: '#666', cursor: 'default' } : {}),
+                    }}
                   />
                 </Field>
                 <Field label="Pace (/km)">
                   <input
                     value={gPace}
-                    onChange={(e) => { setGPace(e.target.value); computeThird('pace', e.target.value) }}
+                    readOnly={paceComputedField === 'pace'}
+                    onChange={(e) => handlePaceInput('pace', e.target.value)}
                     placeholder="4:16/km"
                     className={inputCls}
-                    style={{ minHeight: 36, fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}
+                    style={{
+                      minHeight: 36, fontFamily: 'JetBrains Mono, monospace', fontSize: 12,
+                      ...(paceComputedField === 'pace' ? { background: '#1e1e1e', color: '#666', cursor: 'default' } : {}),
+                    }}
                   />
                 </Field>
               </div>
@@ -839,7 +889,7 @@ function SportShoppingSection({ sport }: { sport: Sport }) {
                 )}
               </button>
               <span className={`flex-1 text-sm ${item.done ? 'line-through text-ink-3' : 'text-ink'}`}>
-                {item.name}
+                {item.title}
               </span>
               <button
                 onClick={() => deleteItem.mutate(item.id)}

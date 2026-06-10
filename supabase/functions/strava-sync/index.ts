@@ -4,7 +4,7 @@
  * Required secrets: STRAVA_CLIENT_ID, STRAVA_CLIENT_SECRET, TOKEN_ENCRYPTION_KEY
  * Called by frontend (authenticated). Returns: { imported: number }
  */
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -189,7 +189,7 @@ Deno.serve(async (req: Request) => {
 
     /* Get existing strava notes to avoid duplicates */
     const { data: existing } = await admin
-      .from('workouts').select('notes')
+      .from('sports').select('notes')
       .eq('user_id', user.id)
       .like('notes', 'strava:%')
 
@@ -202,7 +202,7 @@ Deno.serve(async (req: Request) => {
       .filter(a => !existingIds.has(String(a.id)))
       .map(a => {
         const mapped       = mapActivityType(a.type)
-        const workout_date = (a.start_date_local ?? '').slice(0, 10) || new Date().toISOString().slice(0, 10)
+        const sport_date = (a.start_date_local ?? '').slice(0, 10) || new Date().toISOString().slice(0, 10)
         const distance_m   = Math.round(a.distance ?? 0)
         const duration_s   = a.moving_time ?? 0
         // For musculacao, distance is irrelevant — set 0 and skip pace
@@ -210,19 +210,19 @@ Deno.serve(async (req: Request) => {
           ? null
           : calcPace(distance_m, duration_s)
         return {
-          user_id:      user.id,
-          sport:        mapped.sport,
-          kind:         mapped.kind,
-          distance_m:   distance_m,
-          duration_s:   duration_s,
+          user_id:    user.id,
+          sport:      mapped.sport,
+          kind:       mapped.kind,
+          distance_m: distance_m || null,
+          duration_s: duration_s,
           pace_label,
-          workout_date,
-          notes:        `strava:${a.id}`,
+          sport_date,
+          notes:      `strava:${a.id}`,
         }
       })
 
     if (toInsert.length > 0) {
-      const { error: insertErr } = await admin.from('workouts').insert(toInsert)
+      const { error: insertErr } = await admin.from('sports').insert(toInsert)
       if (insertErr) {
         console.error('[strava-sync] insert error:', insertErr)
         return json({ error: `DB insert failed: ${insertErr.message}` }, 500)
@@ -231,9 +231,9 @@ Deno.serve(async (req: Request) => {
 
     /* Sample for debug */
     const { data: sample } = await admin
-      .from('workouts').select('sport, kind, workout_date, distance_m, notes')
+      .from('sports').select('sport, kind, sport_date, distance_m, notes')
       .eq('user_id', user.id).like('notes', 'strava:%')
-      .order('workout_date', { ascending: false }).limit(5)
+      .order('sport_date', { ascending: false }).limit(5)
     console.log('[strava-sync] sample workouts after insert:', sample)
 
     return json({ imported: toInsert.length, total_fetched: activities.length })

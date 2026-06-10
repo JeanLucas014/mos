@@ -2,19 +2,19 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import type { Database } from '../types/db'
 
-type Workout = Database['public']['Tables']['workouts']['Row']
+type Workout = Database['public']['Tables']['sports']['Row']
 
 export function useWorkouts(sport: string) {
   const qc = useQueryClient()
-  const key = ['workouts', sport]
+  const key = ['sports', sport]
 
   const query = useQuery({
     queryKey: key,
     queryFn: async () => {
-      const { data, error } = await (supabase.from('workouts') as any)
+      const { data, error } = await (supabase.from('sports') as any)
         .select('*')
         .eq('sport', sport)
-        .order('workout_date', { ascending: false })
+        .order('sport_date', { ascending: false })
       if (error) throw error
       return data as Workout[]
     },
@@ -22,10 +22,12 @@ export function useWorkouts(sport: string) {
 
   const addWorkout = useMutation({
     mutationFn: async (w: Omit<Workout, 'id' | 'user_id' | 'created_at'>) => {
-      const { data, error } = await (supabase.from('workouts') as any)
+      console.log('[sports_insert] payload:', w)
+      const { data, error } = await (supabase.from('sports') as any)
         .insert(w)
         .select()
         .single()
+      console.log('[sports_insert] result:', data, error)
       if (error) throw error
       return data as Workout
     },
@@ -36,7 +38,7 @@ export function useWorkouts(sport: string) {
 
   const deleteWorkout = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await (supabase.from('workouts') as any).delete().eq('id', id)
+      const { error } = await (supabase.from('sports') as any).delete().eq('id', id)
       if (error) throw error
     },
     onMutate: async (id) => {

@@ -23,7 +23,7 @@ export function useSportShopping(sport: string) {
   const addItem = useMutation({
     mutationFn: async (name: string) => {
       const { data, error } = await (supabase.from('sport_shopping') as any)
-        .insert({ sport, name, done: false })
+        .insert({ sport, title: name, done: false })
         .select()
         .single()
       if (error) throw error
