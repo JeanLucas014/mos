@@ -22,9 +22,9 @@ export function useGoalItems(goalId: string) {
   })
 
   const addItem = useMutation({
-    mutationFn: async (text: string) => {
+    mutationFn: async (title: string) => {
       const { data, error } = await (supabase.from('goal_items') as any)
-        .insert({ goal_id: goalId, text })
+        .insert({ goal_id: goalId, title, done: false })
         .select().single()
       if (error) throw error
       return data as GoalItem

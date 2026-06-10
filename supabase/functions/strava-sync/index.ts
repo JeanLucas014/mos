@@ -34,27 +34,77 @@ async function encrypt(plaintext: string, secret: string): Promise<string> {
   return btoa(String.fromCharCode(...out))
 }
 
-/* ── Mapping ───────────────────────────────────────────────────── */
+/* ── Activity type mapping ─────────────────────────────────────── */
 function mapActivityType(type: string): { sport: string; kind: string } {
-  const t = type.toLowerCase()
-  // Running variants
-  if (['run', 'virtualrun', 'trailrun'].includes(t)) return { sport: 'corrida', kind: 'easy' }
-  // Swimming
-  if (t === 'swim') return { sport: 'triathlon', kind: 'natação' }
-  // Cycling
-  if (['ride', 'virtualride', 'mountainbikeride', 'ebikeride', 'handcycle'].includes(t)) return { sport: 'triathlon', kind: 'bike' }
-  // Triathlon
-  if (t === 'triathlon') return { sport: 'triathlon', kind: 'tijolo' }
-  // Strength / cross-training → log as corrida/easy so they appear in the list
-  if (['weighttraining', 'workout', 'crossfit', 'yoga', 'pilates', 'elliptical', 'stairstepper'].includes(t)) return { sport: 'corrida', kind: 'easy' }
-  // Catch-all: import everything so nothing is silently dropped
-  return { sport: 'corrida', kind: 'easy' }
+  switch (type) {
+    case 'Run':
+      return { sport: 'corrida', kind: 'easy' }
+    case 'TrailRun':
+      return { sport: 'corrida', kind: 'long' }
+    case 'Ride':
+    case 'VirtualRide':
+    case 'MountainBikeRide':
+    case 'EBikeRide':
+    case 'Handcycle':
+      return { sport: 'triathlon', kind: 'bike' }
+    case 'Swim':
+      return { sport: 'triathlon', kind: 'natação' }
+    case 'Triathlon':
+      return { sport: 'triathlon', kind: 'tijolo' }
+    case 'WeightTraining':
+    case 'Workout':
+    case 'Crossfit':
+    case 'Yoga':
+    case 'Pilates':
+    case 'Elliptical':
+      return { sport: 'musculacao', kind: 'full_body' }
+    case 'Walk':
+    case 'Hike':
+    case 'VirtualRun':
+      return { sport: 'corrida', kind: 'easy' }
+    default:
+      return { sport: 'corrida', kind: 'easy' }
+  }
 }
 
 function calcPace(distance_m: number, duration_s: number): string {
   if (!distance_m || !duration_s) return '—'
   const secPerKm = duration_s / (distance_m / 1000)
   return `${Math.floor(secPerKm / 60)}:${String(Math.round(secPerKm % 60)).padStart(2, '0')}/km`
+}
+
+/* ── Fetch all activities with pagination ─────────────────────── */
+async function fetchAllActivities(accessToken: string): Promise<Array<{
+  id: number
+  name: string
+  type: string
+  distance: number
+  moving_time: number
+  start_date_local: string
+}>> {
+  const all: Array<{
+    id: number; name: string; type: string
+    distance: number; moving_time: number; start_date_local: string
+  }> = []
+
+  const MAX_PAGES   = 3
+  const PER_PAGE    = 200
+
+  for (let page = 1; page <= MAX_PAGES; page++) {
+    const url = `https://www.strava.com/api/v3/athlete/activities?per_page=${PER_PAGE}&page=${page}`
+    const resp = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } })
+    if (!resp.ok) {
+      console.error('[strava-sync] activities fetch error page', page, await resp.text())
+      break
+    }
+    const batch = await resp.json() as typeof all
+    console.log(`[strava-sync] page ${page}: ${batch.length} activities`)
+    if (!batch.length) break
+    all.push(...batch)
+    if (batch.length < PER_PAGE) break  // last page
+  }
+
+  return all
 }
 
 Deno.serve(async (req: Request) => {
@@ -100,7 +150,6 @@ Deno.serve(async (req: Request) => {
     if (Date.now() < expiresAt - 60_000) {
       accessToken = await decrypt(integration.access_token_cipher!, encKey)
     } else {
-      /* Refresh token */
       if (!integration.refresh_token_cipher) return json({ error: 'No refresh token' }, 400)
       const refreshToken = await decrypt(integration.refresh_token_cipher, encKey)
       const refreshResp  = await fetch('https://www.strava.com/oauth/token', {
@@ -124,28 +173,14 @@ Deno.serve(async (req: Request) => {
       }).eq('user_id', user.id).eq('provider', 'strava')
     }
 
-    /* Fetch activities */
-    const activitiesResp = await fetch(
-      'https://www.strava.com/api/v3/athlete/activities?per_page=30',
-      { headers: { Authorization: `Bearer ${accessToken}` } },
-    )
-    if (!activitiesResp.ok) return json({ error: 'Strava API error' }, 502)
+    /* Fetch all activities (paginated) */
+    const activities = await fetchAllActivities(accessToken)
+    console.log(`[strava-sync] total activities fetched: ${activities.length}`)
 
-    const activities = await activitiesResp.json() as Array<{
-      id: number
-      name: string
-      type: string
-      distance: number       // metres
-      moving_time: number    // seconds
-      start_date_local: string // ISO 8601 local time
-    }>
-
-    // DEBUG: log first 3 activities to verify mapping + dates
+    /* Log first 3 for debugging */
     console.log('[strava-sync] first 3 activities:',
       activities.slice(0, 3).map(a => ({
-        id: a.id,
-        name: a.name,
-        type: a.type,
+        id: a.id, name: a.name, type: a.type,
         date: a.start_date_local?.slice(0, 10),
         dist: a.distance,
         mapped: mapActivityType(a.type),
@@ -162,25 +197,29 @@ Deno.serve(async (req: Request) => {
       w.notes?.replace('strava:', ''),
     ))
 
-    /* Insert new activities */
+    /* Build insert array */
     const toInsert = activities
+      .filter(a => !existingIds.has(String(a.id)))
       .map(a => {
-        const mapped = mapActivityType(a.type)
-        if (existingIds.has(String(a.id))) return null
-        // workout_date: use start_date_local (local timezone, YYYY-MM-DD)
+        const mapped       = mapActivityType(a.type)
         const workout_date = (a.start_date_local ?? '').slice(0, 10) || new Date().toISOString().slice(0, 10)
+        const distance_m   = Math.round(a.distance ?? 0)
+        const duration_s   = a.moving_time ?? 0
+        // For musculacao, distance is irrelevant — set 0 and skip pace
+        const pace_label   = mapped.sport === 'musculacao' || distance_m === 0
+          ? null
+          : calcPace(distance_m, duration_s)
         return {
           user_id:      user.id,
           sport:        mapped.sport,
           kind:         mapped.kind,
-          distance_m:   Math.round(a.distance),
-          duration_s:   a.moving_time,
-          pace_label:   calcPace(a.distance, a.moving_time),
+          distance_m:   distance_m,
+          duration_s:   duration_s,
+          pace_label,
           workout_date,
           notes:        `strava:${a.id}`,
         }
       })
-      .filter(Boolean)
 
     if (toInsert.length > 0) {
       const { error: insertErr } = await admin.from('workouts').insert(toInsert)
@@ -190,14 +229,14 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // DEBUG: verify what's now in workouts table for this user
+    /* Sample for debug */
     const { data: sample } = await admin
       .from('workouts').select('sport, kind, workout_date, distance_m, notes')
       .eq('user_id', user.id).like('notes', 'strava:%')
-      .order('workout_date', { ascending: false }).limit(3)
+      .order('workout_date', { ascending: false }).limit(5)
     console.log('[strava-sync] sample workouts after insert:', sample)
 
-    return json({ imported: toInsert.length })
+    return json({ imported: toInsert.length, total_fetched: activities.length })
   } catch (err) {
     console.error('[strava-sync]', err)
     return json({ error: String(err) }, 500)

@@ -22,10 +22,10 @@ export function useProjectChecklist(projectId: string) {
   })
 
   const addItem = useMutation({
-    mutationFn: async (text: string) => {
+    mutationFn: async (title: string) => {
       const position = (query.data?.length ?? 0)
       const { data, error } = await (supabase.from('project_checklist') as any)
-        .insert({ project_id: projectId, text, position })
+        .insert({ project_id: projectId, title, done: false, position })
         .select().single()
       if (error) throw error
       return data as CheckItem

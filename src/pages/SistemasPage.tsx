@@ -1,7 +1,7 @@
 import { useState, useRef, type FormEvent } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
-import { Plus, Edit2, Trash2, ExternalLink, Paperclip, X, Upload, ChevronDown, ChevronUp } from 'lucide-react'
+import { Plus, Edit2, Trash2, ExternalLink, Paperclip, X, Upload, ChevronDown, ChevronUp, Download } from 'lucide-react'
 
 /* ── Palette ─────────────────────────────────────────────────────── */
 const C = {
@@ -28,7 +28,7 @@ interface System {
   category: string
   status: string
   url: string | null
-  stack: string[] | null
+  tech_stack: string[] | null
   thumbnail_url: string | null
   created_at: string
 }
@@ -38,7 +38,8 @@ interface SystemFile {
   system_id: string
   name: string
   type: string
-  url: string
+  file_url: string
+  is_download: boolean
 }
 
 const CATEGORIES = ['App', 'API', 'Site', 'Dashboard', 'CLI', 'Library', 'Automação', 'Outro']
@@ -51,6 +52,30 @@ const STATUS_COLOR: Record<string, string> = {
   'Arquivado':         C.r,
 }
 
+/* ── Shared input style (dark) ───────────────────────────────────── */
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  background: '#1a1a1a',
+  border: '0.5px solid #2a2a2a',
+  borderRadius: 8,
+  color: '#e5e5e5',
+  fontSize: 13,
+  padding: '9px 11px',
+  outline: 'none',
+  boxSizing: 'border-box',
+  fontFamily: 'Manrope, sans-serif',
+}
+
+const btnStyle: React.CSSProperties = {
+  borderRadius: 8,
+  border: 'none',
+  padding: '8px 18px',
+  fontWeight: 600,
+  fontSize: 13,
+  cursor: 'pointer',
+  fontFamily: 'Manrope, sans-serif',
+}
+
 /* ── Hooks ───────────────────────────────────────────────────────── */
 function useSystems() {
   const qc = useQueryClient()
@@ -58,8 +83,7 @@ function useSystems() {
   const query = useQuery({
     queryKey: ['systems'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('systems')
+      const { data, error } = await (supabase.from('systems') as any)
         .select('*')
         .order('created_at', { ascending: false })
       if (error) throw error
@@ -69,7 +93,6 @@ function useSystems() {
 
   const add = useMutation<void, Error, Omit<System, 'id' | 'created_at'>>({
     mutationFn: async (payload) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase.from('systems') as any).insert(payload)
       if (error) throw error
     },
@@ -78,7 +101,6 @@ function useSystems() {
 
   const update = useMutation<void, Error, Partial<System> & { id: string }>({
     mutationFn: async ({ id, ...payload }) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase.from('systems') as any).update(payload).eq('id', id)
       if (error) throw error
     },
@@ -87,7 +109,6 @@ function useSystems() {
 
   const remove = useMutation<void, Error, string>({
     mutationFn: async (id) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase.from('systems') as any).delete().eq('id', id)
       if (error) throw error
     },
@@ -103,8 +124,7 @@ function useSystemFiles(systemId: string) {
   const query = useQuery({
     queryKey: ['system_files', systemId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('system_files')
+      const { data, error } = await (supabase.from('system_files') as any)
         .select('*')
         .eq('system_id', systemId)
         .order('created_at', { ascending: true })
@@ -113,9 +133,8 @@ function useSystemFiles(systemId: string) {
     },
   })
 
-  const add = useMutation<void, Error, { name: string; type: string; url: string }>({
+  const add = useMutation<void, Error, { name: string; type: string; file_url: string; is_download: boolean }>({
     mutationFn: async (payload) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase.from('system_files') as any).insert({ ...payload, system_id: systemId })
       if (error) throw error
     },
@@ -124,7 +143,6 @@ function useSystemFiles(systemId: string) {
 
   const remove = useMutation<void, Error, string>({
     mutationFn: async (id) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase.from('system_files') as any).delete().eq('id', id)
       if (error) throw error
     },
@@ -134,10 +152,10 @@ function useSystemFiles(systemId: string) {
   return { query, add, remove }
 }
 
-/* ── Thumbnail upload ─────────────────────────────────────────────── */
-async function uploadThumbnail(file: File): Promise<string> {
+/* ── Storage uploads ──────────────────────────────────────────────── */
+async function uploadToStorage(file: File, folder: string): Promise<string> {
   const ext  = file.name.split('.').pop()
-  const path = `thumbnails/${Date.now()}.${ext}`
+  const path = `${folder}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
   const { error } = await supabase.storage.from('systems').upload(path, file, { upsert: true })
   if (error) throw error
   const { data } = supabase.storage.from('systems').getPublicUrl(path)
@@ -153,15 +171,15 @@ function SystemModal({
   onClose: () => void
 }) {
   const { add, update } = useSystems()
-  const [name,        setName]        = useState(initial?.name ?? '')
-  const [description, setDescription] = useState(initial?.description ?? '')
-  const [category,    setCategory]    = useState(initial?.category ?? 'App')
-  const [status,      setStatus]      = useState(initial?.status ?? 'Ativo')
-  const [url,         setUrl]         = useState(initial?.url ?? '')
-  const [stackRaw,    setStackRaw]    = useState((initial?.stack ?? []).join(', '))
-  const [thumbUrl,    setThumbUrl]    = useState(initial?.thumbnail_url ?? '')
-  const [uploading,   setUploading]   = useState(false)
-  const [err,         setErr]         = useState<string | null>(null)
+  const [name,         setName]         = useState(initial?.name ?? '')
+  const [description,  setDescription]  = useState(initial?.description ?? '')
+  const [category,     setCategory]     = useState(initial?.category ?? 'App')
+  const [status,       setStatus]       = useState(initial?.status ?? 'Ativo')
+  const [url,          setUrl]          = useState(initial?.url ?? '')
+  const [techStackRaw, setTechStackRaw] = useState((initial?.tech_stack ?? []).join(', '))
+  const [thumbUrl,     setThumbUrl]     = useState(initial?.thumbnail_url ?? '')
+  const [uploading,    setUploading]    = useState(false)
+  const [err,          setErr]          = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const isPending = add.isPending || update.isPending
@@ -171,10 +189,10 @@ function SystemModal({
     if (!file) return
     setUploading(true)
     try {
-      const url = await uploadThumbnail(file)
-      setThumbUrl(url)
-    } catch (e) {
-      setErr((e as Error).message)
+      const publicUrl = await uploadToStorage(file, 'thumbnails')
+      setThumbUrl(publicUrl)
+    } catch (ex) {
+      setErr((ex as Error).message)
     } finally {
       setUploading(false)
     }
@@ -184,25 +202,25 @@ function SystemModal({
     e.preventDefault()
     if (!name.trim()) return
     setErr(null)
-    const stack = stackRaw.split(',').map(s => s.trim()).filter(Boolean)
+    const tech_stack = techStackRaw.split(',').map(s => s.trim()).filter(Boolean)
     const payload = {
       name:          name.trim(),
       description:   description.trim() || null,
       category,
       status,
       url:           url.trim() || null,
-      stack:         stack.length ? stack : null,
+      tech_stack:    tech_stack.length ? tech_stack : null,
       thumbnail_url: thumbUrl || null,
     }
     if (initial) {
       update.mutate({ id: initial.id, ...payload }, {
         onSuccess: onClose,
-        onError: (e) => setErr((e as Error).message),
+        onError: (ex) => setErr((ex as Error).message),
       })
     } else {
       add.mutate(payload, {
         onSuccess: onClose,
-        onError: (e) => setErr((e as Error).message),
+        onError: (ex) => setErr((ex as Error).message),
       })
     }
   }
@@ -210,7 +228,7 @@ function SystemModal({
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 50,
-      background: 'rgba(0,0,0,.7)', display: 'flex',
+      background: 'rgba(0,0,0,.75)', display: 'flex',
       alignItems: 'center', justifyContent: 'center', padding: 16,
     }} onClick={onClose}>
       <div style={{
@@ -276,13 +294,13 @@ function SystemModal({
             <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <span style={{ fontSize: 11, color: C.dm, textTransform: 'uppercase', letterSpacing: '.06em' }}>Categoria</span>
               <select value={category} onChange={e => setCategory(e.target.value)} style={inputStyle}>
-                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                {CATEGORIES.map(c => <option key={c} value={c} style={{ background: '#1a1a1a' }}>{c}</option>)}
               </select>
             </label>
             <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <span style={{ fontSize: 11, color: C.dm, textTransform: 'uppercase', letterSpacing: '.06em' }}>Status</span>
               <select value={status} onChange={e => setStatus(e.target.value)} style={inputStyle}>
-                {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                {STATUSES.map(s => <option key={s} value={s} style={{ background: '#1a1a1a' }}>{s}</option>)}
               </select>
             </label>
           </div>
@@ -290,14 +308,14 @@ function SystemModal({
           {/* URL */}
           <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <span style={{ fontSize: 11, color: C.dm, textTransform: 'uppercase', letterSpacing: '.06em' }}>URL</span>
-            <input value={url} onChange={e => setUrl(e.target.value)} type="url"
+            <input value={url} onChange={e => setUrl(e.target.value)}
               style={inputStyle} placeholder="https://…" />
           </label>
 
-          {/* Stack */}
+          {/* Tech Stack */}
           <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <span style={{ fontSize: 11, color: C.dm, textTransform: 'uppercase', letterSpacing: '.06em' }}>Stack (vírgula)</span>
-            <input value={stackRaw} onChange={e => setStackRaw(e.target.value)}
+            <input value={techStackRaw} onChange={e => setTechStackRaw(e.target.value)}
               style={inputStyle} placeholder="React, TypeScript, Supabase" />
           </label>
 
@@ -322,21 +340,43 @@ function SystemModal({
 /* ── Files section (expandable) ──────────────────────────────────── */
 function FilesSection({ systemId }: { systemId: string }) {
   const { query, add, remove } = useSystemFiles(systemId)
-  const [open,    setOpen]    = useState(false)
-  const [name,    setName]    = useState('')
-  const [fileUrl, setFileUrl] = useState('')
-  const [type,    setType]    = useState('Link')
-  const [err,     setErr]     = useState<string | null>(null)
+  const [open,       setOpen]       = useState(false)
+  const [mode,       setMode]       = useState<'link' | 'upload'>('link')
+  const [name,       setName]       = useState('')
+  const [fileUrl,    setFileUrl]    = useState('')
+  const [fileType,   setFileType]   = useState('Link')
+  const [uploading,  setUploading]  = useState(false)
+  const [err,        setErr]        = useState<string | null>(null)
+  const uploadRef = useRef<HTMLInputElement>(null)
 
   const files = query.data ?? []
 
-  function handleAdd(e: FormEvent) {
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    setErr(null)
+    try {
+      const publicUrl = await uploadToStorage(file, 'files')
+      const autoName  = name.trim() || file.name
+      add.mutate({ name: autoName, type: fileType, file_url: publicUrl, is_download: true }, {
+        onSuccess: () => { setName(''); setFileUrl(''); if (uploadRef.current) uploadRef.current.value = '' },
+        onError: (ex) => setErr((ex as Error).message),
+      })
+    } catch (ex) {
+      setErr((ex as Error).message)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  function handleAddLink(e: FormEvent) {
     e.preventDefault()
     if (!name.trim() || !fileUrl.trim()) return
     setErr(null)
-    add.mutate({ name: name.trim(), url: fileUrl.trim(), type }, {
+    add.mutate({ name: name.trim(), file_url: fileUrl.trim(), type: fileType, is_download: false }, {
       onSuccess: () => { setName(''); setFileUrl('') },
-      onError: (e) => setErr((e as Error).message),
+      onError: (ex) => setErr((ex as Error).message),
     })
   }
 
@@ -358,35 +398,77 @@ function FilesSection({ systemId }: { systemId: string }) {
           {files.map(f => (
             <div key={f.id} style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '5px 0', borderBottom: '1px solid ' + C.border,
+              padding: '6px 0', borderBottom: '1px solid ' + C.border,
             }}>
-              <a href={f.url} target="_blank" rel="noopener noreferrer"
-                style={{ fontSize: 12, color: C.b, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
-                <ExternalLink size={10} />
-                {f.name}
-                <span style={{ fontSize: 10, color: C.dm2, marginLeft: 4 }}>{f.type}</span>
-              </a>
-              <button onClick={() => remove.mutate(f.id)}
-                style={{ background: 'none', border: 'none', color: C.dm2, cursor: 'pointer', padding: 2 }}>
-                <X size={12} />
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 }}>
+                <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 6, background: C.card2, color: C.dm2, flexShrink: 0 }}>{f.type}</span>
+                <span style={{ fontSize: 12, color: C.ink2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
+              </div>
+              <div style={{ display: 'flex', gap: 6, flexShrink: 0, marginLeft: 8 }}>
+                <a href={f.file_url} target="_blank" rel="noopener noreferrer" download={f.is_download ? f.name : undefined}
+                  style={{
+                    fontSize: 11, color: C.b, textDecoration: 'none',
+                    display: 'flex', alignItems: 'center', gap: 3,
+                    padding: '3px 8px', borderRadius: 5,
+                    background: C.b + '18', border: '1px solid ' + C.b + '33',
+                  }}>
+                  {f.is_download ? <><Download size={10} /> Baixar</> : <><ExternalLink size={10} /> Abrir</>}
+                </a>
+                <button onClick={() => remove.mutate(f.id)}
+                  style={{ background: 'none', border: 'none', color: C.dm2, cursor: 'pointer', padding: 4 }}>
+                  <X size={12} />
+                </button>
+              </div>
             </div>
           ))}
 
-          <form onSubmit={handleAdd} style={{ display: 'flex', gap: 6, marginTop: 8, alignItems: 'center' }}>
-            <input value={name} onChange={e => setName(e.target.value)}
-              placeholder="Nome" style={{ ...inputStyle, fontSize: 11, padding: '5px 8px', flex: '0 0 100px' }} />
-            <input value={fileUrl} onChange={e => setFileUrl(e.target.value)}
-              placeholder="URL" style={{ ...inputStyle, fontSize: 11, padding: '5px 8px', flex: 1 }} />
-            <select value={type} onChange={e => setType(e.target.value)}
-              style={{ ...inputStyle, fontSize: 11, padding: '5px 8px', flex: '0 0 68px' }}>
-              {['Link', 'Repo', 'Doc', 'Design', 'Video', 'Outro'].map(t => <option key={t}>{t}</option>)}
-            </select>
-            <button type="submit" disabled={add.isPending}
-              style={{ ...btnStyle, fontSize: 11, padding: '5px 10px', background: C.b, color: '#fff', flexShrink: 0 }}>
-              +
-            </button>
-          </form>
+          {/* Mode toggle */}
+          <div style={{ display: 'flex', gap: 6, marginTop: 10, marginBottom: 8 }}>
+            {(['link', 'upload'] as const).map(m => (
+              <button key={m} type="button" onClick={() => setMode(m)}
+                style={{
+                  fontSize: 11, padding: '4px 10px', borderRadius: 6, cursor: 'pointer',
+                  background: mode === m ? C.b + '20' : 'transparent',
+                  border: mode === m ? '1px solid ' + C.b + '50' : '1px solid ' + C.border,
+                  color: mode === m ? C.b : C.dm,
+                }}>
+                {m === 'link' ? '🔗 Link' : '📎 Arquivo'}
+              </button>
+            ))}
+          </div>
+
+          {mode === 'link' ? (
+            <form onSubmit={handleAddLink} style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+              <input value={name} onChange={e => setName(e.target.value)}
+                placeholder="Nome" style={{ ...inputStyle, fontSize: 11, padding: '5px 8px', flex: '0 0 100px' }} />
+              <input value={fileUrl} onChange={e => setFileUrl(e.target.value)}
+                placeholder="URL" style={{ ...inputStyle, fontSize: 11, padding: '5px 8px', flex: 1 }} />
+              <select value={fileType} onChange={e => setFileType(e.target.value)}
+                style={{ ...inputStyle, fontSize: 11, padding: '5px 8px', flex: '0 0 68px' }}>
+                {['Link', 'Repo', 'Doc', 'Design', 'Video', 'Outro'].map(t => <option key={t} style={{ background: '#1a1a1a' }}>{t}</option>)}
+              </select>
+              <button type="submit" disabled={add.isPending}
+                style={{ ...btnStyle, fontSize: 11, padding: '5px 10px', background: C.b, color: '#fff', flexShrink: 0 }}>
+                +
+              </button>
+            </form>
+          ) : (
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+              <input value={name} onChange={e => setName(e.target.value)}
+                placeholder="Nome (opcional)" style={{ ...inputStyle, fontSize: 11, padding: '5px 8px', flex: '0 0 130px' }} />
+              <select value={fileType} onChange={e => setFileType(e.target.value)}
+                style={{ ...inputStyle, fontSize: 11, padding: '5px 8px', flex: '0 0 68px' }}>
+                {['Doc', 'PDF', 'ZIP', 'IMG', 'Video', 'Outro'].map(t => <option key={t} style={{ background: '#1a1a1a' }}>{t}</option>)}
+              </select>
+              <button type="button" onClick={() => uploadRef.current?.click()} disabled={uploading}
+                style={{ ...btnStyle, fontSize: 11, padding: '5px 12px', background: C.g + '20', color: C.g, border: '1px solid ' + C.g + '40', flexShrink: 0 }}>
+                {uploading ? 'Enviando…' : '↑ Enviar'}
+              </button>
+              <input ref={uploadRef} type="file"
+                accept=".zip,.pdf,.docx,.doc,.png,.jpg,.jpeg,.gif,.svg,.txt,.csv,.xlsx"
+                style={{ display: 'none' }} onChange={handleFileUpload} />
+            </div>
+          )}
           {err && <div style={{ fontSize: 10, color: C.r, marginTop: 4 }}>{err}</div>}
         </div>
       )}
@@ -396,7 +478,7 @@ function FilesSection({ systemId }: { systemId: string }) {
 
 /* ── System Card ─────────────────────────────────────────────────── */
 function SystemCard({ sys, onEdit, onDelete }: { sys: System; onEdit: () => void; onDelete: () => void }) {
-  const stack = sys.stack ?? []
+  const techStack = sys.tech_stack ?? []
 
   return (
     <div style={{
@@ -469,10 +551,10 @@ function SystemCard({ sys, onEdit, onDelete }: { sys: System; onEdit: () => void
           </div>
         )}
 
-        {/* Stack tags */}
-        {stack.length > 0 && (
+        {/* Tech stack tags */}
+        {techStack.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 10 }}>
-            {stack.map(tag => (
+            {techStack.map(tag => (
               <span key={tag} style={{
                 fontSize: 10, padding: '2px 7px', borderRadius: 20,
                 background: C.b + '18', color: C.b,
@@ -487,30 +569,6 @@ function SystemCard({ sys, onEdit, onDelete }: { sys: System; onEdit: () => void
       </div>
     </div>
   )
-}
-
-/* ── Shared styles ───────────────────────────────────────────────── */
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  background: '#0f0f0f',
-  border: '1px solid #262626',
-  borderRadius: 8,
-  color: '#e5e5e5',
-  fontSize: 13,
-  padding: '8px 10px',
-  outline: 'none',
-  boxSizing: 'border-box',
-  fontFamily: 'Manrope, sans-serif',
-}
-
-const btnStyle: React.CSSProperties = {
-  borderRadius: 8,
-  border: 'none',
-  padding: '8px 18px',
-  fontWeight: 600,
-  fontSize: 13,
-  cursor: 'pointer',
-  fontFamily: 'Manrope, sans-serif',
 }
 
 /* ── Page ────────────────────────────────────────────────────────── */

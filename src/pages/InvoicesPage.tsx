@@ -353,9 +353,9 @@ function useMotoRevenue(year: number, month: number) {
     queryFn: async () => {
       const { data, error } = await (supabase.from('moto_revenue') as any)
         .select('*')
-        .gte('record_date', from)
-        .lte('record_date', to)
-        .order('record_date', { ascending: true })
+        .gte('revenue_date', from)
+        .lte('revenue_date', to)
+        .order('revenue_date', { ascending: true })
         .order('created_at', { ascending: true })
       if (error) throw error
       return (data ?? []) as MotoRecord[]
@@ -363,10 +363,12 @@ function useMotoRevenue(year: number, month: number) {
   })
 
   const addRecord = useMutation({
-    mutationFn: async (r: { record_date: string; type: string; category: string; description: string; amount_cents: number; notes?: string }) => {
-      const { error } = await (supabase.from('moto_revenue') as any).insert(r)
+    mutationFn: async (r: { revenue_date: string; kind: string; category: string; description: string; amount_cents: number; notes?: string }) => {
+      const { data, error } = await (supabase.from('moto_revenue') as any).insert(r).select().single()
+      console.log('[moto_insert]', data, error)
       if (error) throw error
     },
+    onSuccess: () => qc.invalidateQueries({ queryKey: key }),
     onSettled: () => qc.invalidateQueries({ queryKey: key }),
   })
 
@@ -392,7 +394,7 @@ function useMotoRevenue(year: number, month: number) {
 function MotoAddModal({
   date, onClose,
   onSave,
-}: { date: string; onClose: () => void; onSave: (r: { record_date: string; type: string; category: string; description: string; amount_cents: number; notes?: string }) => void }) {
+}: { date: string; onClose: () => void; onSave: (r: { revenue_date: string; kind: string; category: string; description: string; amount_cents: number; notes?: string }) => void }) {
   const [type,     setType]     = useState<'entrada' | 'gasto'>('entrada')
   const [category, setCategory] = useState(ENTRADA_CATS[0])
   const [desc,     setDesc]     = useState('')
@@ -413,15 +415,16 @@ function MotoAddModal({
     const cents = Math.round(parseFloat(amount.replace(',', '.')) * 100)
     if (isNaN(cents) || cents <= 0) { setErr('Valor inválido'); return }
     setErr(''); setSaving(true)
-    onSave({ record_date: date, type, category, description: desc.trim(), amount_cents: cents, notes: notes.trim() || undefined })
+    onSave({ revenue_date: date, kind: type, category, description: desc.trim(), amount_cents: cents, notes: notes.trim() || undefined })
     setSaving(false)
   }
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 640
   const fs: React.CSSProperties = {
     width: '100%', boxSizing: 'border-box', marginBottom: 10,
-    background: 'rgba(255,255,255,.05)', border: '1px solid ' + C.border,
+    background: '#1a1a1a', border: '0.5px solid #2a2a2a',
     borderRadius: 8, padding: '10px 12px', color: C.tx, fontSize: 13, outline: 'none',
+    fontFamily: 'Manrope, sans-serif',
   }
 
   const [y, m, d] = date.split('-')
@@ -497,8 +500,8 @@ function MotoTab() {
   const isCurrentMonth = year === today.getFullYear() && month === today.getMonth()
 
   /* summary */
-  const entradas  = records.filter(r => r.type === 'entrada').reduce((s, r) => s + r.amount_cents, 0)
-  const gastos    = records.filter(r => r.type === 'gasto').reduce((s, r) => s + r.amount_cents, 0)
+  const entradas  = records.filter(r => r.kind === 'entrada').reduce((s, r) => s + r.amount_cents, 0)
+  const gastos    = records.filter(r => r.kind === 'gasto').reduce((s, r) => s + r.amount_cents, 0)
   const resultado = entradas - gastos
 
   /* build weeks: groups of 7 days starting day 1 */
@@ -518,7 +521,7 @@ function MotoTab() {
 
   /* by-day map */
   const byDay = records.reduce<Record<string, MotoRecord[]>>((acc, r) => {
-    ;(acc[r.record_date] ??= []).push(r)
+    ;(acc[r.revenue_date] ??= []).push(r)
     return acc
   }, {})
 
@@ -538,8 +541,8 @@ function MotoTab() {
 
   function weekTotals(days: string[]) {
     const recs = days.flatMap(d => byDay[d] ?? [])
-    const e = recs.filter(r => r.type === 'entrada').reduce((s, r) => s + r.amount_cents, 0)
-    const g = recs.filter(r => r.type === 'gasto').reduce((s, r) => s + r.amount_cents, 0)
+    const e = recs.filter(r => r.kind === 'entrada').reduce((s, r) => s + r.amount_cents, 0)
+    const g = recs.filter(r => r.kind === 'gasto').reduce((s, r) => s + r.amount_cents, 0)
     return { e, g, res: e - g }
   }
 
@@ -607,8 +610,8 @@ function MotoTab() {
                   <div style={{ borderTop:'1px solid '+C.border }}>
                     {days.map(dateStr => {
                       const dayRecs = byDay[dateStr] ?? []
-                      const dayE = dayRecs.filter(r => r.type === 'entrada').reduce((s, r) => s + r.amount_cents, 0)
-                      const dayG = dayRecs.filter(r => r.type === 'gasto').reduce((s, r) => s + r.amount_cents, 0)
+                      const dayE = dayRecs.filter(r => r.kind === 'entrada').reduce((s, r) => s + r.amount_cents, 0)
+                      const dayG = dayRecs.filter(r => r.kind === 'gasto').reduce((s, r) => s + r.amount_cents, 0)
                       const dayRes = dayE - dayG
                       const isToday = dateStr === todayStr
                       const isDayExpanded = expandedDay === dateStr
@@ -642,12 +645,12 @@ function MotoTab() {
                             <div style={{ background:'rgba(0,0,0,.2)', padding:'8px 16px 10px 32px' }}>
                               {dayRecs.map(r => (
                                 <div key={r.id} style={{ display:'flex', alignItems:'center', gap:8, paddingTop:5, paddingBottom:5, borderBottom:'1px solid rgba(255,255,255,.04)' }}>
-                                  <span style={{ fontSize:10, padding:'1px 6px', borderRadius:8, background: r.type==='entrada' ? 'rgba(52,211,153,.12)' : 'rgba(248,113,113,.12)', color: r.type==='entrada' ? C.g : C.r, flexShrink:0 }}>
+                                  <span style={{ fontSize:10, padding:'1px 6px', borderRadius:8, background: r.kind==='entrada' ? 'rgba(52,211,153,.12)' : 'rgba(248,113,113,.12)', color: r.kind==='entrada' ? C.g : C.r, flexShrink:0 }}>
                                     {r.category}
                                   </span>
                                   <span style={{ flex:1, fontSize:12, color:C.dm }}>{r.description}</span>
-                                  <span style={{ fontSize:12, fontFamily:'JetBrains Mono, monospace', fontWeight:700, color: r.type==='entrada' ? C.g : C.r, flexShrink:0 }}>
-                                    {r.type === 'entrada' ? '+' : '-'}{fmt(r.amount_cents)}
+                                  <span style={{ fontSize:12, fontFamily:'JetBrains Mono, monospace', fontWeight:700, color: r.kind==='entrada' ? C.g : C.r, flexShrink:0 }}>
+                                    {r.kind === 'entrada' ? '+' : '-'}{fmt(r.amount_cents)}
                                   </span>
                                   <button
                                     onClick={() => deleteRecord.mutate(r.id)}

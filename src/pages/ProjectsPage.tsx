@@ -119,7 +119,7 @@ function ChecklistSection({
             textDecoration: item.done ? 'line-through' : 'none',
             fontFamily: 'Manrope, sans-serif',
           }}>
-            {item.text}
+            {item.title}
           </span>
           <button
             onClick={() => deleteItem.mutate(item.id)}

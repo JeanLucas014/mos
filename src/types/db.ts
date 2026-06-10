@@ -149,7 +149,7 @@ export interface Database {
           id: string
           user_id: string
           project_id: string
-          text: string
+          title: string
           done: boolean
           position: number
           created_at: string
@@ -158,7 +158,7 @@ export interface Database {
           id?: string
           user_id?: string
           project_id: string
-          text: string
+          title: string
           done?: boolean
           position?: number
           created_at?: string
@@ -167,7 +167,7 @@ export interface Database {
           id?: string
           user_id?: string
           project_id?: string
-          text?: string
+          title?: string
           done?: boolean
           position?: number
           created_at?: string
@@ -207,7 +207,7 @@ export interface Database {
           id: string
           user_id: string
           goal_id: string
-          text: string
+          title: string
           done: boolean
           created_at: string
         }
@@ -215,7 +215,7 @@ export interface Database {
           id?: string
           user_id?: string
           goal_id: string
-          text: string
+          title: string
           done?: boolean
           created_at?: string
         }
@@ -223,7 +223,7 @@ export interface Database {
           id?: string
           user_id?: string
           goal_id?: string
-          text?: string
+          title?: string
           done?: boolean
           created_at?: string
         }
@@ -727,8 +727,8 @@ export interface Database {
         Row: {
           id: string
           user_id: string
-          record_date: string
-          type: string
+          revenue_date: string
+          kind: string
           category: string
           description: string
           amount_cents: number
@@ -738,8 +738,8 @@ export interface Database {
         Insert: {
           id?: string
           user_id?: string
-          record_date: string
-          type: string
+          revenue_date: string
+          kind: string
           category: string
           description: string
           amount_cents: number
@@ -749,8 +749,8 @@ export interface Database {
         Update: {
           id?: string
           user_id?: string
-          record_date?: string
-          type?: string
+          revenue_date?: string
+          kind?: string
           category?: string
           description?: string
           amount_cents?: number
@@ -767,7 +767,7 @@ export interface Database {
           category: string
           status: string
           url: string | null
-          stack: string[] | null
+          tech_stack: string[] | null
           thumbnail_url: string | null
           created_at: string
         }
@@ -779,7 +779,7 @@ export interface Database {
           category?: string
           status?: string
           url?: string | null
-          stack?: string[] | null
+          tech_stack?: string[] | null
           thumbnail_url?: string | null
           created_at?: string
         }
@@ -791,7 +791,7 @@ export interface Database {
           category?: string
           status?: string
           url?: string | null
-          stack?: string[] | null
+          tech_stack?: string[] | null
           thumbnail_url?: string | null
           created_at?: string
         }
@@ -803,7 +803,8 @@ export interface Database {
           system_id: string
           name: string
           type: string
-          url: string
+          file_url: string
+          is_download: boolean
           created_at: string
         }
         Insert: {
@@ -812,7 +813,8 @@ export interface Database {
           system_id: string
           name: string
           type?: string
-          url: string
+          file_url: string
+          is_download?: boolean
           created_at?: string
         }
         Update: {
@@ -821,7 +823,8 @@ export interface Database {
           system_id?: string
           name?: string
           type?: string
-          url?: string
+          file_url?: string
+          is_download?: boolean
           created_at?: string
         }
       }

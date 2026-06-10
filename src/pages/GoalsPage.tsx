@@ -88,7 +88,7 @@ function GoalItemsList({ goalId, onProgressChange }: { goalId: string; onProgres
                 )}
               </button>
               <span className={['flex-1 text-xs', item.done ? 'line-through text-ink-3' : 'text-ink'].join(' ')}>
-                {item.text}
+                {item.title}
               </span>
               <button
                 onClick={() => deleteItem.mutate(item.id)}
