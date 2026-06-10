@@ -1,4 +1,4 @@
-import { useState, useRef, type FormEvent } from 'react'
+import { useState, useRef, useEffect, type FormEvent } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { Plus, Edit2, Trash2, ExternalLink, Paperclip, X, Upload, ChevronDown, ChevronUp, Download } from 'lucide-react'
@@ -42,7 +42,7 @@ interface SystemFile {
   is_download: boolean | null
 }
 
-const CATEGORIES = ['App', 'API', 'Site', 'Dashboard', 'CLI', 'Library', 'Automação', 'Outro']
+const CATEGORIES = ['App', 'API', 'Site', 'Dashboard', 'CLI', 'Library', 'Automação', 'Ferramenta', 'Outro']
 const STATUSES   = ['Ativo', 'Em desenvolvimento', 'Pausado', 'Arquivado']
 
 const STATUS_COLOR: Record<string, string> = {
@@ -160,6 +160,51 @@ async function uploadToStorage(file: File, folder: string): Promise<string> {
   if (error) throw error
   const { data } = supabase.storage.from('systems').getPublicUrl(path)
   return data.publicUrl
+}
+
+/* ── Iframe Tool Modal (fullscreen) ─────────────────────────────── */
+function IframeModal({ title, url, onClose }: { title: string; url: string; onClose: () => void }) {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [onClose])
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 200,
+      display: 'flex', flexDirection: 'column',
+      background: '#0a0a0a',
+    }}>
+      {/* Header bar */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0 16px', height: 48, flexShrink: 0,
+        borderBottom: '1px solid #1f1f1f', background: '#111111',
+      }}>
+        <span style={{ fontWeight: 700, fontSize: 14, color: '#e5e5e5', fontFamily: 'Manrope, sans-serif' }}>
+          {title}
+        </span>
+        <button
+          onClick={onClose}
+          title="Fechar (ESC)"
+          style={{
+            background: 'none', border: 'none', color: '#888',
+            cursor: 'pointer', padding: 6, borderRadius: 6,
+            display: 'flex', alignItems: 'center',
+          }}
+        >
+          <X size={18} />
+        </button>
+      </div>
+      {/* Iframe */}
+      <iframe
+        src={url}
+        title={title}
+        style={{ flex: 1, width: '100%', border: 'none', display: 'block' }}
+      />
+    </div>
+  )
 }
 
 /* ── System Modal (add/edit) ─────────────────────────────────────── */
@@ -482,7 +527,14 @@ function FilesSection({ systemId }: { systemId: string }) {
 }
 
 /* ── System Card ─────────────────────────────────────────────────── */
-function SystemCard({ sys, onEdit, onDelete }: { sys: System; onEdit: () => void; onDelete: () => void }) {
+function SystemCard({
+  sys, onEdit, onDelete, onOpenTool,
+}: {
+  sys: System
+  onEdit: () => void
+  onDelete: () => void
+  onOpenTool: (title: string, url: string) => void
+}) {
   const techStack: string[] = Array.isArray(sys.tech_stack)
     ? sys.tech_stack
     : typeof sys.tech_stack === 'string' && sys.tech_stack
@@ -526,15 +578,29 @@ function SystemCard({ sys, onEdit, onDelete }: { sys: System; onEdit: () => void
           </div>
           <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
             {sys.url && (
-              <a href={sys.url} target="_blank" rel="noopener noreferrer"
-                style={{
-                  width: 28, height: 28, borderRadius: 7,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: C.b, background: C.card2 + '80', border: '1px solid ' + C.border,
-                  textDecoration: 'none',
-                }}>
-                <ExternalLink size={13} />
-              </a>
+              sys.url.startsWith('/') ? (
+                <button
+                  onClick={() => onOpenTool(sys.name, sys.url!)}
+                  title="Abrir ferramenta"
+                  style={{
+                    width: 28, height: 28, borderRadius: 7, border: '1px solid ' + C.border,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: C.g, background: C.card2 + '80', cursor: 'pointer',
+                  }}
+                >
+                  <ExternalLink size={13} />
+                </button>
+              ) : (
+                <a href={sys.url} target="_blank" rel="noopener noreferrer"
+                  style={{
+                    width: 28, height: 28, borderRadius: 7,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: C.b, background: C.card2 + '80', border: '1px solid ' + C.border,
+                    textDecoration: 'none',
+                  }}>
+                  <ExternalLink size={13} />
+                </a>
+              )
             )}
             <button onClick={onEdit} style={{
               width: 28, height: 28, borderRadius: 7, border: '1px solid ' + C.border,
@@ -582,10 +648,29 @@ function SystemCard({ sys, onEdit, onDelete }: { sys: System; onEdit: () => void
 
 /* ── Page ────────────────────────────────────────────────────────── */
 export default function SistemasPage() {
-  const { query, remove } = useSystems()
+  const { query, add, remove } = useSystems()
   const [modal, setModal] = useState<System | null | false>(false)
+  const [iframeTool, setIframeTool] = useState<{ title: string; url: string } | null>(null)
+  const autoInserted = useRef(false)
 
   const systems = query.data ?? []
+
+  /* Auto-insert Otimizador de Imagens on first load */
+  useEffect(() => {
+    if (!query.isSuccess || autoInserted.current) return
+    autoInserted.current = true
+    if (!systems.some(s => s.name === 'Otimizador de Imagens')) {
+      add.mutate({
+        name: 'Otimizador de Imagens',
+        description: 'Comprime e otimiza imagens diretamente no browser. Suporta JPG, PNG, WebP e exportação em lote via ZIP.',
+        category: 'Ferramenta',
+        status: 'Ativo',
+        url: '/otimizador.html',
+        tech_stack: ['HTML', 'JavaScript', 'JSZip'],
+        thumbnail_url: null,
+      })
+    }
+  }, [query.isSuccess, systems]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleDelete(sys: System) {
     if (!confirm(`Excluir "${sys.name}"?`)) return
@@ -643,16 +728,26 @@ export default function SistemasPage() {
               sys={sys}
               onEdit={() => setModal(sys)}
               onDelete={() => handleDelete(sys)}
+              onOpenTool={(title, url) => setIframeTool({ title, url })}
             />
           ))}
         </div>
       )}
 
-      {/* Modal */}
+      {/* Edit/create modal */}
       {modal !== false && (
         <SystemModal
           initial={modal}
           onClose={() => setModal(false)}
+        />
+      )}
+
+      {/* Fullscreen iframe tool modal */}
+      {iframeTool && (
+        <IframeModal
+          title={iframeTool.title}
+          url={iframeTool.url}
+          onClose={() => setIframeTool(null)}
         />
       )}
     </div>
