@@ -644,6 +644,7 @@ export function FinancePage() {
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const anoRef = useRef(ano)
   const loadedRef = useRef(false)
+  const dbStateRef = useRef<Record<string, MonthData>>(buildEmptyMonths())
 
   /* load — resets + reloads whenever ano changes */
   useEffect(() => {
@@ -651,7 +652,9 @@ export function FinancePage() {
     if (saveTimer.current) clearTimeout(saveTimer.current)
     loadedRef.current = false
     setLoaded(false)
-    setMonths(buildEmptyMonths())
+    const empty = buildEmptyMonths()
+    setMonths(empty)
+    dbStateRef.current = empty
     setAvulsos({})
     setCartaosList(['Nubank','Bradesco'])
     setMetas([])
@@ -660,10 +663,50 @@ export function FinancePage() {
     setDividas([])
     setTaxaSelic(13.75)
     ;(async () => {
-      const { data } = await (supabase as ReturnType<typeof supabase.from> extends never ? never : typeof supabase).from('financeiro').select('payload').eq('id', String(ano)).maybeSingle() as unknown as { data: { payload: Record<string, unknown> } | null }
-      if (data?.payload) {
-        const p = data.payload as Record<string, unknown>
-        if (p.months) setMonths(p.months as Record<string, MonthData>)
+      // 1. Load transactions for the year (source of truth for months data)
+      type TxnRow = { id: string; description: string; amount_cents: number; kind: string; category: string | null; occurred_at: string }
+      const { data: txns } = await (supabase as any)
+        .from('transactions')
+        .select('id,description,amount_cents,kind,category,occurred_at')
+        .gte('occurred_at', `${ano}-01-01`)
+        .lte('occurred_at', `${ano}-12-31`)
+        .order('occurred_at', { ascending: true }) as { data: TxnRow[] | null }
+
+      console.log('[financeiro] dados carregados:', txns?.length, txns?.[0])
+
+      if (txns && txns.length > 0) {
+        const m = buildEmptyMonths()
+        for (const t of txns) {
+          const monthIdx = parseInt(t.occurred_at.slice(5, 7)) - 1
+          const mes = MS[monthIdx]
+          if (!mes) continue
+          const dayNum = parseInt(t.occurred_at.slice(8, 10)) || 1
+          const item: Item = {
+            id: t.id,
+            nome: t.description,
+            valor: t.amount_cents / 100,
+            dataPg: String(dayNum),
+            pago: false,
+            prioridade: 'normal',
+          }
+          if (t.kind === 'in') m[mes].entradas.push(item)
+          else if (t.category === 'fixa') m[mes].fixas.push(item)
+          else if (t.category === 'variavel') m[mes].variaveis.push(item)
+          else if (t.category === 'cartao') m[mes].cartoes_itens.push(item)
+        }
+        setMonths(m)
+        dbStateRef.current = m
+      }
+
+      // 2. Load metadata from financeiro blob (avulsos, metas, carteira, etc.)
+      const { data: blob } = await (supabase as any)
+        .from('financeiro')
+        .select('payload')
+        .eq('id', String(ano))
+        .maybeSingle() as { data: { payload: Record<string, unknown> } | null }
+
+      if (blob?.payload) {
+        const p = blob.payload as Record<string, unknown>
         if (p.avulsos) setAvulsos(p.avulsos as Record<string, Avulso[]>)
         if (p.cartaosList) setCartaosList(p.cartaosList as string[])
         if (p.metas) setMetas(p.metas as Meta[])
@@ -672,32 +715,110 @@ export function FinancePage() {
         if (p.dividas) setDividas(p.dividas as Divida[])
         if (p.taxaSelic) setTaxaSelic(p.taxaSelic as number)
       }
+
       loadedRef.current = true
       setLoaded(true)
     })()
   }, [ano])
 
-  /* autosave */
-  const save = useCallback((m = months, av = avulsos, cl = cartaosList, mt = metas, ca = carteira, inv = investimentos, dv = dividas, sel = taxaSelic) => {
+  /* autosave — persists only metadata to the financeiro blob.
+     months data goes through syncMonthToTransactions instead. */
+  const save = useCallback((_m = months, av = avulsos, cl = cartaosList, mt = metas, ca = carteira, inv = investimentos, dv = dividas, sel = taxaSelic) => {
     if (saveTimer.current) clearTimeout(saveTimer.current)
     saveTimer.current = setTimeout(async () => {
       setSaving(true)
-      const payload = { months: m, avulsos: av, cartaosList: cl, metas: mt, carteira: ca, investimentos: inv, dividas: dv, taxaSelic: sel }
+      const payload = { avulsos: av, cartaosList: cl, metas: mt, carteira: ca, investimentos: inv, dividas: dv, taxaSelic: sel }
       await (supabase as unknown as { from: (t: string) => { upsert: (d: unknown) => Promise<void> } }).from('financeiro').upsert({ id: String(anoRef.current), payload })
       setSaving(false)
     }, 1500)
   }, [])
 
-  function triggerSave(m = months, av = avulsos, cl = cartaosList, mt = metas, ca = carteira, inv = investimentos, dv = dividas, sel = taxaSelic) {
+  function triggerSave(_m = months, av = avulsos, cl = cartaosList, mt = metas, ca = carteira, inv = investimentos, dv = dividas, sel = taxaSelic) {
     if (!loadedRef.current) return
-    save(m, av, cl, mt, ca, inv, dv, sel)
+    save(_m, av, cl, mt, ca, inv, dv, sel)
+  }
+
+  /* Sync one month's items to the transactions table (INSERT/UPDATE/DELETE by id). */
+  async function syncMonthToTransactions(mes: string, oldData: MonthData, newData: MonthData) {
+    const monthIdx = MS.indexOf(mes)
+    const yy = String(anoRef.current)
+    const mm = String(monthIdx + 1).padStart(2, '0')
+
+    type Bkt = { key: keyof Pick<MonthData,'entradas'|'fixas'|'variaveis'|'cartoes_itens'>; kind: string; category: string | null }
+    const buckets: Bkt[] = [
+      { key: 'entradas',     kind: 'in',  category: null       },
+      { key: 'fixas',        kind: 'out', category: 'fixa'     },
+      { key: 'variaveis',    kind: 'out', category: 'variavel' },
+      { key: 'cartoes_itens',kind: 'out', category: 'cartao'   },
+    ]
+
+    const replacedIds: Record<string, Record<string, string>> = {}
+
+    for (const { key, kind, category } of buckets) {
+      const oldItems = oldData[key] || []
+      const newItems = newData[key] || []
+      const newIds = new Set(newItems.map(i => i.id))
+
+      // DELETE items that were removed (only DB rows — UUIDs contain '-')
+      for (const item of oldItems) {
+        if (!newIds.has(item.id) && item.id.includes('-')) {
+          await (supabase as any).from('transactions').delete().eq('id', item.id)
+        }
+      }
+
+      const oldMap = new Map(oldItems.map(i => [i.id, i]))
+      for (const item of newItems) {
+        const dayNum = parseInt(item.dataPg || '') || 1
+        const occurred_at = `${yy}-${mm}-${String(dayNum).padStart(2, '0')}`
+
+        if (!item.id.includes('-')) {
+          // New item — INSERT and capture the new UUID
+          const { data: ins } = await (supabase as any)
+            .from('transactions')
+            .insert({ description: item.nome || '—', amount_cents: Math.round((item.valor || 0) * 100), kind, category, occurred_at })
+            .select('id').single()
+          if (ins?.id) {
+            if (!replacedIds[key]) replacedIds[key] = {}
+            replacedIds[key][item.id] = ins.id
+          }
+        } else {
+          // Existing DB item — UPDATE if any field changed
+          const old = oldMap.get(item.id)
+          if (old && (old.nome !== item.nome || old.valor !== item.valor || old.dataPg !== item.dataPg)) {
+            await (supabase as any).from('transactions').update({
+              description: item.nome || '—',
+              amount_cents: Math.round((item.valor || 0) * 100),
+              occurred_at,
+            }).eq('id', item.id)
+          }
+        }
+      }
+    }
+
+    // Update dbStateRef with synced state
+    dbStateRef.current = { ...dbStateRef.current, [mes]: newData }
+
+    // Swap local uid()s for real DB UUIDs if any INSERTs happened
+    if (Object.keys(replacedIds).length > 0) {
+      setMonths(prev => {
+        const updated = { ...prev[mes] }
+        for (const [key, idMap] of Object.entries(replacedIds)) {
+          updated[key as keyof MonthData] = ((updated[key as keyof MonthData] as Item[]) || []).map(
+            item => idMap[item.id] ? { ...item, id: idMap[item.id] } : item
+          ) as Item[]
+        }
+        dbStateRef.current = { ...dbStateRef.current, [mes]: updated }
+        return { ...prev, [mes]: updated }
+      })
+    }
   }
 
   function updateMonth(mes: string, d: MonthData | ((p: MonthData) => MonthData)) {
     setMonths(prev => {
-      const next = { ...prev, [mes]: typeof d === 'function' ? d(prev[mes] || buildEmptyMonths()[mes]) : d }
-      triggerSave(next)
-      return next
+      const oldData = prev[mes] || buildEmptyMonths()[mes]
+      const newData = typeof d === 'function' ? d(oldData) : d
+      if (loadedRef.current) syncMonthToTransactions(mes, oldData, newData)
+      return { ...prev, [mes]: newData }
     })
   }
 
@@ -1133,7 +1254,8 @@ export function FinancePage() {
                 inp.onchange=async e=>{
                   const f=(e.target as HTMLInputElement).files?.[0];if(!f)return
                   const txt=await f.text();const p=JSON.parse(txt)
-                  if(p.months)setMonths(p.months)
+                  const restoredMonths = (p.months || months) as Record<string, MonthData>
+                  if(p.months)setMonths(restoredMonths)
                   if(p.avulsos)setAvulsos(p.avulsos)
                   if(p.cartaosList)setCartaosList(p.cartaosList)
                   if(p.metas)setMetas(p.metas)
@@ -1141,14 +1263,26 @@ export function FinancePage() {
                   if(p.investimentos)setInvestimentos(p.investimentos)
                   if(p.dividas)setDividas(p.dividas)
                   if(p.taxaSelic)setTaxaSelic(p.taxaSelic)
-                  triggerSave(p.months||months,p.avulsos||avulsos)
+                  triggerSave(restoredMonths, p.avulsos||avulsos)
+                  // Sync all months from backup to transactions table
+                  if(p.months) {
+                    for (const mes of MS) {
+                      await syncMonthToTransactions(mes, dbStateRef.current[mes] || buildEmptyMonths()[mes], restoredMonths[mes] || buildEmptyMonths()[mes])
+                    }
+                  }
                 }
                 inp.click()
               }} style={{ padding:'10px 16px',borderRadius:10,cursor:'pointer',fontSize:12,fontWeight:600,border:'1px solid '+C.a+'40',background:C.aB,color:C.a }}>Restaurar Backup</button>
-              <button onClick={() => {
+              <button onClick={async () => {
                 if(window.confirm('Zerar todos os dados de '+ano+'?')&&window.confirm('Tem certeza? Não tem volta!')) {
-                  const em=buildEmptyMonths();setMonths(em);setAvulsos({});setMetas([]);setCarteira([]);setDividas([])
+                  const em=buildEmptyMonths()
+                  const oldMonths = { ...months }
+                  setMonths(em);setAvulsos({});setMetas([]);setCarteira([]);setDividas([])
                   triggerSave(em,{})
+                  // Sync empty months to transactions (will DELETE each item by id)
+                  for (const mes of MS) {
+                    await syncMonthToTransactions(mes, oldMonths[mes] || buildEmptyMonths()[mes], em[mes])
+                  }
                 }
               }} style={{ padding:'10px 16px',borderRadius:10,cursor:'pointer',fontSize:12,fontWeight:600,border:'1px solid '+C.r+'30',background:C.rB,color:C.r }}>Zerar dados do ano</button>
             </div>
