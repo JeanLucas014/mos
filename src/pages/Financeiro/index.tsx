@@ -642,9 +642,14 @@ export function FinancePage() {
   const [addInv, setAddInv] = useState<Investimento | null>(null)
   const [aportePopup, setAportePopup] = useState<{ invId: string; valor: string; data: string } | null>(null)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const anoRef = useRef(ano)
+  const loadedRef = useRef(false)
 
   /* load — resets + reloads whenever ano changes */
   useEffect(() => {
+    anoRef.current = ano
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    loadedRef.current = false
     setLoaded(false)
     setMonths(buildEmptyMonths())
     setAvulsos({})
@@ -667,6 +672,7 @@ export function FinancePage() {
         if (p.dividas) setDividas(p.dividas as Divida[])
         if (p.taxaSelic) setTaxaSelic(p.taxaSelic as number)
       }
+      loadedRef.current = true
       setLoaded(true)
     })()
   }, [ano])
@@ -677,12 +683,13 @@ export function FinancePage() {
     saveTimer.current = setTimeout(async () => {
       setSaving(true)
       const payload = { months: m, avulsos: av, cartaosList: cl, metas: mt, carteira: ca, investimentos: inv, dividas: dv, taxaSelic: sel }
-      await (supabase as unknown as { from: (t: string) => { upsert: (d: unknown) => Promise<void> } }).from('financeiro').upsert({ id: String(ano), payload })
+      await (supabase as unknown as { from: (t: string) => { upsert: (d: unknown) => Promise<void> } }).from('financeiro').upsert({ id: String(anoRef.current), payload })
       setSaving(false)
     }, 1500)
   }, [])
 
   function triggerSave(m = months, av = avulsos, cl = cartaosList, mt = metas, ca = carteira, inv = investimentos, dv = dividas, sel = taxaSelic) {
+    if (!loadedRef.current) return
     save(m, av, cl, mt, ca, inv, dv, sel)
   }
 
