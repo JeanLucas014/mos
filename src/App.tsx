@@ -11,7 +11,7 @@ import { ProjectsPage } from './pages/ProjectsPage'
 import { GoalsPage } from './pages/GoalsPage'
 import { HabitsPage } from './pages/HabitsPage'
 import { ShoppingPage } from './pages/ShoppingPage'
-import { FinancePage } from './pages/FinancePage'
+import FinanceiroDashboard from './pages/Financeiro'
 import { InvoicesPage } from './pages/InvoicesPage'
 import { NotesPage } from './pages/NotesPage'
 import { LibraryPage } from './pages/LibraryPage'
@@ -43,7 +43,7 @@ export default function App() {
         <Route path="metas" element={<GoalsPage />} />
         <Route path="habitos" element={<HabitsPage />} />
         <Route path="compras" element={<ShoppingPage />} />
-        <Route path="financeiro" element={<FinancePage />} />
+        <Route path="financeiro" element={<FinanceiroDashboard session={null} />} />
         <Route path="faturamento" element={<InvoicesPage />} />
         <Route path="notas" element={<NotesPage />} />
         <Route path="biblioteca" element={<LibraryPage />} />
