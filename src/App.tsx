@@ -11,7 +11,7 @@ import { ProjectsPage } from './pages/ProjectsPage'
 import { GoalsPage } from './pages/GoalsPage'
 import { HabitsPage } from './pages/HabitsPage'
 import { ShoppingPage } from './pages/ShoppingPage'
-import FinanceiroDashboard from './pages/Financeiro'
+import FinanceiroPage from '@/pages/Financeiro/index'
 import { InvoicesPage } from './pages/InvoicesPage'
 import { NotesPage } from './pages/NotesPage'
 import { LibraryPage } from './pages/LibraryPage'
@@ -28,6 +28,7 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/recuperar-senha" element={<ForgotPasswordPage />} />
       <Route path="/nova-senha" element={<ResetPasswordPage />} />
+      <Route path="/financeiro" element={<RequireAuth><FinanceiroPage /></RequireAuth>} />
       <Route
         element={
           <RequireAuth>
@@ -43,7 +44,7 @@ export default function App() {
         <Route path="metas" element={<GoalsPage />} />
         <Route path="habitos" element={<HabitsPage />} />
         <Route path="compras" element={<ShoppingPage />} />
-        <Route path="financeiro" element={<FinanceiroDashboard session={null} />} />
+        <Route path="financeiro" element={<FinanceiroPage />} />
         <Route path="faturamento" element={<InvoicesPage />} />
         <Route path="notas" element={<NotesPage />} />
         <Route path="biblioteca" element={<LibraryPage />} />

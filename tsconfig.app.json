@@ -18,7 +18,10 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
     "allowJs": true,
-    "types": ["vite-plugin-pwa/client"]
+    "types": ["vite-plugin-pwa/client"],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "include": ["src"]
 }
