@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useState, useMemo, useEffect, useCallback, useRef, Component } from "react";
-import { supabase } from "../../lib/supabase";
+import { supabase } from "@/lib/supabase";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   Area, AreaChart, CartesianGrid, ComposedChart, Line, ReferenceLine
@@ -10,7 +10,7 @@ const MS = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agost
 const MSH = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
 const ACCENTS = {
-  blue: { main: "#0EA5E9", bg: "rgba(14,165,233,.12)" },
+  blue: { main: "#3b82f6", bg: "rgba(59,130,246,.12)" },
   purple: { main: "#8b5cf6", bg: "rgba(139,92,246,.12)" },
   emerald: { main: "#10b981", bg: "rgba(16,185,129,.12)" },
   orange: { main: "#f97316", bg: "rgba(249,115,22,.12)" },
@@ -20,14 +20,14 @@ const ACCENTS = {
 
 const THEMES = {
   dark: {
-    bg: "#0a0a0a", card: "#111111", border: "rgba(255,255,255,0.06)", bL: "#1f1f1f",
-    tx: "#f5f5f5", dm: "#71717a", dm2: "#3f3f46",
-    g: "#22c55e", gB: "rgba(34,197,94,0.1)",
-    r: "#ef4444", rB: "rgba(239,68,68,0.08)",
-    p: "#a78bfa", pB: "rgba(167,139,250,0.1)",
-    a: "#f59e0b", aB: "rgba(245,158,11,0.08)",
+    bg: "#0a0d12", card: "#111318", border: "rgba(255,255,255,.06)", bL: "#1e242e",
+    tx: "#edf0f5", dm: "#7d8694", dm2: "#4a5262",
+    g: "#22c55e", gB: "rgba(34,197,94,.1)",
+    r: "#ef4444", rB: "rgba(239,68,68,.08)",
+    p: "#a78bfa", pB: "rgba(167,139,250,.1)",
+    a: "#f59e0b", aB: "rgba(245,158,11,.08)",
     c: "#06b6d4", o: "#f97316", pk: "#ec4899",
-    headerBg: "rgba(10,10,10,0.9)", optionBg: "#111111",
+    headerBg: "rgba(10,13,18,.9)", optionBg: "#1a1f2b",
   },
   light: {
     bg: "#f1f5f9", card: "#ffffff", border: "#e2e8f0", bL: "#cbd5e1",
@@ -871,25 +871,25 @@ function DiarioView({ mes, setMes, months, diario, upDiario, addEntry, rmEntry, 
                       {saiLabel ? <div style={{ fontSize: 8, color: C.dm, marginTop: 1, maxWidth: 90, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{saiLabel}</div> : null}
                     </td>
 
-                    {/* DIÁRIO (desktop - editable via upDiarioCol) */}
+                    {/* DIÁRIO (desktop - editable) */}
                     <td className="desktop-only" style={{ padding: "8px", textAlign: "right" }}>
-                      {(function() {
-                        var dayEntry = days.find(function(d) { return d.dia === row.dia; });
-                        var diVal = dayEntry ? (dayEntry.diario || 0) : 0;
-                        var diLabel = dayEntry ? (dayEntry.label || "") : "";
-                        return (
-                          <div>
-                            <ENum value={diVal} onChange={function(v) { upDiarioCol(mes, row.dia, v); }} color={diVal > 0 ? C.a : C.dm2} w={68} />
-                            {diLabel ? <div style={{ fontSize: 7, color: C.dm, marginTop: 1, textAlign: "right", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 100 }}>{diLabel}</div> : null}
-                          </div>
-                        );
-                      })()}
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}>
+                        <ENum value={dayAvulsosSaida.reduce(function(a,b){ return a+b.valor; },0)} onChange={function(v) {
+                          var current = dayAvulsosSaida.reduce(function(a,b){ return a+b.valor; },0);
+                          if (v === current) return;
+                          if (dayAvulsosSaida.length === 0 && v > 0) { addAvulso(row.dia, "Diário", v, "saida"); }
+                          else if (dayAvulsosSaida.length === 1) { setAvulsos(function(prev) { var n = Object.assign({}, prev); n[mes] = (n[mes]||[]).map(function(a) { return a.id === dayAvulsosSaida[0].id ? Object.assign({},a,{valor:v}) : a; }); return n; }); }
+                          else { var diff = v - current; if (diff > 0) addAvulso(row.dia, "Ajuste", diff, "saida"); else if (diff < 0) addAvulso(row.dia, "Ajuste", Math.abs(diff), "entrada"); }
+                        }} color={dayAvulsosSaida.length > 0 ? C.a : C.dm2} w={68} />
+                        {dayAvulsosSaida.length > 0 && <button onClick={function() { setPopup({ dia: row.dia, tipo: "diario", items: [], avulsos: dayAvulsosSaida }); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 9, color: C.a, padding: "2px" }}>...</button>}
+                      </div>
+                      {dayAvulsosSaida.length > 1 && <div style={{ fontSize: 7, color: C.dm, marginTop: 1, textAlign: "right", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 100 }}>{dayAvulsosSaida.map(function(a){return a.nome;}).join(", ")}</div>}
                     </td>
 
                     {/* MOBILE: selector-based column */}
                     {viewMode === "entradas" && <td colSpan={3} className="mobile-only" style={{ padding: "8px", textAlign: "right" }}><span style={{ color: row.entrada > 0 ? C.g : C.dm2, fontFamily: "'JetBrains Mono',monospace", fontSize: 12 }}>{row.entrada > 0 ? fmt(row.entrada) : "R$ 0,00"}</span></td>}
                     {viewMode === "saidas" && <td colSpan={3} className="mobile-only" style={{ padding: "8px", textAlign: "right" }}><span style={{ color: (row.saida - dayAvulsosSaida.reduce(function(a,b){return a+b.valor;},0)) > 0 ? C.r : C.dm2, fontFamily: "'JetBrains Mono',monospace", fontSize: 12 }}>{(row.saida - dayAvulsosSaida.reduce(function(a,b){return a+b.valor;},0)) > 0 ? fmt(row.saida - dayAvulsosSaida.reduce(function(a,b){return a+b.valor;},0)) : "R$ 0,00"}</span></td>}
-                    {viewMode === "diarios" && (function() { var de = days.find(function(d) { return d.dia === row.dia; }); var dv = de ? (de.diario || 0) : 0; return <td colSpan={3} className="mobile-only" style={{ padding: "8px", textAlign: "right" }}><span style={{ color: dv > 0 ? C.a : C.dm2, fontFamily: "'JetBrains Mono',monospace", fontSize: 12 }}>{fmt(dv)}</span></td>; })()}
+                    {viewMode === "diarios" && <td colSpan={3} className="mobile-only" style={{ padding: "8px", textAlign: "right" }}><span style={{ color: dayAvulsosSaida.reduce(function(a,b){return a+b.valor;},0) > 0 ? C.a : C.dm2, fontFamily: "'JetBrains Mono',monospace", fontSize: 12 }}>{fmt(dayAvulsosSaida.reduce(function(a,b){return a+b.valor;},0))}</span></td>}
                     {viewMode === "todas" && <td colSpan={3} className="mobile-only" style={{ padding: "8px", textAlign: "right" }}><span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: C.tx }}>{fmt(row.entrada + row.saida)}</span></td>}
 
                     {/* SALDO */}
@@ -1123,10 +1123,6 @@ function Dashboard({ session = null }) {
   const PC = [C.b].concat(PC_BASE);
 
   const userId = session?.user?.id;
-
-  useEffect(() => {
-    document.body.style.fontFamily = "'Manrope', sans-serif";
-  }, []);
 
   // Register service worker for PWA
   useEffect(function() {
@@ -1540,7 +1536,7 @@ function Dashboard({ session = null }) {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: C.bg, color: C.tx, fontFamily: "'Manrope',sans-serif" }}>
+    <div style={{ background: C.bg, color: C.tx, fontFamily: "'Manrope',sans-serif" }}>
       {showTutorial && <TutorialOverlay />}
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }

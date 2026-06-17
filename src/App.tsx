@@ -28,7 +28,6 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/recuperar-senha" element={<ForgotPasswordPage />} />
       <Route path="/nova-senha" element={<ResetPasswordPage />} />
-      <Route path="/financeiro" element={<RequireAuth><FinanceiroPage /></RequireAuth>} />
       <Route
         element={
           <RequireAuth>
