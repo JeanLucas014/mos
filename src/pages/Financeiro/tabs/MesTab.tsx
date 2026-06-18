@@ -1,18 +1,29 @@
-import { useState, useEffect, useRef } from 'react'
+// src/pages/Financeiro/tabs/MesTab.tsx
+// v2 — editar lançamentos, subitens em grupos, clique por coluna, nova cat rápida, cards de resumo
+
+import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Plus, ChevronDown, ChevronRight, Trash2 } from 'lucide-react'
-import type { FinAno, FinLancamento, FinLancamentoTree, FinCategoria, FinCartao, DiaTotais, Natureza, SaidaTipo } from '../types'
+import { Plus, ChevronDown, ChevronRight, Trash2, Pencil, X } from 'lucide-react'
+import type {
+  FinAno, FinLancamento, FinLancamentoTree,
+  FinCategoria, FinCartao, DiaTotais, Natureza, SaidaTipo,
+} from '../types'
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Utils
+// ─────────────────────────────────────────────────────────────────────────────
 
 const MS_FULL = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
 const MS_OPT  = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
 const BRL = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
-// ── Algoritmo de árvore ──────────────────────────────────────────────────────
+function daysInMonth(year: number, month: number) {
+  return new Date(year, month, 0).getDate()
+}
 
 function buildTree(items: FinLancamento[]): FinLancamentoTree[] {
   const map = new Map<string, FinLancamentoTree>()
   for (const item of items) map.set(item.id, { ...item, children: [], valorTotal: 0 })
-
   const roots: FinLancamentoTree[] = []
   for (const node of map.values()) {
     if (node.parent_id && map.has(node.parent_id)) {
@@ -21,13 +32,12 @@ function buildTree(items: FinLancamento[]): FinLancamentoTree[] {
       roots.push(node)
     }
   }
-
-  function calcValue(node: FinLancamentoTree): number {
+  function calc(node: FinLancamentoTree): number {
     if (!node.is_grupo) { node.valorTotal = node.valor ?? 0; return node.valorTotal }
-    node.valorTotal = node.children.reduce((s, c) => s + calcValue(c), 0)
+    node.valorTotal = node.children.reduce((s, c) => s + calc(c), 0)
     return node.valorTotal
   }
-  roots.forEach(calcValue)
+  roots.forEach(calc)
   return roots
 }
 
@@ -36,13 +46,9 @@ function sumLeaves(node: FinLancamentoTree): number {
   return node.children.reduce((s, c) => s + sumLeaves(c), 0)
 }
 
-function daysInMonth(year: number, month: number) {
-  return new Date(year, month, 0).getDate()
-}
-
-// ── Componente principal ─────────────────────────────────────────────────────
-
-interface Props { ano: FinAno; initialMonth: number }
+// ─────────────────────────────────────────────────────────────────────────────
+// AddForm type
+// ─────────────────────────────────────────────────────────────────────────────
 
 interface AddForm {
   natureza: Natureza
@@ -55,70 +61,72 @@ interface AddForm {
   parent_id: string | null
 }
 
-const defaultForm = (): AddForm => ({
-  natureza: 'diario', saida_tipo: 'fixa',
-  nome: '', valor: '', categoria_id: '', cartao_id: '',
-  is_grupo: false, parent_id: null,
-})
+function defaultForm(nat: Natureza = 'diario', parentId: string | null = null, st: SaidaTipo = 'fixa'): AddForm {
+  return { natureza: nat, saida_tipo: st, nome: '', valor: '', categoria_id: '', cartao_id: '', is_grupo: false, parent_id: parentId }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MesTab (main)
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface Props { ano: FinAno; initialMonth: number }
 
 export function MesTab({ ano, initialMonth }: Props) {
-  const [month, setMonth] = useState(initialMonth)
-  const [lancamentos, setLancamentos] = useState<FinLancamento[]>([])
-  const [categorias, setCategorias] = useState<FinCategoria[]>([])
-  const [cartoes, setCartoes] = useState<FinCartao[]>([])
-  const [saldoAbertura, setSaldoAbertura] = useState(0)
-  const [loading, setLoading] = useState(true)
+  const [month, setMonth]               = useState(initialMonth)
+  const [lancamentos, setLancamentos]   = useState<FinLancamento[]>([])
+  const [categorias, setCategorias]     = useState<FinCategoria[]>([])
+  const [cartoes, setCartoes]           = useState<FinCartao[]>([])
+  const [saldoAbertura, setSaldoAb]     = useState(0)
+  const [loading, setLoading]           = useState(true)
   const [expandedDays, setExpandedDays] = useState<Set<number>>(new Set())
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
-  const [editingCell, setEditingCell] = useState<{ id: string; field: 'nome' | 'valor' } | null>(null)
-  const [editValue, setEditValue] = useState('')
-  const [addingToDay, setAddingToDay] = useState<number | null>(null)
-  const [addForm, setAddForm] = useState<AddForm>(defaultForm())
-  const [saving, setSaving] = useState(false)
-  const [mobileCol, setMobileCol] = useState<'entrada' | 'saida' | 'diario'>('diario')
-  const editRef = useRef<HTMLInputElement>(null)
+  const [editingItem, setEditingItem]   = useState<FinLancamento | null>(null)
+  const [addingToDay, setAddingToDay]   = useState<number | null>(null)
+  const [addForm, setAddForm]           = useState<AddForm>(defaultForm())
+  const [saving, setSaving]             = useState(false)
+  const [mobileCol, setMobileCol]       = useState<Natureza>('diario')
 
   useEffect(() => { loadAll() }, [ano.id, month])
-  useEffect(() => { if (editingCell) editRef.current?.focus() }, [editingCell])
 
   async function loadAll() {
     setLoading(true)
+    const lastDay  = daysInMonth(ano.ano, month)
+    const startDate = `${ano.ano}-${String(month).padStart(2,'0')}-01`
+    const endDate   = `${ano.ano}-${String(month).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`
 
     const [{ data: cats }, { data: cards }, { data: rows }] = await Promise.all([
       supabase.from('fin_categorias').select('*').order('ordem'),
       supabase.from('fin_cartoes').select('*').order('nome'),
       supabase.from('fin_lancamentos').select('*')
         .eq('ano_id', ano.id)
-        .gte('data', `${ano.ano}-${String(month).padStart(2,'0')}-01`)
-        .lte('data', `${ano.ano}-${String(month).padStart(2,'0')}-${daysInMonth(ano.ano, month)}`)
+        .gte('data', startDate)
+        .lte('data', endDate)
         .order('ordem'),
     ])
-
     setCategorias((cats ?? []) as FinCategoria[])
     setCartoes((cards ?? []) as FinCartao[])
     setLancamentos((rows ?? []) as FinLancamento[])
 
-    // Calcular saldo_abertura: saldo_inicial + tudo antes deste mês
-    const firstDay = `${ano.ano}-${String(month).padStart(2,'0')}-01`
+    // saldo_abertura = saldo_inicial + net dos meses anteriores
     const { data: prev } = await supabase
       .from('fin_lancamentos')
-      .select('natureza, valor, saida_tipo, is_grupo')
+      .select('natureza, valor, is_grupo')
       .eq('ano_id', ano.id)
       .eq('is_grupo', false)
-      .lt('data', firstDay)
+      .lt('data', startDate)
 
-    type PRow = { natureza: string; valor: number | null; saida_tipo: string | null; is_grupo: boolean }
-    let abertura = Number(ano.saldo_inicial)
+    type PRow = { natureza: string; valor: number | null; is_grupo: boolean }
+    let ab = Number(ano.saldo_inicial)
     for (const r of (prev ?? []) as PRow[]) {
       const v = Number(r.valor) || 0
-      if (r.natureza === 'entrada') abertura += v
-      else abertura -= v
+      ab += r.natureza === 'entrada' ? v : -v
     }
-    setSaldoAbertura(abertura)
+    setSaldoAb(ab)
     setLoading(false)
   }
 
-  // Construção da estrutura de dados
+  // ── Derived state ──────────────────────────────────────────────────────────
+
   const trees = buildTree(lancamentos)
   const byDay: Record<number, FinLancamentoTree[]> = {}
   for (const t of trees) {
@@ -127,14 +135,13 @@ export function MesTab({ ano, initialMonth }: Props) {
     byDay[d].push(t)
   }
 
-  const total = daysInMonth(ano.ano, month)
+  const totalDays = daysInMonth(ano.ano, month)
   const days: DiaTotais[] = (() => {
     let saldo = saldoAbertura
-    return Array.from({ length: total }, (_, i) => {
+    return Array.from({ length: totalDays }, (_, i) => {
       const dia = i + 1
-      const items = byDay[dia] ?? []
       let entrada = 0, saida = 0, diario = 0
-      for (const t of items) {
+      for (const t of byDay[dia] ?? []) {
         const v = sumLeaves(t)
         if (t.natureza === 'entrada') entrada += v
         else if (t.natureza === 'saida') saida += v
@@ -145,67 +152,92 @@ export function MesTab({ ano, initialMonth }: Props) {
     })
   })()
 
+  // Month summary
+  const totE = days.reduce((a, d) => a + d.entrada, 0)
+  const totS = days.reduce((a, d) => a + d.saida, 0)
+  const totD = days.reduce((a, d) => a + d.diario, 0)
+  const res  = totE - totS - totD
+
   const categoriasRapidas = categorias.filter(c => c.rapida && c.natureza === 'diario')
 
-  // Ações inline
-  function startEdit(id: string, field: 'nome' | 'valor', current: string) {
-    setEditingCell({ id, field })
-    setEditValue(current)
-  }
+  // ── Actions ────────────────────────────────────────────────────────────────
 
-  async function commitEdit() {
-    if (!editingCell) return
-    const { id, field } = editingCell
-    const update: Record<string, unknown> = {}
-    if (field === 'nome') update.nome = editValue.trim()
-    if (field === 'valor') update.valor = parseFloat(editValue.replace(',', '.')) || 0
-    await (supabase.from('fin_lancamentos') as any).update(update).eq('id', id)
-    setEditingCell(null)
-    loadAll()
-  }
-
-  async function deleteLancamento(id: string) {
-    if (!confirm('Excluir este lançamento?')) return
-    await (supabase.from('fin_lancamentos') as any).delete().eq('id', id)
-    loadAll()
+  function openAdd(dia: number, nat: Natureza = 'diario', parentId: string | null = null, st: SaidaTipo = 'fixa') {
+    setAddForm(defaultForm(nat, parentId, st))
+    setAddingToDay(dia)
+    if (!expandedDays.has(dia)) toggleDay(dia)
   }
 
   async function addLancamento(dia: number) {
     const nome = addForm.nome.trim()
     if (!nome) return
     setSaving(true)
-
     const data = `${ano.ano}-${String(month).padStart(2,'0')}-${String(dia).padStart(2,'0')}`
-    const isLeaf = !addForm.is_grupo
-    const valor = isLeaf ? (parseFloat(addForm.valor.replace(',', '.')) || 0) : null
-
     await (supabase.from('fin_lancamentos') as any).insert({
-      ano_id: ano.id,
-      parent_id: addForm.parent_id || null,
+      ano_id:      ano.id,
+      parent_id:   addForm.parent_id || null,
       data,
-      natureza: addForm.natureza,
+      natureza:    addForm.natureza,
       nome,
-      valor,
-      is_grupo: addForm.is_grupo,
+      valor:       addForm.is_grupo ? null : (parseFloat(addForm.valor.replace(',','.')) || 0),
+      is_grupo:    addForm.is_grupo,
       categoria_id: addForm.categoria_id || null,
-      cartao_id: addForm.natureza === 'saida' && addForm.saida_tipo === 'cartao'
-        ? addForm.cartao_id || null : null,
-      saida_tipo: addForm.natureza === 'saida' ? addForm.saida_tipo : null,
+      cartao_id:   addForm.natureza === 'saida' && addForm.saida_tipo === 'cartao' ? addForm.cartao_id || null : null,
+      saida_tipo:  addForm.natureza === 'saida' ? addForm.saida_tipo : null,
     })
-
     setSaving(false)
     setAddingToDay(null)
     setAddForm(defaultForm())
     loadAll()
   }
 
-  async function launchQuick(dia: number, cat: FinCategoria, nome: string, valor: string) {
+  async function saveEdit(form: EditFormState) {
+    if (!editingItem) return
+    const update: Record<string, unknown> = {
+      nome:         form.nome.trim(),
+      data:         form.data,
+      categoria_id: form.categoria_id || null,
+    }
+    if (!editingItem.is_grupo) {
+      update.valor = parseFloat(form.valor.replace(',', '.')) || 0
+    }
+    if (!editingItem.parent_id) {
+      update.natureza = form.natureza
+    }
+    if (form.natureza === 'saida') {
+      update.saida_tipo = form.saida_tipo
+      update.cartao_id  = form.saida_tipo === 'cartao' ? form.cartao_id || null : null
+    } else {
+      update.saida_tipo = null
+      update.cartao_id  = null
+    }
+    await (supabase.from('fin_lancamentos') as any).update(update).eq('id', editingItem.id)
+    setEditingItem(null)
+    loadAll()
+  }
+
+  async function deleteLancamento(id: string) {
+    if (!confirm('Excluir este lançamento e todos os seus subitens?')) return
+    await (supabase.from('fin_lancamentos') as any).delete().eq('id', id)
+    loadAll()
+  }
+
+  async function quickLaunch(dia: number, cat: FinCategoria, nome: string, valor: string) {
     const v = parseFloat(valor.replace(',', '.'))
     if (!v || !nome.trim()) return
     const data = `${ano.ano}-${String(month).padStart(2,'0')}-${String(dia).padStart(2,'0')}`
     await (supabase.from('fin_lancamentos') as any).insert({
       ano_id: ano.id, data, natureza: 'diario', nome: nome.trim(),
       valor: v, is_grupo: false, categoria_id: cat.id,
+    })
+    loadAll()
+  }
+
+  async function addQuickCat(nome: string, cor?: string) {
+    if (!nome.trim()) return
+    await (supabase.from('fin_categorias') as any).insert({
+      nome: nome.trim(), natureza: 'diario', cor: cor || null, rapida: true,
+      ordem: categorias.filter(c => c.rapida && c.natureza === 'diario').length,
     })
     loadAll()
   }
@@ -217,42 +249,59 @@ export function MesTab({ ano, initialMonth }: Props) {
     setExpandedItems(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
   }
 
+  // ── Render ─────────────────────────────────────────────────────────────────
+
   if (loading) return (
     <div className="flex justify-center py-16">
       <div className="w-5 h-5 rounded-full border-2 border-[#0EA5E9] border-t-transparent animate-spin" />
     </div>
   )
 
-  // ── Render ──
+  const today = new Date()
+  const isCurrentMonth = ano.ano === today.getFullYear() && month === today.getMonth() + 1
 
   return (
     <div>
-      {/* Month selector */}
+      {/* ── Month selector ── */}
       <div className="flex items-center gap-3 mb-5 flex-wrap">
         <select
           value={month}
           onChange={e => setMonth(Number(e.target.value))}
           className="bg-[#111111] border border-[#1f1f1f] text-white text-sm rounded-lg px-3 py-1.5 outline-none focus:border-[#0EA5E9]/60"
         >
-          {MS_OPT.map((m, i) => <option key={i+1} value={i+1}>{m}</option>)}
+          {MS_OPT.map((m, i) => <option key={i + 1} value={i + 1}>{m}</option>)}
         </select>
-        <span className="text-[#555] text-sm">{MS_FULL[month - 1]} {ano.ano}</span>
+        <span className="text-[#555] text-sm">{MS_FULL[month - 1]} · {ano.ano}</span>
         <span className="ml-auto text-xs text-[#555]">
-          Saldo abertura: <span className="text-white tabular-nums">{BRL(saldoAbertura)}</span>
+          Abertura: <span className="text-white tabular-nums">{BRL(saldoAbertura)}</span>
         </span>
       </div>
 
-      {/* Mobile column toggle */}
+      {/* ── Summary cards ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        {[
+          { label: 'Entradas',  value: totE, color: '#22c55e' },
+          { label: 'Saídas',   value: totS, color: '#ef4444' },
+          { label: 'Diário',   value: totD, color: '#f97316' },
+          { label: 'Resultado',value: res,  color: res >= 0 ? '#22c55e' : '#ef4444' },
+        ].map(c => (
+          <div key={c.label} className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-3.5 relative">
+            <span className="absolute top-3.5 right-3.5 w-2 h-2 rounded-full" style={{ background: c.color }} />
+            <div className="text-[10px] text-[#555] uppercase tracking-wider font-[Sora] mb-1.5">{c.label}</div>
+            <div className="text-sm font-bold tabular-nums" style={{ color: c.color }}>{BRL(c.value)}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Mobile column toggle ── */}
       <div className="flex sm:hidden gap-1 mb-4">
-        {(['entrada','saida','diario'] as const).map(col => (
+        {(['entrada','saida','diario'] as Natureza[]).map(col => (
           <button
             key={col}
             onClick={() => setMobileCol(col)}
             className={[
               'flex-1 py-1.5 text-xs rounded-lg border transition-colors',
-              mobileCol === col
-                ? 'border-[#0EA5E9]/50 text-[#0EA5E9] bg-[#0EA5E9]/8'
-                : 'border-[#1f1f1f] text-[#555]',
+              mobileCol === col ? 'border-[#0EA5E9]/50 text-[#0EA5E9]' : 'border-[#1f1f1f] text-[#555]',
             ].join(' ')}
           >
             {col === 'entrada' ? 'Entrada' : col === 'saida' ? 'Saída' : 'Diário'}
@@ -260,15 +309,15 @@ export function MesTab({ ano, initialMonth }: Props) {
         ))}
       </div>
 
-      {/* PC TABLE */}
+      {/* ── PC TABLE ── */}
       <div className="hidden sm:block overflow-x-auto">
         <table className="w-full text-sm border-collapse">
           <thead>
-            <tr className="text-[10px] text-[#555] uppercase tracking-wider">
+            <tr className="text-[10px] text-[#555] uppercase tracking-wider select-none">
               <th className="text-left py-2 px-2 w-12">Dia</th>
-              <th className="text-right py-2 px-2">Entrada</th>
-              <th className="text-right py-2 px-2">Saída</th>
-              <th className="text-right py-2 px-2">Diário</th>
+              <th className="text-right py-2 px-3 text-[#22c55e]/60" title="Clique na célula para adicionar">Entrada ↓</th>
+              <th className="text-right py-2 px-3 text-[#ef4444]/60" title="Clique na célula para adicionar">Saída ↓</th>
+              <th className="text-right py-2 px-3 text-[#f97316]/60" title="Clique na célula para adicionar">Diário ↓</th>
               <th className="text-right py-2 px-2">Saldo</th>
               <th className="w-8" />
             </tr>
@@ -277,53 +326,66 @@ export function MesTab({ ano, initialMonth }: Props) {
             {days.map(d => {
               const dayItems = byDay[d.dia] ?? []
               const isExpanded = expandedDays.has(d.dia)
-              const hasData = dayItems.length > 0
-              const today = new Date()
-              const isToday = d.dia === today.getDate() && month === today.getMonth() + 1 && ano.ano === today.getFullYear()
+              const isToday    = isCurrentMonth && d.dia === today.getDate()
 
               return (
                 <>
-                  {/* Day row */}
+                  {/* ── Day row ── */}
                   <tr
-                    key={d.dia}
-                    className={[
-                      'border-t border-[#1f1f1f] group',
-                      isToday ? 'bg-[#0EA5E9]/5' : 'hover:bg-[#111111]/60',
-                    ].join(' ')}
+                    key={`day-${d.dia}`}
+                    className={['border-t border-[#1f1f1f] group', isToday ? 'bg-[#0EA5E9]/5' : ''].join(' ')}
                   >
+                    {/* Dia */}
                     <td className="py-2.5 px-2">
                       <button
-                        onClick={() => hasData && toggleDay(d.dia)}
-                        className="flex items-center gap-1 text-[#999] hover:text-white transition-colors"
-                        disabled={!hasData}
+                        onClick={() => dayItems.length > 0 && toggleDay(d.dia)}
+                        className="flex items-center gap-1 text-[#666] hover:text-white transition-colors"
                       >
-                        {hasData
+                        {dayItems.length > 0
                           ? isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />
-                          : <span className="w-3" />}
+                          : <span className="w-3 inline-block" />}
                         <span className={['tabular-nums font-medium', isToday ? 'text-[#0EA5E9]' : ''].join(' ')}>
                           {d.dia}
                         </span>
                       </button>
                     </td>
-                    <td className="py-2.5 px-2 text-right tabular-nums text-[#22c55e]">
-                      {d.entrada > 0 ? BRL(d.entrada) : <span className="text-[#333]">—</span>}
+
+                    {/* Entrada — click to add */}
+                    <td
+                      className="py-2.5 px-3 text-right tabular-nums text-[#22c55e] cursor-pointer hover:bg-[#22c55e]/5 transition-colors"
+                      onClick={() => openAdd(d.dia, 'entrada')}
+                      title="Clique para adicionar entrada"
+                    >
+                      {d.entrada > 0 ? BRL(d.entrada) : <span className="text-[#252525]">—</span>}
                     </td>
-                    <td className="py-2.5 px-2 text-right tabular-nums text-[#ef4444]">
-                      {d.saida > 0 ? BRL(d.saida) : <span className="text-[#333]">—</span>}
+
+                    {/* Saída — click to add */}
+                    <td
+                      className="py-2.5 px-3 text-right tabular-nums text-[#ef4444] cursor-pointer hover:bg-[#ef4444]/5 transition-colors"
+                      onClick={() => openAdd(d.dia, 'saida')}
+                      title="Clique para adicionar saída"
+                    >
+                      {d.saida > 0 ? BRL(d.saida) : <span className="text-[#252525]">—</span>}
                     </td>
-                    <td className="py-2.5 px-2 text-right tabular-nums text-[#f97316]">
-                      {d.diario > 0 ? (
-                        <span title={`${dayItems.filter(i => i.natureza === 'diario').length} item(s)`}>
-                          {BRL(d.diario)} {dayItems.some(i => i.natureza === 'diario') && '···'}
-                        </span>
-                      ) : <span className="text-[#333]">—</span>}
+
+                    {/* Diário — click to add */}
+                    <td
+                      className="py-2.5 px-3 text-right tabular-nums text-[#f97316] cursor-pointer hover:bg-[#f97316]/5 transition-colors"
+                      onClick={() => openAdd(d.dia, 'diario')}
+                      title="Clique para adicionar diário"
+                    >
+                      {d.diario > 0 ? BRL(d.diario) : <span className="text-[#252525]">—</span>}
                     </td>
+
+                    {/* Saldo — texto simples sem fundo */}
                     <td className={['py-2.5 px-2 text-right tabular-nums font-medium', d.saldo >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'].join(' ')}>
                       {BRL(d.saldo)}
                     </td>
+
+                    {/* Generic + */}
                     <td className="py-2.5 px-2">
                       <button
-                        onClick={() => { setAddingToDay(d.dia); setAddForm(defaultForm()) }}
+                        onClick={() => openAdd(d.dia)}
                         className="opacity-0 group-hover:opacity-100 transition-opacity text-[#0EA5E9] hover:text-white"
                       >
                         <Plus size={14} />
@@ -331,7 +393,7 @@ export function MesTab({ ano, initialMonth }: Props) {
                     </td>
                   </tr>
 
-                  {/* Expanded items */}
+                  {/* ── Expanded items ── */}
                   {isExpanded && dayItems.map(item => (
                     <ItemRows
                       key={item.id}
@@ -339,31 +401,28 @@ export function MesTab({ ano, initialMonth }: Props) {
                       depth={0}
                       expandedItems={expandedItems}
                       toggleItem={toggleItem}
-                      editingCell={editingCell}
-                      editValue={editValue}
-                      editRef={editRef}
-                      onStartEdit={startEdit}
-                      onEditChange={setEditValue}
-                      onCommit={commitEdit}
+                      onEdit={setEditingItem}
                       onDelete={deleteLancamento}
+                      onAddChild={parent => openAdd(d.dia, parent.natureza, parent.id, (parent.saida_tipo as SaidaTipo) ?? 'fixa')}
                     />
                   ))}
 
-                  {/* Add form inline */}
+                  {/* ── Add form row ── */}
                   {addingToDay === d.dia && (
-                    <tr className="bg-[#111111]">
-                      <td colSpan={6} className="p-3">
+                    <tr key={`add-${d.dia}`}>
+                      <td colSpan={6} className="px-3 py-3 bg-[#0b0b0b] border-t border-[#1f1f1f]">
                         <AddPanel
                           form={addForm}
                           onChange={setAddForm}
-
+                          categorias={categorias}
                           cartoes={cartoes}
                           categoriasRapidas={categoriasRapidas}
                           onAdd={() => addLancamento(d.dia)}
                           onCancel={() => setAddingToDay(null)}
                           saving={saving}
                           dia={d.dia}
-                          onQuickLaunch={launchQuick}
+                          onQuickLaunch={quickLaunch}
+                          onAddQuickCat={addQuickCat}
                         />
                       </td>
                     </tr>
@@ -375,29 +434,29 @@ export function MesTab({ ano, initialMonth }: Props) {
         </table>
       </div>
 
-      {/* MOBILE LIST */}
-      <div className="sm:hidden space-y-1">
+      {/* ── MOBILE LIST ── */}
+      <div className="sm:hidden divide-y divide-[#1f1f1f]">
         {days.map(d => {
-          const colVal = mobileCol === 'entrada' ? d.entrada : mobileCol === 'saida' ? d.saida : d.diario
+          const colVal   = mobileCol === 'entrada' ? d.entrada : mobileCol === 'saida' ? d.saida : d.diario
           const colColor = mobileCol === 'entrada' ? '#22c55e' : mobileCol === 'saida' ? '#ef4444' : '#f97316'
-          const today = new Date()
-          const isToday = d.dia === today.getDate() && month === today.getMonth() + 1 && ano.ano === today.getFullYear()
+          const isToday  = isCurrentMonth && d.dia === today.getDate()
 
           return (
-            <div key={d.dia} className={['border-b border-[#1f1f1f] py-2.5 flex items-center gap-3', isToday ? 'bg-[#0EA5E9]/5' : ''].join(' ')}>
-              <span className={['w-8 text-sm tabular-nums font-medium text-center', isToday ? 'text-[#0EA5E9]' : 'text-[#666]'].join(' ')}>
+            <div key={d.dia} className={['flex items-center gap-3 py-2.5', isToday ? 'bg-[#0EA5E9]/5' : ''].join(' ')}>
+              <span className={['w-8 text-sm tabular-nums font-medium text-center shrink-0', isToday ? 'text-[#0EA5E9]' : 'text-[#666]'].join(' ')}>
                 {d.dia}
               </span>
-              <span className="flex-1 tabular-nums text-sm" style={{ color: colVal > 0 ? colColor : '#333' }}>
+              <button
+                className="flex-1 tabular-nums text-sm text-left"
+                style={{ color: colVal > 0 ? colColor : '#2a2a2a' }}
+                onClick={() => openAdd(d.dia, mobileCol)}
+              >
                 {colVal > 0 ? BRL(colVal) : '—'}
-              </span>
+              </button>
               <span className={['tabular-nums text-xs font-medium', d.saldo >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'].join(' ')}>
                 {BRL(d.saldo)}
               </span>
-              <button
-                onClick={() => { setAddingToDay(d.dia); setAddForm(defaultForm()) }}
-                className="text-[#0EA5E9]"
-              >
+              <button onClick={() => openAdd(d.dia)} className="text-[#0EA5E9] shrink-0">
                 <Plus size={14} />
               </button>
             </div>
@@ -405,114 +464,343 @@ export function MesTab({ ano, initialMonth }: Props) {
         })}
       </div>
 
-      {/* Mobile add modal */}
+      {/* ── Mobile add modal (bottom sheet) ── */}
       {addingToDay !== null && (
         <div className="sm:hidden fixed inset-0 bg-black/70 z-50 flex items-end" onClick={() => setAddingToDay(null)}>
-          <div className="bg-[#111111] border-t border-[#1f1f1f] w-full p-4 rounded-t-2xl" onClick={e => e.stopPropagation()}>
+          <div
+            className="bg-[#111111] border-t border-[#1f1f1f] w-full p-4 pb-8 rounded-t-2xl max-h-[90vh] overflow-y-auto"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="w-8 h-1 bg-[#333] rounded-full mx-auto mb-4" />
             <AddPanel
               form={addForm}
               onChange={setAddForm}
-
+              categorias={categorias}
               cartoes={cartoes}
               categoriasRapidas={categoriasRapidas}
               onAdd={() => addLancamento(addingToDay)}
               onCancel={() => setAddingToDay(null)}
               saving={saving}
               dia={addingToDay}
-              onQuickLaunch={launchQuick}
+              onQuickLaunch={quickLaunch}
+              onAddQuickCat={addQuickCat}
             />
           </div>
         </div>
+      )}
+
+      {/* ── Edit modal ── */}
+      {editingItem && (
+        <EditModal
+          item={editingItem}
+          categorias={categorias}
+          cartoes={cartoes}
+          onSave={saveEdit}
+          onClose={() => setEditingItem(null)}
+        />
       )}
     </div>
   )
 }
 
-// ── Sub-componentes ──────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// ItemRows — árvore recursiva com editar, deletar e adicionar subitem
+// ─────────────────────────────────────────────────────────────────────────────
 
 interface ItemRowsProps {
   node: FinLancamentoTree
   depth: number
   expandedItems: Set<string>
   toggleItem: (id: string) => void
-  editingCell: { id: string; field: 'nome' | 'valor' } | null
-  editValue: string
-  editRef: React.RefObject<HTMLInputElement | null>
-  onStartEdit: (id: string, field: 'nome' | 'valor', current: string) => void
-  onEditChange: (v: string) => void
-  onCommit: () => void
+  onEdit: (item: FinLancamento) => void
   onDelete: (id: string) => void
+  onAddChild: (parent: FinLancamentoTree) => void
 }
 
-function ItemRows({ node, depth, expandedItems, toggleItem, editingCell, editValue, editRef, onStartEdit, onEditChange, onCommit, onDelete }: ItemRowsProps) {
+function ItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDelete, onAddChild }: ItemRowsProps) {
   const isExpanded = expandedItems.has(node.id)
-  const natColor = node.natureza === 'entrada' ? '#22c55e' : node.natureza === 'saida' ? '#ef4444' : '#f97316'
-  const indent = depth * 16
+  const natColor   = node.natureza === 'entrada' ? '#22c55e' : node.natureza === 'saida' ? '#ef4444' : '#f97316'
+  const pl         = 8 + depth * 20
 
   return (
     <>
-      <tr className="group hover:bg-[#0a0a0a]">
-        <td className="py-1.5 px-2" style={{ paddingLeft: 8 + indent }}>
-          {node.is_grupo && (
-            <button onClick={() => toggleItem(node.id)} className="text-[#555] hover:text-white mr-1">
+      <tr className="group hover:bg-[#0d0d0d]">
+        {/* Expand toggle */}
+        <td className="py-1.5" style={{ paddingLeft: pl }}>
+          {node.is_grupo ? (
+            <button onClick={() => toggleItem(node.id)} className="text-[#444] hover:text-white transition-colors">
               {isExpanded ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
             </button>
-          )}
-        </td>
-        <td className="py-1.5 px-2 text-[#aaa] text-xs" colSpan={3} style={{ paddingLeft: node.is_grupo ? undefined : 8 + indent }}>
-          {editingCell?.id === node.id && editingCell.field === 'nome' ? (
-            <input
-              ref={editRef}
-              value={editValue}
-              onChange={e => onEditChange(e.target.value)}
-              onBlur={onCommit}
-              onKeyDown={e => e.key === 'Enter' && onCommit()}
-              className="bg-transparent border-b border-[#0EA5E9] outline-none text-white w-full"
-            />
           ) : (
-            <span onClick={() => onStartEdit(node.id, 'nome', node.nome)} className="cursor-text hover:text-white transition-colors">
-              {node.nome}
-            </span>
+            <span className="w-3 inline-block" />
           )}
         </td>
+
+        {/* Nome + badges */}
+        <td className="py-1.5 px-2 text-xs text-[#aaa]" colSpan={3}>
+          <span>{node.nome}</span>
+          {node.saida_tipo === 'cartao' && (
+            <span className="ml-2 text-[9px] text-[#a78bfa] border border-[#a78bfa]/30 rounded px-1 py-0.5">cartão</span>
+          )}
+          {node.saida_tipo === 'fixa' && (
+            <span className="ml-2 text-[9px] text-[#ef4444]/60 border border-[#ef4444]/20 rounded px-1 py-0.5">fixa</span>
+          )}
+        </td>
+
+        {/* Valor */}
         <td className="py-1.5 px-2 text-right text-xs tabular-nums" style={{ color: natColor }}>
-          {editingCell?.id === node.id && editingCell.field === 'valor' ? (
-            <input
-              ref={editRef}
-              value={editValue}
-              onChange={e => onEditChange(e.target.value)}
-              onBlur={onCommit}
-              onKeyDown={e => e.key === 'Enter' && onCommit()}
-              className="bg-transparent border-b border-[#0EA5E9] outline-none text-right w-24"
-            />
-          ) : (
-            <span onClick={() => !node.is_grupo && onStartEdit(node.id, 'valor', String(node.valor ?? 0))} className={!node.is_grupo ? 'cursor-text' : ''}>
-              {BRL(node.valorTotal)}
-            </span>
-          )}
+          {BRL(node.valorTotal)}
         </td>
+
+        {/* Actions (hover) */}
         <td className="py-1.5 px-2">
-          <button onClick={() => onDelete(node.id)} className="opacity-0 group-hover:opacity-100 text-[#555] hover:text-[#ef4444] transition-all">
-            <Trash2 size={12} />
-          </button>
+          <div className="flex items-center gap-1.5 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              onClick={() => onEdit(node)}
+              className="text-[#444] hover:text-[#0EA5E9] transition-colors"
+              title="Editar"
+            >
+              <Pencil size={11} />
+            </button>
+            {node.is_grupo && (
+              <button
+                onClick={() => onAddChild(node)}
+                className="text-[#444] hover:text-[#0EA5E9] transition-colors"
+                title="Adicionar subitem"
+              >
+                <Plus size={11} />
+              </button>
+            )}
+            <button
+              onClick={() => onDelete(node.id)}
+              className="text-[#444] hover:text-[#ef4444] transition-colors"
+              title="Excluir"
+            >
+              <Trash2 size={11} />
+            </button>
+          </div>
         </td>
       </tr>
-      {isExpanded && node.children.map(child => (
-        <ItemRows key={child.id} node={child} depth={depth + 1}
-          expandedItems={expandedItems} toggleItem={toggleItem}
-          editingCell={editingCell} editValue={editValue} editRef={editRef}
-          onStartEdit={onStartEdit} onEditChange={onEditChange} onCommit={onCommit} onDelete={onDelete}
-        />
-      ))}
+
+      {/* Children */}
+      {isExpanded && (
+        <>
+          {node.children.map(child => (
+            <ItemRows
+              key={child.id}
+              node={child}
+              depth={depth + 1}
+              expandedItems={expandedItems}
+              toggleItem={toggleItem}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onAddChild={onAddChild}
+            />
+          ))}
+
+          {/* Add child row — sempre visível quando expandido */}
+          <tr>
+            <td colSpan={6} style={{ paddingLeft: pl + 20 }} className="pb-2">
+              <button
+                onClick={() => onAddChild(node)}
+                className="flex items-center gap-1 text-[11px] text-[#0EA5E9]/50 hover:text-[#0EA5E9] transition-colors"
+              >
+                <Plus size={10} />
+                <span>item em <em className="not-italic text-[#0EA5E9]/80">{node.nome}</em></span>
+              </button>
+            </td>
+          </tr>
+        </>
+      )}
     </>
   )
 }
 
-// ── AddPanel ─────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// EditModal — edição completa de qualquer lançamento
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface EditFormState {
+  nome: string
+  valor: string
+  data: string
+  natureza: Natureza
+  saida_tipo: SaidaTipo
+  cartao_id: string
+  categoria_id: string
+}
+
+interface EditModalProps {
+  item: FinLancamento
+  categorias: FinCategoria[]
+  cartoes: FinCartao[]
+  onSave: (form: EditFormState) => Promise<void>
+  onClose: () => void
+}
+
+function EditModal({ item, categorias, cartoes, onSave, onClose }: EditModalProps) {
+  const [form, setForm] = useState<EditFormState>({
+    nome:         item.nome,
+    valor:        String(item.valor ?? ''),
+    data:         item.data,
+    natureza:     item.natureza,
+    saida_tipo:   (item.saida_tipo as SaidaTipo) ?? 'fixa',
+    cartao_id:    item.cartao_id ?? '',
+    categoria_id: item.categoria_id ?? '',
+  })
+  const [saving, setSaving] = useState(false)
+
+  const set = (k: keyof EditFormState, v: string) => setForm(f => ({ ...f, [k]: v }))
+
+  async function handle() {
+    setSaving(true)
+    await onSave(form)
+    setSaving(false)
+  }
+
+  const filteredCats = categorias.filter(c => c.natureza === form.natureza)
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-5 w-full max-w-sm space-y-3.5"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="text-sm font-semibold text-white font-[Sora]">Editar lançamento</div>
+          <button onClick={onClose} className="text-[#555] hover:text-white transition-colors">
+            <X size={14} />
+          </button>
+        </div>
+
+        {/* Nome */}
+        <input
+          value={form.nome}
+          onChange={e => set('nome', e.target.value)}
+          placeholder="Nome"
+          className="w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#0EA5E9]/60"
+        />
+
+        {/* Data */}
+        <div>
+          <div className="text-[10px] text-[#555] mb-1.5">Data</div>
+          <input
+            type="date"
+            value={form.data}
+            onChange={e => set('data', e.target.value)}
+            className="w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#0EA5E9]/60"
+          />
+        </div>
+
+        {/* Valor (somente folhas) */}
+        {!item.is_grupo && (
+          <input
+            value={form.valor}
+            onChange={e => set('valor', e.target.value)}
+            placeholder="Valor"
+            className="w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums"
+          />
+        )}
+
+        {/* Natureza (somente raízes) */}
+        {!item.parent_id && (
+          <div>
+            <div className="text-[10px] text-[#555] mb-1.5">Natureza</div>
+            <div className="flex gap-1">
+              {(['entrada','saida','diario'] as Natureza[]).map(n => (
+                <button
+                  key={n}
+                  onClick={() => set('natureza', n)}
+                  className={[
+                    'flex-1 py-1.5 text-xs rounded-lg border transition-colors',
+                    form.natureza === n ? 'border-[#0EA5E9]/50 text-[#0EA5E9]' : 'border-[#1f1f1f] text-[#555] hover:text-white',
+                  ].join(' ')}
+                >
+                  {n === 'entrada' ? 'Entrada' : n === 'saida' ? 'Saída' : 'Diário'}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Saída tipo */}
+        {form.natureza === 'saida' && (
+          <div>
+            <div className="text-[10px] text-[#555] mb-1.5">Tipo</div>
+            <div className="flex gap-1">
+              {(['fixa','cartao'] as SaidaTipo[]).map(t => (
+                <button
+                  key={t}
+                  onClick={() => set('saida_tipo', t)}
+                  className={[
+                    'flex-1 py-1.5 text-xs rounded-lg border transition-colors',
+                    form.saida_tipo === t ? 'border-[#a78bfa]/50 text-[#a78bfa]' : 'border-[#1f1f1f] text-[#555] hover:text-white',
+                  ].join(' ')}
+                >
+                  {t === 'fixa' ? 'Fixa' : 'Cartão'}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Cartão */}
+        {form.natureza === 'saida' && form.saida_tipo === 'cartao' && (
+          <select
+            value={form.cartao_id}
+            onChange={e => set('cartao_id', e.target.value)}
+            className="w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-2 text-sm text-white outline-none"
+          >
+            <option value="">Selecione o cartão</option>
+            {cartoes.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+          </select>
+        )}
+
+        {/* Categoria */}
+        {filteredCats.length > 0 && (
+          <select
+            value={form.categoria_id}
+            onChange={e => set('categoria_id', e.target.value)}
+            className="w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-2 text-sm text-white outline-none"
+          >
+            <option value="">Sem categoria</option>
+            {filteredCats.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+          </select>
+        )}
+
+        {/* Actions */}
+        <div className="flex gap-2 pt-1">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm text-[#555] border border-[#1f1f1f] rounded-lg hover:text-white transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handle}
+            disabled={saving || !form.nome.trim()}
+            className="flex-1 py-2 text-sm font-medium bg-[#0EA5E9] text-black rounded-lg hover:bg-[#38bdf8] disabled:opacity-40 transition-colors"
+          >
+            {saving ? 'Salvando…' : 'Salvar alterações'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AddPanel — formulário de adição + atalhos rápidos + nova categoria rápida
+// ─────────────────────────────────────────────────────────────────────────────
 
 interface AddPanelProps {
   form: AddForm
   onChange: (f: AddForm) => void
+  categorias: FinCategoria[]
   cartoes: FinCartao[]
   categoriasRapidas: FinCategoria[]
   onAdd: () => void
@@ -520,82 +808,154 @@ interface AddPanelProps {
   saving: boolean
   dia: number
   onQuickLaunch: (dia: number, cat: FinCategoria, nome: string, valor: string) => void
+  onAddQuickCat: (nome: string, cor?: string) => Promise<void>
 }
 
-function AddPanel({ form, onChange, cartoes, categoriasRapidas, onAdd, onCancel, saving, dia, onQuickLaunch }: AddPanelProps) {
-  const [quickNome, setQuickNome] = useState('')
-  const [quickValor, setQuickValor] = useState('')
-  const [quickCat, setQuickCat] = useState<FinCategoria | null>(null)
+function AddPanel({
+  form, onChange, categorias, cartoes, categoriasRapidas,
+  onAdd, onCancel, saving, dia, onQuickLaunch, onAddQuickCat,
+}: AddPanelProps) {
+  const [quickNome, setQuickNome]       = useState('')
+  const [quickValor, setQuickValor]     = useState('')
+  const [quickCat, setQuickCat]         = useState<FinCategoria | null>(null)
+  const [showNewCat, setShowNewCat]     = useState(false)
+  const [newCatNome, setNewCatNome]     = useState('')
+  const [newCatCor, setNewCatCor]       = useState('#f97316')
+  const [savingCat, setSavingCat]       = useState(false)
 
   const set = (k: keyof AddForm, v: unknown) => onChange({ ...form, [k]: v })
 
+  async function saveNewCat() {
+    if (!newCatNome.trim()) return
+    setSavingCat(true)
+    await onAddQuickCat(newCatNome, newCatCor)
+    setNewCatNome('')
+    setShowNewCat(false)
+    setSavingCat(false)
+  }
+
+  function fireQuick() {
+    if (!quickCat || !quickValor.trim()) return
+    onQuickLaunch(dia, quickCat, quickNome || quickCat.nome, quickValor)
+    setQuickNome('')
+    setQuickValor('')
+    setQuickCat(null)
+  }
+
   return (
-    <div className="space-y-3">
-      {/* Atalhos rápidos de diário */}
-      {categoriasRapidas.length > 0 && (
-        <div>
-          <div className="text-[10px] text-[#555] uppercase tracking-wider mb-2">Diário rápido</div>
-          <div className="flex gap-2 flex-wrap">
-            {categoriasRapidas.map(cat => (
-              <button
-                key={cat.id}
-                onClick={() => setQuickCat(quickCat?.id === cat.id ? null : cat)}
-                className={[
-                  'px-2.5 py-1 text-xs rounded-lg border transition-colors',
-                  quickCat?.id === cat.id
-                    ? 'border-[#0EA5E9]/50 text-[#0EA5E9]'
-                    : 'border-[#1f1f1f] text-[#666] hover:text-white',
-                ].join(' ')}
-              >
-                {cat.nome}
-              </button>
-            ))}
-          </div>
-          {quickCat && (
-            <div className="flex gap-2 mt-2">
-              <input
-                placeholder={quickCat.nome}
-                value={quickNome}
-                onChange={e => setQuickNome(e.target.value)}
-                className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60"
-              />
-              <input
-                placeholder="R$ 0,00"
-                value={quickValor}
-                onChange={e => setQuickValor(e.target.value)}
-                className="w-28 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums"
-              />
-              <button
-                onClick={() => { onQuickLaunch(dia, quickCat, quickNome || quickCat.nome, quickValor); setQuickNome(''); setQuickValor(''); setQuickCat(null) }}
-                className="bg-[#0EA5E9] text-black text-xs font-semibold px-3 rounded-lg hover:bg-[#38bdf8] transition-colors"
-              >
-                OK
-              </button>
-            </div>
-          )}
+    <div className="space-y-4">
+      {/* ── Quick diary ── */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-[10px] text-[#555] uppercase tracking-wider">Diário rápido</div>
+          <button
+            onClick={() => setShowNewCat(v => !v)}
+            className="flex items-center gap-0.5 text-[10px] text-[#0EA5E9]/60 hover:text-[#0EA5E9] transition-colors"
+          >
+            <Plus size={10} /> nova categoria
+          </button>
         </div>
-      )}
 
-      <div className="border-t border-[#1f1f1f] pt-3">
-        <div className="text-[10px] text-[#555] uppercase tracking-wider mb-2">Lançamento completo</div>
-
-        {/* Type selector */}
-        <div className="flex gap-1 mb-3">
-          {(['entrada','saida','diario'] as Natureza[]).map(n => (
+        {/* New quick cat form */}
+        {showNewCat && (
+          <div className="flex gap-2 mb-2">
+            <input
+              placeholder="Nome da categoria"
+              value={newCatNome}
+              onChange={e => setNewCatNome(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && saveNewCat()}
+              className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-2 py-1 text-xs text-white outline-none focus:border-[#0EA5E9]/60"
+            />
+            <input
+              type="color"
+              value={newCatCor}
+              onChange={e => setNewCatCor(e.target.value)}
+              className="w-9 h-7 bg-[#0a0a0a] border border-[#1f1f1f] rounded cursor-pointer p-0.5"
+            />
             <button
-              key={n}
-              onClick={() => set('natureza', n)}
+              onClick={saveNewCat}
+              disabled={savingCat || !newCatNome.trim()}
+              className="px-2.5 py-1 text-xs bg-[#0EA5E9] text-black rounded-lg hover:bg-[#38bdf8] disabled:opacity-40"
+            >
+              {savingCat ? '…' : 'OK'}
+            </button>
+          </div>
+        )}
+
+        {/* Quick cat buttons */}
+        <div className="flex gap-2 flex-wrap">
+          {categoriasRapidas.map(cat => (
+            <button
+              key={cat.id}
+              onClick={() => setQuickCat(quickCat?.id === cat.id ? null : cat)}
+              style={cat.cor ? {
+                borderColor: quickCat?.id === cat.id ? cat.cor + '80' : '#1f1f1f',
+                color: quickCat?.id === cat.id ? cat.cor : '#666',
+              } : {}}
               className={[
-                'flex-1 py-1.5 text-xs rounded-lg border transition-colors',
-                form.natureza === n
+                'px-2.5 py-1 text-xs rounded-lg border transition-colors',
+                !cat.cor && (quickCat?.id === cat.id
                   ? 'border-[#0EA5E9]/50 text-[#0EA5E9]'
-                  : 'border-[#1f1f1f] text-[#555] hover:text-white',
+                  : 'border-[#1f1f1f] text-[#666] hover:text-white'),
               ].join(' ')}
             >
-              {n === 'entrada' ? 'Entrada' : n === 'saida' ? 'Saída' : 'Diário'}
+              {cat.nome}
             </button>
           ))}
         </div>
+
+        {/* Quick launch inputs */}
+        {quickCat && (
+          <div className="flex gap-2 mt-2">
+            <input
+              placeholder={quickCat.nome}
+              value={quickNome}
+              onChange={e => setQuickNome(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && fireQuick()}
+              className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60"
+            />
+            <input
+              placeholder="R$ 0,00"
+              value={quickValor}
+              onChange={e => setQuickValor(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && fireQuick()}
+              className="w-28 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums"
+              autoFocus
+            />
+            <button
+              onClick={fireQuick}
+              disabled={!quickValor.trim()}
+              className="bg-[#0EA5E9] text-black text-xs font-semibold px-3 rounded-lg hover:bg-[#38bdf8] disabled:opacity-40 transition-colors"
+            >
+              OK
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* ── Full form ── */}
+      <div className="border-t border-[#1f1f1f] pt-4">
+        <div className="text-[10px] text-[#555] uppercase tracking-wider mb-3">
+          {form.parent_id ? '↳ Subitem do grupo' : 'Lançamento'}
+        </div>
+
+        {/* Natureza (hide for subitems) */}
+        {!form.parent_id && (
+          <div className="flex gap-1 mb-3">
+            {(['entrada','saida','diario'] as Natureza[]).map(n => (
+              <button
+                key={n}
+                onClick={() => set('natureza', n)}
+                className={[
+                  'flex-1 py-1.5 text-xs rounded-lg border transition-colors',
+                  form.natureza === n ? 'border-[#0EA5E9]/50 text-[#0EA5E9]' : 'border-[#1f1f1f] text-[#555] hover:text-white',
+                ].join(' ')}
+              >
+                {n === 'entrada' ? 'Entrada' : n === 'saida' ? 'Saída' : 'Diário'}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Saída tipo */}
         {form.natureza === 'saida' && (
@@ -606,9 +966,7 @@ function AddPanel({ form, onChange, cartoes, categoriasRapidas, onAdd, onCancel,
                 onClick={() => set('saida_tipo', t)}
                 className={[
                   'flex-1 py-1.5 text-xs rounded-lg border transition-colors',
-                  form.saida_tipo === t
-                    ? 'border-[#a78bfa]/50 text-[#a78bfa]'
-                    : 'border-[#1f1f1f] text-[#555] hover:text-white',
+                  form.saida_tipo === t ? 'border-[#a78bfa]/50 text-[#a78bfa]' : 'border-[#1f1f1f] text-[#555] hover:text-white',
                 ].join(' ')}
               >
                 {t === 'fixa' ? 'Fixa' : 'Cartão'}
@@ -617,7 +975,7 @@ function AddPanel({ form, onChange, cartoes, categoriasRapidas, onAdd, onCancel,
           </div>
         )}
 
-        {/* Cartão selector */}
+        {/* Cartão */}
         {form.natureza === 'saida' && form.saida_tipo === 'cartao' && (
           <select
             value={form.cartao_id}
@@ -635,25 +993,44 @@ function AddPanel({ form, onChange, cartoes, categoriasRapidas, onAdd, onCancel,
             placeholder="Nome"
             value={form.nome}
             onChange={e => set('nome', e.target.value)}
-            className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60"
             onKeyDown={e => e.key === 'Enter' && onAdd()}
+            autoFocus
+            className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60"
           />
           {!form.is_grupo && (
             <input
               placeholder="R$ 0,00"
               value={form.valor}
               onChange={e => set('valor', e.target.value)}
-              className="w-28 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums"
               onKeyDown={e => e.key === 'Enter' && onAdd()}
+              className="w-28 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums"
             />
           )}
         </div>
 
+        {/* Categoria */}
+        {categorias.filter(c => c.natureza === form.natureza).length > 0 && (
+          <select
+            value={form.categoria_id}
+            onChange={e => set('categoria_id', e.target.value)}
+            className="w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none mb-2"
+          >
+            <option value="">Sem categoria</option>
+            {categorias.filter(c => c.natureza === form.natureza).map(c => (
+              <option key={c.id} value={c.id}>{c.nome}</option>
+            ))}
+          </select>
+        )}
+
         {/* Grupo toggle */}
-        <label className="flex items-center gap-2 text-xs text-[#555] cursor-pointer mb-3">
-          <input type="checkbox" checked={form.is_grupo} onChange={e => set('is_grupo', e.target.checked)}
-            className="accent-[#0EA5E9]" />
-          Criar como grupo (soma filhos)
+        <label className="flex items-center gap-2 text-xs text-[#555] cursor-pointer mb-3 select-none">
+          <input
+            type="checkbox"
+            checked={form.is_grupo}
+            onChange={e => set('is_grupo', e.target.checked)}
+            className="accent-[#0EA5E9]"
+          />
+          Criar como grupo (soma dos subitens)
         </label>
 
         {/* Actions */}
@@ -676,4 +1053,3 @@ function AddPanel({ form, onChange, cartoes, categoriasRapidas, onAdd, onCancel,
     </div>
   )
 }
-
