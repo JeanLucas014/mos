@@ -686,15 +686,12 @@ function EditModal({ item, categorias, cartoes, onSave, onClose }: EditModalProp
           />
         </div>
 
-        {/* Valor (somente folhas) */}
-        {!item.is_grupo && (
-          <input
-            value={form.valor}
-            onChange={e => set('valor', e.target.value)}
-            placeholder="Valor"
-            className="w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums"
-          />
-        )}
+        <input
+          value={form.valor}
+          onChange={e => set('valor', e.target.value)}
+          placeholder="Valor"
+          className="w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums"
+        />
 
         {/* Natureza (somente raízes) */}
         {!item.parent_id && (
