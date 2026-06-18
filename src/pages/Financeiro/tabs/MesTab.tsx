@@ -1,7 +1,7 @@
 // src/pages/Financeiro/tabs/MesTab.tsx
 // v2 — editar lançamentos, subitens em grupos, clique por coluna, nova cat rápida, cards de resumo
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Plus, ChevronDown, ChevronRight, Trash2, Pencil, X } from 'lucide-react'
 import type {
@@ -59,10 +59,17 @@ interface AddForm {
   cartao_id: string
   is_grupo: boolean
   parent_id: string | null
+  repetir: boolean
+  repeticao_freq: 'mensal' | 'quinzenal' | 'semanal'
+  repeticao_ate: string
 }
 
 function defaultForm(nat: Natureza = 'diario', parentId: string | null = null, st: SaidaTipo = 'fixa'): AddForm {
-  return { natureza: nat, saida_tipo: st, nome: '', valor: '', categoria_id: '', cartao_id: '', is_grupo: false, parent_id: parentId }
+  return {
+    natureza: nat, saida_tipo: st, nome: '', valor: '', categoria_id: '', cartao_id: '',
+    is_grupo: false, parent_id: parentId,
+    repetir: false, repeticao_freq: 'mensal', repeticao_ate: '',
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -172,19 +179,42 @@ export function MesTab({ ano, initialMonth }: Props) {
     const nome = addForm.nome.trim()
     if (!nome) return
     setSaving(true)
-    const data = `${ano.ano}-${String(month).padStart(2,'0')}-${String(dia).padStart(2,'0')}`
-    await (supabase.from('fin_lancamentos') as any).insert({
+
+    const baseDate = new Date(`${ano.ano}-${String(month).padStart(2,'0')}-${String(dia).padStart(2,'0')}`)
+    const datas: string[] = []
+
+    if (!addForm.repetir || !addForm.repeticao_ate) {
+      datas.push(baseDate.toISOString().slice(0, 10))
+    } else {
+      const ateDate = new Date(addForm.repeticao_ate)
+      let current = new Date(baseDate)
+      while (current <= ateDate) {
+        datas.push(current.toISOString().slice(0, 10))
+        if (addForm.repeticao_freq === 'mensal') {
+          current = new Date(current.getFullYear(), current.getMonth() + 1, current.getDate())
+        } else if (addForm.repeticao_freq === 'quinzenal') {
+          current = new Date(current.getTime() + 14 * 24 * 60 * 60 * 1000)
+        } else {
+          current = new Date(current.getTime() + 7 * 24 * 60 * 60 * 1000)
+        }
+      }
+    }
+
+    const inserts = datas.map(data => ({
       ano_id:      ano.id,
       parent_id:   addForm.parent_id || null,
       data,
       natureza:    addForm.natureza,
       nome,
-      valor:       addForm.is_grupo ? null : (parseFloat(addForm.valor.replace(',','.')) || 0),
+      valor:       addForm.is_grupo ? null : (parseFloat(addForm.valor.replace(',', '.')) || 0),
       is_grupo:    addForm.is_grupo,
       categoria_id: addForm.categoria_id || null,
       cartao_id:   addForm.natureza === 'saida' && addForm.saida_tipo === 'cartao' ? addForm.cartao_id || null : null,
       saida_tipo:  addForm.natureza === 'saida' ? addForm.saida_tipo : null,
-    })
+    }))
+
+    await (supabase.from('fin_lancamentos') as any).insert(inserts)
+
     setSaving(false)
     setAddingToDay(null)
     setAddForm(defaultForm())
@@ -472,6 +502,8 @@ export function MesTab({ ano, initialMonth }: Props) {
               onCancel={() => setAddingToDay(null)}
               saving={saving}
               dia={addingToDay}
+              anoAno={ano.ano}
+              monthNum={month}
               onQuickLaunch={quickLaunch}
               onAddQuickCat={addQuickCat}
             />
@@ -794,13 +826,15 @@ interface AddPanelProps {
   onCancel: () => void
   saving: boolean
   dia: number
+  anoAno: number
+  monthNum: number
   onQuickLaunch: (dia: number, cat: FinCategoria, nome: string, valor: string) => void
   onAddQuickCat: (nome: string, cor?: string) => Promise<void>
 }
 
 function AddPanel({
   form, onChange, categorias, cartoes, categoriasRapidas,
-  onAdd, onCancel, saving, dia, onQuickLaunch, onAddQuickCat,
+  onAdd, onCancel, saving, dia, anoAno, monthNum, onQuickLaunch, onAddQuickCat,
 }: AddPanelProps) {
   const [quickNome, setQuickNome]       = useState('')
   const [quickValor, setQuickValor]     = useState('')
@@ -811,6 +845,25 @@ function AddPanel({
   const [savingCat, setSavingCat]       = useState(false)
 
   const set = (k: keyof AddForm, v: unknown) => onChange({ ...form, [k]: v })
+
+  const repeticaoCount = useMemo(() => {
+    if (!form.repetir || !form.repeticao_ate) return 1
+    const base = new Date(`${anoAno}-${String(monthNum).padStart(2,'0')}-${String(dia).padStart(2,'0')}`)
+    const ate = new Date(form.repeticao_ate)
+    let count = 0
+    let current = new Date(base)
+    while (current <= ate) {
+      count++
+      if (form.repeticao_freq === 'mensal') {
+        current = new Date(current.getFullYear(), current.getMonth() + 1, current.getDate())
+      } else if (form.repeticao_freq === 'quinzenal') {
+        current = new Date(current.getTime() + 14 * 24 * 60 * 60 * 1000)
+      } else {
+        current = new Date(current.getTime() + 7 * 24 * 60 * 60 * 1000)
+      }
+    }
+    return count
+  }, [form.repetir, form.repeticao_ate, form.repeticao_freq, anoAno, monthNum, dia])
 
   async function saveNewCat() {
     if (!newCatNome.trim()) return
@@ -1020,6 +1073,51 @@ function AddPanel({
           Criar como grupo (soma dos subitens)
         </label>
 
+        {/* Recorrência */}
+        <div className="border-t border-[#1f1f1f] pt-3 mb-3">
+          <label className="flex items-center gap-2 text-xs text-[#555] cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={form.repetir}
+              onChange={e => set('repetir', e.target.checked)}
+              className="accent-[#0EA5E9]"
+            />
+            Repetir este lançamento
+          </label>
+
+          {form.repetir && (
+            <div className="mt-3 space-y-2">
+              <div className="flex gap-1">
+                {(['mensal','quinzenal','semanal'] as const).map(f => (
+                  <button
+                    key={f}
+                    onClick={() => set('repeticao_freq', f)}
+                    className={[
+                      'flex-1 py-1.5 text-xs rounded-lg border transition-colors',
+                      form.repeticao_freq === f
+                        ? 'border-[#0EA5E9]/50 text-[#0EA5E9]'
+                        : 'border-[#1f1f1f] text-[#555] hover:text-white',
+                    ].join(' ')}
+                  >
+                    {f === 'mensal' ? 'Mensal' : f === 'quinzenal' ? 'Quinzenal' : 'Semanal'}
+                  </button>
+                ))}
+              </div>
+              <div>
+                <div className="text-[10px] text-[#555] mb-1">Repetir até</div>
+                <input
+                  type="date"
+                  value={form.repeticao_ate}
+                  onChange={e => set('repeticao_ate', e.target.value)}
+                  min={`${anoAno}-01-01`}
+                  max={`${anoAno}-12-31`}
+                  className="w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Actions */}
         <div className="flex gap-2">
           <button
@@ -1033,7 +1131,7 @@ function AddPanel({
             disabled={saving || !form.nome.trim()}
             className="flex-1 py-1.5 text-sm font-medium bg-[#0EA5E9] text-black rounded-lg hover:bg-[#38bdf8] disabled:opacity-40 transition-colors"
           >
-            {saving ? 'Salvando…' : 'Adicionar'}
+            {saving ? 'Salvando…' : form.repetir && form.repeticao_ate ? `Adicionar (${repeticaoCount}x)` : 'Adicionar'}
           </button>
         </div>
       </div>

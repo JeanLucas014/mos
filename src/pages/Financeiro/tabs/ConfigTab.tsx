@@ -1,20 +1,17 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Plus, Trash2, Play, Download, Upload, AlertTriangle } from 'lucide-react'
-import type { FinAno, FinCategoria, FinCartao, FinRecorrente } from '../types'
+import { Plus, Trash2, Download, Upload, AlertTriangle } from 'lucide-react'
+import type { FinAno, FinCategoria, FinCartao } from '../types'
 
-const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
 
 interface Props { anos: FinAno[]; onReload: () => void }
 
 export function ConfigTab({ anos, onReload }: Props) {
-  const [tab, setTab] = useState<'recorrentes' | 'categorias' | 'cartoes' | 'anos' | 'backup'>('recorrentes')
-  const [recorrentes, setRecorrentes] = useState<FinRecorrente[]>([])
+  const [tab, setTab] = useState<'categorias' | 'cartoes' | 'anos' | 'backup'>('categorias')
   const [categorias, setCategorias] = useState<FinCategoria[]>([])
   const [cartoes, setCartoes] = useState<FinCartao[]>([])
   const [loading, setLoading] = useState(true)
 
-  const [recForm, setRecForm] = useState({ nome: '', valor: '', dia_previsto: '10', saida_tipo: 'fixa' })
   const [catForm, setCatForm] = useState({ nome: '', natureza: 'diario', cor: '', rapida: false })
   const [cardForm, setCardForm] = useState({ nome: '', cor: '' })
   const [anoForm, setAnoForm] = useState({ ano: String(new Date().getFullYear() + 1), saldo_inicial: '0' })
@@ -23,58 +20,13 @@ export function ConfigTab({ anos, onReload }: Props) {
 
   async function loadAll() {
     setLoading(true)
-    const [{ data: r }, { data: c }, { data: cr }] = await Promise.all([
-      supabase.from('fin_recorrentes').select('*').order('dia_previsto'),
+    const [{ data: c }, { data: cr }] = await Promise.all([
       supabase.from('fin_categorias').select('*').order('ordem'),
       supabase.from('fin_cartoes').select('*').order('nome'),
     ])
-    setRecorrentes((r ?? []) as FinRecorrente[])
     setCategorias((c ?? []) as FinCategoria[])
     setCartoes((cr ?? []) as FinCartao[])
     setLoading(false)
-  }
-
-  async function launchRecorrentes(mes: number) {
-    const ano = anos[anos.length - 1]
-    if (!ano) return alert('Nenhum ano configurado.')
-    const ativas = recorrentes.filter(r => r.ativo)
-    if (!ativas.length) return alert('Nenhum recorrente ativo.')
-    for (const rec of ativas) {
-      const dia = Math.min(rec.dia_previsto, new Date(ano.ano, mes, 0).getDate())
-      const data = `${ano.ano}-${String(mes).padStart(2,'0')}-${String(dia).padStart(2,'0')}`
-      const { data: exists } = await (supabase.from('fin_lancamentos') as any)
-        .select('id').eq('ano_id', ano.id).eq('nome', rec.nome).eq('data', data).limit(1)
-      if (!(exists as {id:string}[] | null)?.length) {
-        await (supabase.from('fin_lancamentos') as any).insert({
-          ano_id: ano.id, data, natureza: 'saida', nome: rec.nome,
-          valor: rec.valor, is_grupo: false,
-          saida_tipo: rec.saida_tipo as 'fixa' | 'cartao',
-        })
-      }
-    }
-    alert(`${ativas.length} lançamentos inseridos para ${MESES[mes - 1]}.`)
-  }
-
-  async function addRecorrente() {
-    const v = parseFloat(recForm.valor.replace(',', '.')) || 0
-    if (!recForm.nome.trim()) return
-    await (supabase.from('fin_recorrentes') as any).insert({
-      nome: recForm.nome.trim(), valor: v,
-      dia_previsto: parseInt(recForm.dia_previsto) || 10,
-      saida_tipo: recForm.saida_tipo,
-    })
-    setRecForm({ nome: '', valor: '', dia_previsto: '10', saida_tipo: 'fixa' })
-    loadAll()
-  }
-
-  async function toggleRecorrente(id: string, ativo: boolean) {
-    await (supabase.from('fin_recorrentes') as any).update({ ativo }).eq('id', id)
-    loadAll()
-  }
-
-  async function delRec(id: string) {
-    await (supabase.from('fin_recorrentes') as any).delete().eq('id', id)
-    loadAll()
   }
 
   async function addCategoria() {
@@ -121,7 +73,6 @@ export function ConfigTab({ anos, onReload }: Props) {
   }
 
   const subtabs = [
-    { id: 'recorrentes', label: 'Recorrentes' },
     { id: 'categorias',  label: 'Categorias' },
     { id: 'cartoes',     label: 'Cartões' },
     { id: 'anos',        label: 'Anos' },
@@ -145,58 +96,6 @@ export function ConfigTab({ anos, onReload }: Props) {
           </button>
         ))}
       </div>
-
-      {/* Recorrentes */}
-      {tab === 'recorrentes' && (
-        <div className="space-y-4">
-          <div className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-4">
-            <div className="text-xs text-[#555] font-[Sora] uppercase tracking-wider mb-3">Lançar fixos do mês</div>
-            <div className="flex gap-2 flex-wrap">
-              {MESES.map((m, i) => (
-                <button key={i} onClick={() => launchRecorrentes(i + 1)}
-                  className="flex items-center gap-1 px-3 py-1.5 text-xs border border-[#1f1f1f] rounded-lg text-[#666] hover:text-[#0EA5E9] hover:border-[#0EA5E9]/40 transition-colors">
-                  <Play size={10} /> {m}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-4 space-y-3">
-            <div className="text-xs text-[#555] font-[Sora] uppercase tracking-wider">Novo recorrente</div>
-            <div className="flex gap-2 flex-wrap">
-              <input placeholder="Nome" value={recForm.nome} onChange={e => setRecForm({ ...recForm, nome: e.target.value })}
-                className="flex-1 min-w-32 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60" />
-              <input placeholder="Valor" value={recForm.valor} onChange={e => setRecForm({ ...recForm, valor: e.target.value })}
-                className="w-24 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums" />
-              <input placeholder="Dia" type="number" min={1} max={31} value={recForm.dia_previsto}
-                onChange={e => setRecForm({ ...recForm, dia_previsto: e.target.value })}
-                className="w-16 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums" />
-              <select value={recForm.saida_tipo} onChange={e => setRecForm({ ...recForm, saida_tipo: e.target.value })}
-                className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none">
-                <option value="fixa">Fixa</option>
-                <option value="cartao">Cartão</option>
-              </select>
-              <button onClick={addRecorrente}
-                className="px-4 py-1.5 text-sm font-medium bg-[#0EA5E9] text-black rounded-lg hover:bg-[#38bdf8]">
-                <Plus size={14} />
-              </button>
-            </div>
-          </div>
-
-          {recorrentes.map(r => (
-            <div key={r.id} className="group flex items-center gap-3 py-2.5 border-b border-[#1f1f1f]">
-              <button onClick={() => toggleRecorrente(r.id, !r.ativo)}
-                className={['w-3 h-3 rounded-full border shrink-0', r.ativo ? 'bg-[#22c55e] border-[#22c55e]' : 'border-[#555]'].join(' ')} />
-              <span className={['flex-1 text-sm', r.ativo ? 'text-white' : 'text-[#555]'].join(' ')}>{r.nome}</span>
-              <span className="text-xs text-[#555]">Dia {r.dia_previsto}</span>
-              <span className="text-xs text-[#555]">{r.saida_tipo}</span>
-              <button onClick={() => delRec(r.id)} className="opacity-0 group-hover:opacity-100 text-[#555] hover:text-[#ef4444] transition-all">
-                <Trash2 size={12} />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
 
       {/* Categorias */}
       {tab === 'categorias' && (
