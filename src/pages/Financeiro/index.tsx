@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import type { FinAno } from './types'
 import { AnoTab } from './tabs/AnoTab'
@@ -17,7 +18,10 @@ const TABS: { id: Tab; label: string }[] = [
 ]
 
 export default function FinanceiroPage() {
-  const [activeTab, setActiveTab] = useState<Tab>('ano')
+  const location = useLocation()
+  const [activeTab, setActiveTab] = useState<Tab>(
+    (location.state as any)?.initialTab ?? 'ano'
+  )
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1)
   const [ano, setAno] = useState<FinAno | null>(null)
