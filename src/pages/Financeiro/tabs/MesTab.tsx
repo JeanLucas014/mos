@@ -407,26 +407,6 @@ export function MesTab({ ano, initialMonth }: Props) {
                     />
                   ))}
 
-                  {/* ── Add form row ── */}
-                  {addingToDay === d.dia && (
-                    <tr key={`add-${d.dia}`}>
-                      <td colSpan={6} className="px-3 py-3 bg-[#0b0b0b] border-t border-[#1f1f1f]">
-                        <AddPanel
-                          form={addForm}
-                          onChange={setAddForm}
-                          categorias={categorias}
-                          cartoes={cartoes}
-                          categoriasRapidas={categoriasRapidas}
-                          onAdd={() => addLancamento(d.dia)}
-                          onCancel={() => setAddingToDay(null)}
-                          saving={saving}
-                          dia={d.dia}
-                          onQuickLaunch={quickLaunch}
-                          onAddQuickCat={addQuickCat}
-                        />
-                      </td>
-                    </tr>
-                  )}
                 </>
               )
             })}
@@ -464,14 +444,24 @@ export function MesTab({ ano, initialMonth }: Props) {
         })}
       </div>
 
-      {/* ── Mobile add modal (bottom sheet) ── */}
+      {/* ── Add modal (overlay — desktop e mobile) ── */}
       {addingToDay !== null && (
-        <div className="sm:hidden fixed inset-0 bg-black/70 z-50 flex items-end" onClick={() => setAddingToDay(null)}>
+        <div
+          className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4"
+          onClick={() => setAddingToDay(null)}
+        >
           <div
-            className="bg-[#111111] border-t border-[#1f1f1f] w-full p-4 pb-8 rounded-t-2xl max-h-[90vh] overflow-y-auto"
+            className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-5 w-full max-w-sm max-h-[90vh] overflow-y-auto"
             onClick={e => e.stopPropagation()}
           >
-            <div className="w-8 h-1 bg-[#333] rounded-full mx-auto mb-4" />
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-sm font-semibold text-white font-[Sora]">
+                Adicionar · Dia {addingToDay}
+              </div>
+              <button onClick={() => setAddingToDay(null)} className="text-[#555] hover:text-white transition-colors">
+                <X size={14} />
+              </button>
+            </div>
             <AddPanel
               form={addForm}
               onChange={setAddForm}
