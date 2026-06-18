@@ -899,6 +899,48 @@ export interface Database {
           updated_at?: string
         }
       }
+      fin_anos: {
+        Row: { id: string; user_id: string; ano: number; saldo_inicial: number; created_at: string }
+        Insert: { id?: string; user_id?: string; ano: number; saldo_inicial?: number; created_at?: string }
+        Update: { id?: string; user_id?: string; ano?: number; saldo_inicial?: number; created_at?: string }
+        Relationships: []
+      }
+      fin_categorias: {
+        Row: { id: string; user_id: string; nome: string; natureza: string; cor: string | null; rapida: boolean; ordem: number }
+        Insert: { id?: string; user_id?: string; nome: string; natureza: string; cor?: string | null; rapida?: boolean; ordem?: number }
+        Update: { id?: string; user_id?: string; nome?: string; natureza?: string; cor?: string | null; rapida?: boolean; ordem?: number }
+        Relationships: []
+      }
+      fin_cartoes: {
+        Row: { id: string; user_id: string; nome: string; cor: string | null }
+        Insert: { id?: string; user_id?: string; nome: string; cor?: string | null }
+        Update: { id?: string; user_id?: string; nome?: string; cor?: string | null }
+        Relationships: []
+      }
+      fin_lancamentos: {
+        Row: { id: string; user_id: string; ano_id: string; parent_id: string | null; data: string; natureza: string; nome: string; valor: number | null; is_grupo: boolean; categoria_id: string | null; cartao_id: string | null; saida_tipo: string | null; ordem: number; created_at: string }
+        Insert: { id?: string; user_id?: string; ano_id: string; parent_id?: string | null; data: string; natureza: string; nome: string; valor?: number | null; is_grupo?: boolean; categoria_id?: string | null; cartao_id?: string | null; saida_tipo?: string | null; ordem?: number; created_at?: string }
+        Update: { id?: string; user_id?: string; ano_id?: string; parent_id?: string | null; data?: string; natureza?: string; nome?: string; valor?: number | null; is_grupo?: boolean; categoria_id?: string | null; cartao_id?: string | null; saida_tipo?: string | null; ordem?: number; created_at?: string }
+        Relationships: []
+      }
+      fin_metas: {
+        Row: { id: string; user_id: string; nome: string; alvo: number; atual: number; ordem: number }
+        Insert: { id?: string; user_id?: string; nome: string; alvo?: number; atual?: number; ordem?: number }
+        Update: { id?: string; user_id?: string; nome?: string; alvo?: number; atual?: number; ordem?: number }
+        Relationships: []
+      }
+      fin_investimentos: {
+        Row: { id: string; user_id: string; data: string; valor: number; descricao: string | null }
+        Insert: { id?: string; user_id?: string; data: string; valor: number; descricao?: string | null }
+        Update: { id?: string; user_id?: string; data?: string; valor?: number; descricao?: string | null }
+        Relationships: []
+      }
+      fin_recorrentes: {
+        Row: { id: string; user_id: string; nome: string; valor: number; dia_previsto: number; natureza: string; saida_tipo: string; categoria_id: string | null; ativo: boolean }
+        Insert: { id?: string; user_id?: string; nome: string; valor?: number; dia_previsto?: number; natureza?: string; saida_tipo?: string; categoria_id?: string | null; ativo?: boolean }
+        Update: { id?: string; user_id?: string; nome?: string; valor?: number; dia_previsto?: number; natureza?: string; saida_tipo?: string; categoria_id?: string | null; ativo?: boolean }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
