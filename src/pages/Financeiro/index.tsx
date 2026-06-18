@@ -14,7 +14,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'mes', label: 'Mês' },
   { id: 'metas', label: 'Metas' },
   { id: 'investimentos', label: 'Investimentos' },
-  { id: 'config', label: 'Config' },
+  { id: 'config', label: 'Configurações' },
 ]
 
 export default function FinanceiroPage() {

@@ -100,17 +100,6 @@ const GROUPS = [
         ),
       },
       {
-        path: '/financeiro',
-        label: 'Configurações',
-        icon: (
-          <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
-            <circle cx="8" cy="8" r="2.2" stroke="currentColor" strokeWidth="1.3"/>
-            <path d="M8 1.5v1.2M8 13.3v1.2M1.5 8h1.2M13.3 8h1.2M3.3 3.3l.85.85M11.85 11.85l.85.85M3.3 12.7l.85-.85M11.85 4.15l.85-.85" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-          </svg>
-        ),
-        state: { initialTab: 'config' },
-      },
-      {
         path: '/faturamento',
         label: 'Faturamento',
         icon: (
