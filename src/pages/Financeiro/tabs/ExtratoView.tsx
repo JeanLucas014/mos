@@ -1,9 +1,10 @@
 // src/pages/Financeiro/tabs/ExtratoView.tsx
 // Modo de visualização "Extrato" — somente leitura, sem edição/criação/exclusão.
-// Agrupa subitens sob o nome do "pai" (grupo), igual à visão de calendário.
+// Agrupa subitens sob o nome do "pai" (grupo) e permite ordenar por
+// data, nome ou valor (asc/desc).
 
 import { useState } from 'react'
-import { Search } from 'lucide-react'
+import { Search, ArrowUpDown } from 'lucide-react'
 import type { FinLancamentoTree, Natureza } from '../types'
 
 const BRL = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -42,10 +43,40 @@ function flattenLeaves(nodes: FinLancamentoTree[], parentNome?: string): Extrato
 }
 
 type Block =
-  | { kind: 'single'; sortKey: string; item: ExtratoItem }
-  | { kind: 'group'; parentNome: string; children: ExtratoItem[]; total: number; sortKey: string }
+  | { kind: 'single'; item: ExtratoItem }
+  | { kind: 'group'; parentNome: string; children: ExtratoItem[]; total: number }
 
-function buildBlocks(items: ExtratoItem[]): Block[] {
+type SortOption = 'data_desc' | 'data_asc' | 'nome_asc' | 'nome_desc' | 'valor_desc' | 'valor_asc'
+
+const SORT_OPTIONS: { id: SortOption; label: string }[] = [
+  { id: 'data_desc',  label: 'Data (mais recente)' },
+  { id: 'data_asc',   label: 'Data (mais antiga)' },
+  { id: 'nome_asc',   label: 'Nome (A-Z)' },
+  { id: 'nome_desc',  label: 'Nome (Z-A)' },
+  { id: 'valor_desc', label: 'Valor (maior)' },
+  { id: 'valor_asc',  label: 'Valor (menor)' },
+]
+
+function makeComparator<T>(
+  option: SortOption,
+  dateOf: (x: T) => string,
+  nameOf: (x: T) => string,
+  valorOf: (x: T) => number,
+) {
+  return (a: T, b: T) => {
+    switch (option) {
+      case 'data_desc':  return dateOf(b).localeCompare(dateOf(a))
+      case 'data_asc':   return dateOf(a).localeCompare(dateOf(b))
+      case 'nome_asc':   return nameOf(a).localeCompare(nameOf(b), 'pt-BR')
+      case 'nome_desc':  return nameOf(b).localeCompare(nameOf(a), 'pt-BR')
+      case 'valor_desc': return valorOf(b) - valorOf(a)
+      case 'valor_asc':  return valorOf(a) - valorOf(b)
+      default: return 0
+    }
+  }
+}
+
+function buildBlocks(items: ExtratoItem[], sortOption: SortOption): Block[] {
   const groupsMap = new Map<string, ExtratoItem[]>()
   const standalone: ExtratoItem[] = []
 
@@ -58,18 +89,25 @@ function buildBlocks(items: ExtratoItem[]): Block[] {
     }
   }
 
-  const blocks: Block[] = []
+  const childComparator = makeComparator<ExtratoItem>(sortOption, i => i.data, i => i.nome, i => i.valor)
+
+  let blocks: Block[] = []
   for (const item of standalone) {
-    blocks.push({ kind: 'single', sortKey: item.data, item })
+    blocks.push({ kind: 'single', item })
   }
   for (const [parentNome, children] of groupsMap.entries()) {
     const total = children.reduce((s, c) => s + c.valor, 0)
-    const sorted = [...children].sort((a, b) => b.data.localeCompare(a.data))
-    blocks.push({ kind: 'group', parentNome, children: sorted, total, sortKey: sorted[0].data })
+    const sortedChildren = [...children].sort(childComparator)
+    blocks.push({ kind: 'group', parentNome, children: sortedChildren, total })
   }
 
-  blocks.sort((a, b) => b.sortKey.localeCompare(a.sortKey))
-  return blocks
+  const blockComparator = makeComparator<Block>(
+    sortOption,
+    b => b.kind === 'single' ? b.item.data : b.children[0].data,
+    b => b.kind === 'single' ? b.item.nome : b.parentNome,
+    b => b.kind === 'single' ? b.item.valor : b.total,
+  )
+  return blocks.sort(blockComparator)
 }
 
 interface Props {
@@ -85,6 +123,7 @@ const SEGMENTS: { id: Natureza; label: string; color: string }[] = [
 export function ExtratoView({ trees }: Props) {
   const [segment, setSegment] = useState<Natureza>('saida')
   const [query, setQuery] = useState('')
+  const [sortOption, setSortOption] = useState<SortOption>('data_desc')
 
   const allLeaves = flattenLeaves(trees)
   const bySegment = allLeaves.filter(i => i.natureza === segment)
@@ -97,14 +136,14 @@ export function ExtratoView({ trees }: Props) {
       )
     : bySegment
 
-  const blocks = buildBlocks(filteredItems)
+  const blocks = buildBlocks(filteredItems, sortOption)
   const total = filteredItems.reduce((s, i) => s + i.valor, 0)
   const activeColor = SEGMENTS.find(s => s.id === segment)!.color
 
   return (
     <div>
       {/* Segment selector */}
-      <div className="flex gap-1 mb-4">
+      <div className="flex gap-1 mb-3">
         {SEGMENTS.map(s => (
           <button
             key={s.id}
@@ -120,15 +159,30 @@ export function ExtratoView({ trees }: Props) {
         ))}
       </div>
 
-      {/* Search */}
-      <div className="relative mb-4">
-        <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#444]" />
-        <input
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          placeholder="Buscar por nome…"
-          className="w-full bg-[#111111] border border-[#1f1f1f] rounded-lg pl-8 pr-3 py-2 text-sm text-white outline-none focus:border-[#0EA5E9]/60"
-        />
+      {/* Search + Sort */}
+      <div className="flex gap-2 mb-4">
+        <div className="relative flex-1">
+          <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#444]" />
+          <input
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Buscar por nome…"
+            className="w-full bg-[#111111] border border-[#1f1f1f] rounded-lg pl-8 pr-3 py-2 text-sm text-white outline-none focus:border-[#0EA5E9]/60"
+          />
+        </div>
+
+        <div className="relative shrink-0">
+          <ArrowUpDown size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#555] pointer-events-none" />
+          <select
+            value={sortOption}
+            onChange={e => setSortOption(e.target.value as SortOption)}
+            className="bg-[#111111] border border-[#1f1f1f] rounded-lg pl-7 pr-2.5 py-2 text-xs text-[#ccc] outline-none cursor-pointer appearance-none max-w-[150px] focus:border-[#0EA5E9]/60"
+          >
+            {SORT_OPTIONS.map(o => (
+              <option key={o.id} value={o.id}>{o.label}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Summary */}
