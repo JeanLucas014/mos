@@ -3,7 +3,8 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Plus, ChevronDown, ChevronRight, Trash2, Pencil, X } from 'lucide-react'
+import { Plus, ChevronDown, ChevronRight, Trash2, Pencil, X, CalendarDays, List } from 'lucide-react'
+import { ExtratoView } from './ExtratoView'
 import type {
   FinAno, FinLancamento, FinLancamentoTree,
   FinCategoria, FinCartao, DiaTotais, Natureza, SaidaTipo,
@@ -89,6 +90,7 @@ export function MesTab({ ano, initialMonth }: Props) {
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
   const [editingItem, setEditingItem]   = useState<FinLancamento | null>(null)
   const [addingToDay, setAddingToDay]   = useState<number | null>(null)
+  const [viewMode, setViewMode]         = useState<'calendario' | 'extrato'>('calendario')
   const [addForm, setAddForm]           = useState<AddForm>(defaultForm())
   const [saving, setSaving]             = useState(false)
   const [mobileCol, setMobileCol]       = useState<Natureza>('diario')
@@ -307,6 +309,32 @@ export function MesTab({ ano, initialMonth }: Props) {
         </span>
       </div>
 
+      {/* ── View mode toggle ── */}
+      <div className="flex gap-1 mb-5">
+        <button
+          onClick={() => setViewMode('calendario')}
+          className={[
+            'flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border transition-colors',
+            viewMode === 'calendario'
+              ? 'border-[#0EA5E9]/50 text-[#0EA5E9]'
+              : 'border-[#1f1f1f] text-[#555] hover:text-white',
+          ].join(' ')}
+        >
+          <CalendarDays size={12} /> Calendário
+        </button>
+        <button
+          onClick={() => setViewMode('extrato')}
+          className={[
+            'flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border transition-colors',
+            viewMode === 'extrato'
+              ? 'border-[#0EA5E9]/50 text-[#0EA5E9]'
+              : 'border-[#1f1f1f] text-[#555] hover:text-white',
+          ].join(' ')}
+        >
+          <List size={12} /> Extrato
+        </button>
+      </div>
+
       {/* ── Summary cards ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {[
@@ -323,22 +351,25 @@ export function MesTab({ ano, initialMonth }: Props) {
         ))}
       </div>
 
-      {/* ── Mobile column toggle ── */}
-      <div className="flex sm:hidden gap-1 mb-4">
-        {(['entrada','saida','diario'] as Natureza[]).map(col => (
-          <button
-            key={col}
-            onClick={() => setMobileCol(col)}
-            className={[
-              'flex-1 py-1.5 text-xs rounded-lg border transition-colors',
-              mobileCol === col ? 'border-[#0EA5E9]/50 text-[#0EA5E9]' : 'border-[#1f1f1f] text-[#555]',
-            ].join(' ')}
-          >
-            {col === 'entrada' ? 'Entrada' : col === 'saida' ? 'Saída' : 'Diário'}
-          </button>
-        ))}
-      </div>
+      {/* ── Mobile column toggle (apenas calendário) ── */}
+      {viewMode === 'calendario' && (
+        <div className="flex sm:hidden gap-1 mb-4">
+          {(['entrada','saida','diario'] as Natureza[]).map(col => (
+            <button
+              key={col}
+              onClick={() => setMobileCol(col)}
+              className={[
+                'flex-1 py-1.5 text-xs rounded-lg border transition-colors',
+                mobileCol === col ? 'border-[#0EA5E9]/50 text-[#0EA5E9]' : 'border-[#1f1f1f] text-[#555]',
+              ].join(' ')}
+            >
+              {col === 'entrada' ? 'Entrada' : col === 'saida' ? 'Saída' : 'Diário'}
+            </button>
+          ))}
+        </div>
+      )}
 
+      {viewMode === 'calendario' ? (<>
       {/* ── PC TABLE ── */}
       <div className="hidden sm:block overflow-x-auto">
         <table className="w-full text-sm border-collapse">
@@ -498,6 +529,9 @@ export function MesTab({ ano, initialMonth }: Props) {
           )
         })}
       </div>
+      </>) : (
+        <ExtratoView trees={trees} />
+      )}
 
       {/* ── Add modal (overlay — desktop e mobile) ── */}
       {addingToDay !== null && (
