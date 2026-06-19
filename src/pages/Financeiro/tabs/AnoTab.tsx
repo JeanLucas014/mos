@@ -76,8 +76,14 @@ export function AnoTab({ ano, onGoToMonth }: Props) {
     <div className="space-y-6">
       {/* Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        {cards.map(c => (
-          <div key={c.label} className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-4 relative">
+        {cards.map((c, idx) => (
+          <div
+            key={c.label}
+            className={[
+              'bg-[#111111] border border-[#1f1f1f] rounded-xl p-4 relative',
+              idx === cards.length - 1 ? 'col-span-2 sm:col-span-1' : '',
+            ].join(' ')}
+          >
             <span className="absolute top-3.5 right-3.5 w-2 h-2 rounded-full" style={{ background: c.color }} />
             <div className="text-[10px] text-[#555] uppercase tracking-wider font-[Sora] mb-2">{c.label}</div>
             <div className="text-base font-bold tabular-nums" style={{ color: c.color }}>{BRL(c.value)}</div>

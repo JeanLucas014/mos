@@ -89,3 +89,18 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Previne zoom automático do iOS ao focar inputs */
+input, select, textarea {
+  font-size: 16px !important;
+}
+@media (min-width: 640px) {
+  input, select, textarea {
+    font-size: 14px !important;
+  }
+}
+
+/* Previne zoom de double-tap em botões/elementos clicáveis */
+button, a, [role="button"] {
+  touch-action: manipulation;
+}

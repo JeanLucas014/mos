@@ -447,28 +447,53 @@ export function MesTab({ ano, initialMonth }: Props) {
       {/* ── MOBILE LIST ── */}
       <div className="sm:hidden divide-y divide-[#1f1f1f]">
         {days.map(d => {
-          const colVal   = mobileCol === 'entrada' ? d.entrada : mobileCol === 'saida' ? d.saida : d.diario
-          const colColor = mobileCol === 'entrada' ? '#22c55e' : mobileCol === 'saida' ? '#ef4444' : '#f97316'
-          const isToday  = isCurrentMonth && d.dia === today.getDate()
+          const colVal          = mobileCol === 'entrada' ? d.entrada : mobileCol === 'saida' ? d.saida : d.diario
+          const colColor        = mobileCol === 'entrada' ? '#22c55e' : mobileCol === 'saida' ? '#ef4444' : '#f97316'
+          const isToday         = isCurrentMonth && d.dia === today.getDate()
+          const dayItemsFiltered = (byDay[d.dia] ?? []).filter(i => i.natureza === mobileCol)
+          const isExpanded      = expandedDays.has(d.dia)
 
           return (
-            <div key={d.dia} className={['flex items-center gap-3 py-2.5', isToday ? 'bg-[#0EA5E9]/5' : ''].join(' ')}>
-              <span className={['w-8 text-sm tabular-nums font-medium text-center shrink-0', isToday ? 'text-[#0EA5E9]' : 'text-[#666]'].join(' ')}>
-                {d.dia}
-              </span>
-              <button
-                className="flex-1 tabular-nums text-sm text-left"
-                style={{ color: colVal > 0 ? colColor : '#2a2a2a' }}
-                onClick={() => openAdd(d.dia, mobileCol)}
-              >
-                {colVal > 0 ? BRL(colVal) : '—'}
-              </button>
-              <span className={['tabular-nums text-xs font-medium', d.saldo >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'].join(' ')}>
-                {BRL(d.saldo)}
-              </span>
-              <button onClick={() => openAdd(d.dia)} className="text-[#0EA5E9] shrink-0">
-                <Plus size={14} />
-              </button>
+            <div key={d.dia} className={isToday ? 'bg-[#0EA5E9]/5' : ''}>
+              <div className="flex items-center gap-3 py-2.5">
+                <button
+                  className="flex items-center gap-1 w-8 shrink-0"
+                  onClick={() => dayItemsFiltered.length > 0 && toggleDay(d.dia)}
+                >
+                  {dayItemsFiltered.length > 0
+                    ? (isExpanded ? <ChevronDown size={11} className="text-[#666]" /> : <ChevronRight size={11} className="text-[#666]" />)
+                    : <span className="w-[11px]" />}
+                  <span className={['text-sm tabular-nums font-medium', isToday ? 'text-[#0EA5E9]' : 'text-[#666]'].join(' ')}>
+                    {d.dia}
+                  </span>
+                </button>
+                <button
+                  className="flex-1 tabular-nums text-sm text-left"
+                  style={{ color: colVal > 0 ? colColor : '#2a2a2a' }}
+                  onClick={() => openAdd(d.dia, mobileCol)}
+                >
+                  {colVal > 0 ? BRL(colVal) : '—'}
+                </button>
+                <span className={['tabular-nums text-xs font-medium', d.saldo >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'].join(' ')}>
+                  {BRL(d.saldo)}
+                </span>
+                <button onClick={() => openAdd(d.dia, mobileCol)} className="text-[#0EA5E9] shrink-0">
+                  <Plus size={14} />
+                </button>
+              </div>
+
+              {isExpanded && dayItemsFiltered.map(item => (
+                <MobileItemRows
+                  key={item.id}
+                  node={item}
+                  depth={0}
+                  expandedItems={expandedItems}
+                  toggleItem={toggleItem}
+                  onEdit={setEditingItem}
+                  onDelete={deleteLancamento}
+                  onAddChild={parent => openAdd(d.dia, parent.natureza, parent.id, (parent.saida_tipo as SaidaTipo) ?? 'fixa')}
+                />
+              ))}
             </div>
           )
         })}
@@ -634,6 +659,53 @@ function ItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDelete, on
           </tr>
         </>
       )}
+    </>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MobileItemRows — versão mobile do ItemRows (divs ao invés de tr/td)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function MobileItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDelete, onAddChild }: ItemRowsProps) {
+  const isExpanded = expandedItems.has(node.id)
+  const natColor   = node.natureza === 'entrada' ? '#22c55e' : node.natureza === 'saida' ? '#ef4444' : '#f97316'
+  const pl         = depth * 14
+
+  return (
+    <>
+      <div className="flex items-center gap-2 py-2 border-t border-[#1f1f1f]/60" style={{ paddingLeft: pl }}>
+        {node.is_grupo ? (
+          <button onClick={() => toggleItem(node.id)} className="text-[#444] shrink-0">
+            {isExpanded ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
+          </button>
+        ) : (
+          <span className="w-[11px] shrink-0" />
+        )}
+        <span className="flex-1 text-xs text-[#aaa] truncate">{node.nome}</span>
+        <span className="text-xs tabular-nums shrink-0" style={{ color: natColor }}>
+          {BRL(node.valorTotal)}
+        </span>
+        <div className="flex items-center gap-2 shrink-0">
+          <button onClick={() => onEdit(node)} className="text-[#444]"><Pencil size={11} /></button>
+          {node.is_grupo && (
+            <button onClick={() => onAddChild(node)} className="text-[#444]"><Plus size={11} /></button>
+          )}
+          <button onClick={() => onDelete(node.id)} className="text-[#444]"><Trash2 size={11} /></button>
+        </div>
+      </div>
+      {isExpanded && node.children.map(child => (
+        <MobileItemRows
+          key={child.id}
+          node={child}
+          depth={depth + 1}
+          expandedItems={expandedItems}
+          toggleItem={toggleItem}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onAddChild={onAddChild}
+        />
+      ))}
     </>
   )
 }
