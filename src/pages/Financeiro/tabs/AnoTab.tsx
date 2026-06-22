@@ -118,11 +118,6 @@ export function AnoTab({ ano, onGoToMonth }: Props) {
         </ResponsiveContainer>
       </div>
 
-      {/* ── Horizonte de saldos ── */}
-      <div className="border-t border-[#1f1f1f] pt-6">
-        <HorizonteSaldos ano={ano} />
-      </div>
-
       {/* Month grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
         {data.map((m, i) => {
@@ -160,6 +155,11 @@ export function AnoTab({ ano, onGoToMonth }: Props) {
             </button>
           )
         })}
+      </div>
+
+      {/* ── Horizonte de saldos ── */}
+      <div className="mt-6 -mx-4 lg:-mx-7 border-t border-[#1f1f1f] pt-6 px-4 lg:px-7">
+        <HorizonteSaldos ano={ano} />
       </div>
     </div>
   )

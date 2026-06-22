@@ -172,21 +172,58 @@ export function HorizonteSaldos({ ano }: Props) {
   async function loadData() {
     setLoading(true)
 
-    // Pegar todos os lançamentos folha do ano
+    // Buscar TODOS os lançamentos do ano (sem filtro is_grupo)
     const { data: rows } = await supabase
       .from('fin_lancamentos')
-      .select('data, natureza, valor, is_grupo')
+      .select('id, parent_id, data, natureza, valor, is_grupo')
       .eq('ano_id', ano.id)
-      .eq('is_grupo', false)
+      .order('data')
 
-    // Mapear net por data: "YYYY-MM-DD" → net value
-    const netByDate: Record<string, number> = {}
-    for (const r of (rows ?? []) as { data: string; natureza: string; valor: number | null; is_grupo: boolean }[]) {
-      const v = Number(r.valor) || 0
-      netByDate[r.data] = (netByDate[r.data] || 0) + (r.natureza === 'entrada' ? v : -v)
+    if (!rows) { setLoading(false); return }
+
+    interface LRow { id: string; parent_id: string | null; data: string; natureza: string; valor: number | null; is_grupo: boolean }
+    interface LNode extends LRow { children: LNode[] }
+
+    const typedRows = rows as unknown as LRow[]
+
+    function buildTree(items: LRow[]): LNode[] {
+      const map = new Map<string, LNode>(items.map(i => [i.id, { ...i, children: [] }]))
+      const roots: LNode[] = []
+      for (const node of map.values()) {
+        if (node.parent_id && map.has(node.parent_id)) {
+          map.get(node.parent_id)!.children.push(node)
+        } else {
+          roots.push(node)
+        }
+      }
+      return roots
     }
 
-    // Construir células percorrendo dia a dia do ano inteiro
+    function sumLeaves(node: LNode): number {
+      if (!node.is_grupo) return Number(node.valor) || 0
+      return node.children.reduce((s, c) => s + sumLeaves(c), 0)
+    }
+
+    // Agrupar por data
+    const byDate: Record<string, LRow[]> = {}
+    for (const r of typedRows) {
+      if (!byDate[r.data]) byDate[r.data] = []
+      byDate[r.data].push(r)
+    }
+
+    // Calcular net por data usando árvore (apenas raízes)
+    const netByDate: Record<string, number> = {}
+    for (const [date, items] of Object.entries(byDate)) {
+      const roots = buildTree(items)
+      let net = 0
+      for (const root of roots) {
+        const v = sumLeaves(root)
+        net += root.natureza === 'entrada' ? v : -v
+      }
+      netByDate[date] = net
+    }
+
+    // Percorrer dia a dia acumulando saldo
     let balance = Number(ano.saldo_inicial)
     const result: MonthData[] = []
 
@@ -206,7 +243,6 @@ export function HorizonteSaldos({ ano }: Props) {
 
     setMonthsData(result)
 
-    // Página inicial: mês atual (se for o mesmo ano)
     const today = new Date()
     if (ano.ano === today.getFullYear()) {
       setMobilePage(Math.floor(today.getMonth() / 3))
