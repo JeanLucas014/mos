@@ -5,6 +5,7 @@ import {
   ResponsiveContainer, CartesianGrid,
 } from 'recharts'
 import type { FinAno } from '../types'
+import { HorizonteSaldos } from '../components/HorizonteSaldos'
 
 const MS = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
 const MS_FULL = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
@@ -115,6 +116,11 @@ export function AnoTab({ ano, onGoToMonth }: Props) {
             <Line dataKey="Entradas"  stroke="#22c55e" strokeWidth={2} dot={false} type="monotone" />
           </ComposedChart>
         </ResponsiveContainer>
+      </div>
+
+      {/* ── Horizonte de saldos ── */}
+      <div className="border-t border-[#1f1f1f] pt-6">
+        <HorizonteSaldos ano={ano} />
       </div>
 
       {/* Month grid */}
