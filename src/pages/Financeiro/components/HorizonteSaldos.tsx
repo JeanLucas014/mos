@@ -48,18 +48,21 @@ export function HorizonteSaldos({ ano }: Props) {
     // 1. Buscar APENAS folhas (is_grupo = false) — elas têm o valor real.
     //    Grupos têm valor null e servem só de container visual.
     //    natureza está em cada registro (inclusive filhos).
-    const { data: rows, error } = await supabase
+    const { data: allRows, error } = await supabase
       .from('fin_lancamentos')
       .select('data, natureza, valor, is_grupo')
       .eq('ano_id', ano.id)
-      .eq('is_grupo', false)
 
-    if (error || !rows) { setLoading(false); return }
+    if (error || !allRows) { setLoading(false); return }
+
+    // Filtra folhas em JS — inclui is_grupo=false E is_grupo=null
+    // (registros importados do app antigo têm is_grupo=null)
+    type LRow = { data: string; natureza: string; valor: number | null; is_grupo: boolean | null }
+    const rows = (allRows as LRow[]).filter(r => !r.is_grupo)
 
     // 2. Somar net por data
-    type LRow = { data: string; natureza: string; valor: number | null; is_grupo: boolean }
     const netByDate: Record<string, number> = {}
-    for (const r of rows as LRow[]) {
+    for (const r of rows) {
       const v   = Number(r.valor) || 0
       const net = r.natureza === 'entrada' ? v : -v
       netByDate[r.data] = (netByDate[r.data] ?? 0) + net
