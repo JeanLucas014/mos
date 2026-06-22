@@ -114,7 +114,8 @@ export function MesTab({ ano, initialMonth }: Props) {
     ])
     setCategorias((cats ?? []) as FinCategoria[])
     setCartoes((cards ?? []) as FinCartao[])
-    setLancamentos((rows ?? []) as FinLancamento[])
+    const currentRows = (rows ?? []) as FinLancamento[]
+    setLancamentos(currentRows)
 
     // saldo_abertura = saldo_inicial + net dos meses anteriores
     const { data: prev } = await supabase
@@ -131,7 +132,46 @@ export function MesTab({ ano, initialMonth }: Props) {
       ab += r.natureza === 'entrada' ? v : -v
     }
     setSaldoAb(ab)
+    await generatePrevisoesIfNeeded(currentRows)
     setLoading(false)
+  }
+
+  async function generatePrevisoesIfNeeded(currentRows: FinLancamento[]) {
+    if (ano.ano < 2026 || (ano.ano === 2026 && month < 7)) return
+
+    const jaTemDiario = currentRows.some(l => l.natureza === 'diario')
+    if (jaTemDiario) return
+
+    const { data: configRaw } = await supabase
+      .from('fin_previsao_config').select('valor')
+    const total = ((configRaw ?? []) as { valor: number }[]).reduce((s, c) => s + Number(c.valor), 0)
+    if (total <= 0) return
+
+    const days = daysInMonth(ano.ano, month)
+    const dailyValue = Math.round((total / days) * 100) / 100
+
+    const inserts = Array.from({ length: days }, (_, i) => ({
+      ano_id:      ano.id,
+      data:        `${ano.ano}-${String(month).padStart(2,'0')}-${String(i + 1).padStart(2,'0')}`,
+      natureza:    'diario' as const,
+      nome:        'Previsão Diária',
+      valor:       dailyValue,
+      is_grupo:    false,
+      is_previsao: true,
+    }))
+
+    await (supabase.from('fin_lancamentos') as any).insert(inserts)
+
+    const lastDay = days
+    const startDate = `${ano.ano}-${String(month).padStart(2,'0')}-01`
+    const endDate   = `${ano.ano}-${String(month).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`
+    const { data: reloaded } = await supabase
+      .from('fin_lancamentos').select('*')
+      .eq('ano_id', ano.id)
+      .gte('data', startDate)
+      .lte('data', endDate)
+      .order('ordem')
+    setLancamentos((reloaded ?? []) as FinLancamento[])
   }
 
   // ── Derived state ──────────────────────────────────────────────────────────
@@ -210,6 +250,7 @@ export function MesTab({ ano, initialMonth }: Props) {
       nome,
       valor:       addForm.is_grupo ? null : (parseFloat(addForm.valor.replace(',', '.')) || 0),
       is_grupo:    addForm.is_grupo,
+      is_previsao: false,
       categoria_id: addForm.categoria_id || null,
       cartao_id:   addForm.natureza === 'saida' && addForm.saida_tipo === 'cartao' ? addForm.cartao_id || null : null,
       saida_tipo:  addForm.natureza === 'saida' ? addForm.saida_tipo : null,
@@ -223,12 +264,15 @@ export function MesTab({ ano, initialMonth }: Props) {
     loadAll()
   }
 
+
+
   async function saveEdit(form: EditFormState) {
     if (!editingItem) return
     const update: Record<string, unknown> = {
       nome:         form.nome.trim(),
       data:         form.data,
       categoria_id: form.categoria_id || null,
+      is_previsao:  false,
     }
     if (!editingItem.is_grupo) {
       update.valor = parseFloat(form.valor.replace(',', '.')) || 0
