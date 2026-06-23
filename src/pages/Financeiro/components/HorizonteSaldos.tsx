@@ -45,30 +45,46 @@ export function HorizonteSaldos({ ano }: Props) {
   async function load() {
     setLoading(true)
 
-    // 1. Buscar APENAS folhas (is_grupo = false) — elas têm o valor real.
-    //    Grupos têm valor null e servem só de container visual.
-    //    natureza está em cada registro (inclusive filhos).
     const { data: allRows, error } = await supabase
       .from('fin_lancamentos')
-      .select('data, natureza, valor, is_grupo')
+      .select('id, parent_id, data, natureza, valor, is_grupo')
       .eq('ano_id', ano.id)
 
     if (error || !allRows) { setLoading(false); return }
 
-    // Filtra folhas em JS — inclui is_grupo=false E is_grupo=null
-    // (registros importados do app antigo têm is_grupo=null)
-    type LRow = { data: string; natureza: string; valor: number | null; is_grupo: boolean | null }
-    const rows = (allRows as LRow[]).filter(r => !r.is_grupo)
-
-    // 2. Somar net por data
-    const netByDate: Record<string, number> = {}
-    for (const r of rows) {
-      const v   = Number(r.valor) || 0
-      const net = r.natureza === 'entrada' ? v : -v
-      netByDate[r.data] = (netByDate[r.data] ?? 0) + net
+    // Monta árvore global
+    const map = new Map<string, any>()
+    for (const r of allRows as any[]) map.set(r.id, { ...r, children: [] })
+    const roots: any[] = []
+    for (const node of map.values()) {
+      if (node.parent_id && map.has(node.parent_id)) {
+        map.get(node.parent_id).children.push(node)
+      } else {
+        roots.push(node)
+      }
     }
 
-    // 3. Acumular saldo dia a dia, jan→dez
+    // CORREÇÃO: atribui cada folha à DATA DA PRÓPRIA FOLHA,
+    // não à data do grupo-pai. Isso evita que grupos com filhos
+    // em outros meses contaminem a data do grupo.
+    const netByDate: Record<string, number> = {}
+
+    function addLeaves(node: any): void {
+      const hasChildren = node.children && node.children.length > 0
+      if (node.is_grupo && hasChildren) {
+        // Grupo com filhos: desce para as folhas
+        for (const child of node.children) addLeaves(child)
+      } else {
+        // Folha (ou grupo sem filhos): usa valor e DATA DESTA FOLHA
+        const v   = Number(node.valor) || 0
+        const net = node.natureza === 'entrada' ? v : -v
+        netByDate[node.data] = (netByDate[node.data] ?? 0) + net
+      }
+    }
+
+    for (const root of roots) addLeaves(root)
+
+    // Acumula saldo dia a dia
     let balance = Number(ano.saldo_inicial)
     const result: MonthData[] = []
 
@@ -76,9 +92,8 @@ export function HorizonteSaldos({ ano }: Props) {
       const month = mi + 1
       const days  = daysInMonth(ano.ano, month)
       const cells: number[] = []
-
       for (let d = 1; d <= days; d++) {
-        const key  = `${ano.ano}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+        const key  = `${ano.ano}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`
         balance   += netByDate[key] ?? 0
         cells.push(Math.round(balance * 100) / 100)
       }
