@@ -21,9 +21,9 @@ export function useShopping() {
   })
 
   const addItem = useMutation({
-    mutationFn: async (title: string) => {
+    mutationFn: async ({ title, category }: { title: string; category: string }) => {
       const { data, error } = await (supabase.from('shopping_items') as any)
-        .insert({ title })
+        .insert({ title, category })
         .select()
         .single()
       if (error) throw error
