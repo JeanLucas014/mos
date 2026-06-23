@@ -17,13 +17,14 @@ function daysInMonth(year: number, month: number): number {
 
 function cellBg(v: number | null): string {
   if (v === null) return 'transparent'
-  if (v < -1500) return '#4a0404'
+  if (v < -1500) return '#3b0000'
   if (v <  -700) return '#7f1d1d'
   if (v <  -250) return '#991b1b'
   if (v <     0) return '#c0394b'
-  if (v <   950) return '#92400e'
-  if (v <  1600) return '#1a7a52'
-  return '#22a86e'
+  if (v <   300) return '#14532d'
+  if (v <   800) return '#166534'
+  if (v <  1500) return '#15803d'
+  return '#16a34a'
 }
 
 interface MonthData { mi: number; days: number; cells: number[] }
@@ -205,9 +206,10 @@ export function HorizonteSaldos({ ano }: Props) {
         <div className="flex items-center gap-3">
           {[
             { bg: '#7f1d1d', label: 'Negativo' },
-            { bg: '#92400e', label: '0–950'    },
-            { bg: '#1a7a52', label: '950–1.6K' },
-            { bg: '#22a86e', label: '1.6K+'    },
+            { bg: '#14532d', label: '0–300'    },
+            { bg: '#166534', label: '300–800'  },
+            { bg: '#15803d', label: '800–1.5K' },
+            { bg: '#16a34a', label: '1.5K+'    },
           ].map(l => (
             <div key={l.label} className="flex items-center gap-1.5">
               <span className="inline-block w-2.5 h-2.5 rounded-[2px]" style={{ background: l.bg }} />
