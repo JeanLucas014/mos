@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { Activity, Github, ExternalLink, RefreshCw, Unplug, Check, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { PluggyConnect } from '@/components/PluggyConnect'
 
 /* ── Palette ──────────────────────────────────────────────────── */
 const C = {
@@ -512,6 +513,11 @@ export function IntegrationsPage() {
         <StravaCard />
         <GitHubCard />
         <VercelCard />
+      </div>
+
+      {/* TESTE - Open Finance */}
+      <div style={{ background: 'red', color: 'white', padding: 20, marginTop: 24 }}>
+        OPEN FINANCE AQUI
       </div>
     </div>
   )

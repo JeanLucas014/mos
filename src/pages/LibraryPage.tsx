@@ -4,19 +4,21 @@ import { useBooks, type AddBookInput } from '../hooks/useBooks'
 import type { Database } from '../types/db'
 
 type Book = Database['public']['Tables']['books']['Row']
-type BookStatus = 'lendo' | 'lido' | 'quero_ler'
+type BookStatus = 'lendo' | 'lido' | 'quero_ler' | 'nao_finalizado'
 
 /* ── Status config ──────────────────────────────────────────────────── */
 const STATUS_CFG: Record<BookStatus, { label: string; color: string; bg: string }> = {
   lendo:     { label: 'Lendo',     color: '#0EA5E9', bg: 'rgba(14,165,233,.14)' },
   lido:      { label: 'Lido',      color: '#34d399', bg: 'rgba(52,211,153,.12)' },
-  quero_ler: { label: 'Quero ler', color: '#888',    bg: 'rgba(255,255,255,.06)' },
+  quero_ler:      { label: 'Quero ler',      color: '#888',    bg: 'rgba(255,255,255,.06)' },
+  nao_finalizado: { label: 'Não finalizado', color: '#f97316', bg: 'rgba(249,115,22,.14)' },
 }
 
 const SECTIONS: { key: BookStatus; label: string; color: string }[] = [
   { key: 'lendo',     label: 'Lendo',     color: '#0EA5E9' },
-  { key: 'quero_ler', label: 'Quero ler', color: '#888' },
-  { key: 'lido',      label: 'Lidos',     color: '#34d399' },
+  { key: 'quero_ler',      label: 'Quero ler',     color: '#888' },
+  { key: 'nao_finalizado', label: 'Não finalizados', color: '#f97316' },
+  { key: 'lido',           label: 'Lidos',          color: '#34d399' },
 ]
 
 const FORMAT_OPTIONS = ['Físico', 'Kindle', 'PDF', 'Audiobook']
@@ -237,6 +239,7 @@ function BookCard({
           <option value="lendo">Lendo</option>
           <option value="lido">Lido</option>
           <option value="quero_ler">Quero ler</option>
+          <option value="nao_finalizado">Não finalizado</option>
         </select>
 
         {/* Progress — for 'lendo' */}
@@ -331,6 +334,7 @@ function BookFormFields({
             <option value="quero_ler">Quero ler</option>
             <option value="lendo">Lendo</option>
             <option value="lido">Lido</option>
+            <option value="nao_finalizado">Não finalizado</option>
           </select>
         </div>
         <div>
@@ -661,11 +665,90 @@ function EditModal({
   )
 }
 
+/* ── BookRow (list mode) ────────────────────────────────────────────── */
+function BookRow({ book, onStatus, onFavorite, onDelete, onClick }: {
+  book: Book
+  onStatus: (id: string, s: BookStatus) => void
+  onFavorite: (id: string, fav: boolean) => void
+  onDelete: (id: string) => void
+  onClick: (book: Book) => void
+}) {
+  const st = (book.status as BookStatus) in STATUS_CFG
+    ? (book.status as BookStatus) : 'quero_ler'
+  const cfg = STATUS_CFG[st]
+  return (
+    <div
+      className="group flex items-center gap-3 px-4 py-3 border-b border-line hover:bg-bg-3 cursor-pointer transition-colors"
+      onClick={() => onClick(book)}
+    >
+      {/* Mini capa */}
+      <div style={{ width: 32, height: 48, flexShrink: 0, borderRadius: 4, overflow: 'hidden' }}>
+        {book.cover_url ? (
+          <img src={book.cover_url} alt={book.title}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        ) : (
+          <div style={{
+            width: '100%', height: '100%', background: hashGradient(book.title),
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <BookOpen size={12} color="rgba(255,255,255,.7)" />
+          </div>
+        )}
+      </div>
+
+      {/* Título + autor */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="truncate" style={{ fontFamily: 'Sora, sans-serif', fontWeight: 700, fontSize: 13, color: '#fff' }}>
+          {book.title}
+        </div>
+        {book.author && (
+          <div style={{ fontSize: 11, color: '#888', marginTop: 1 }}>{book.author}</div>
+        )}
+      </div>
+
+      {/* Categoria */}
+      {book.category && (
+        <span className="hidden sm:inline text-[10px] text-[#555] shrink-0">{book.category}</span>
+      )}
+
+      {/* Stars */}
+      <div className="hidden sm:flex shrink-0"><Stars value={book.rating} /></div>
+
+      {/* Status badge */}
+      <span style={{
+        fontSize: 10, fontWeight: 700, color: cfg.color,
+        background: cfg.bg, padding: '3px 8px', borderRadius: 6, flexShrink: 0,
+      }}>
+        {cfg.label}
+      </span>
+
+      {/* Favorito */}
+      <button
+        onClick={e => { e.stopPropagation(); onFavorite(book.id, !book.favorite) }}
+        style={{ color: book.favorite ? '#f87171' : '#333', flexShrink: 0 }}
+      >
+        <Heart size={13} fill={book.favorite ? '#f87171' : 'none'} color={book.favorite ? '#f87171' : '#333'} />
+      </button>
+
+      {/* Delete */}
+      <button
+        onClick={e => {
+          e.stopPropagation()
+          if (window.confirm(`Remover "${book.title}"?`)) onDelete(book.id)
+        }}
+        className="opacity-0 group-hover:opacity-100 transition-opacity text-[#555] hover:text-red-400 text-base w-6 flex items-center justify-center shrink-0"
+      >×</button>
+    </div>
+  )
+}
+
 /* ── Page ──────────────────────────────────────────────────────────── */
 export function LibraryPage() {
   const { data: books, isLoading, isError, error, addBook, updateBook, deleteBook } = useBooks()
   const [showAdd, setShowAdd]     = useState(false)
   const [editBook, setEditBook]   = useState<Book | null>(null)
+  const [viewMode, setViewMode]   = useState<'grid' | 'list'>('grid')
+  const [gridCols, setGridCols]   = useState<number>(4)
 
   /* ── Filters ── */
   const [filterStatus,    setFilterStatus]    = useState<string>('all')
@@ -772,6 +855,7 @@ export function LibraryPage() {
           <option value="lendo">Lendo</option>
           <option value="lido">Lidos</option>
           <option value="quero_ler">Quero ler</option>
+          <option value="nao_finalizado">Não finalizados</option>
         </select>
 
         {/* Year filter */}
@@ -809,6 +893,60 @@ export function LibraryPage() {
         >
           <Heart size={12} className="mr-1 inline" /> Favoritos
         </button>
+
+        {/* Separador */}
+        <div className="flex-1" />
+
+        {/* Seletor de colunas (só no grid) */}
+        {viewMode === 'grid' && (
+          <div className="flex items-center gap-1">
+            {[2, 3, 4, 5, 6].map(n => (
+              <button
+                key={n}
+                onClick={() => setGridCols(n)}
+                className="w-7 h-7 rounded text-xs font-bold transition-colors"
+                style={{
+                  background: gridCols === n ? '#0EA5E9' : '#111111',
+                  color: gridCols === n ? '#000' : '#555',
+                  border: '1px solid',
+                  borderColor: gridCols === n ? '#0EA5E9' : '#1f1f1f',
+                  fontFamily: 'Manrope, sans-serif',
+                }}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Toggle grid/lista */}
+        <div className="flex rounded-lg border border-[#1f1f1f] overflow-hidden">
+          <button
+            onClick={() => setViewMode('grid')}
+            className="px-2.5 h-7 flex items-center transition-colors"
+            style={{ background: viewMode === 'grid' ? '#0EA5E9' : '#111111' }}
+            title="Grade"
+          >
+            <svg width="13" height="13" viewBox="0 0 12 12" fill="none">
+              <rect x="0" y="0" width="5" height="5" rx="1" fill={viewMode === 'grid' ? '#000' : '#555'} />
+              <rect x="7" y="0" width="5" height="5" rx="1" fill={viewMode === 'grid' ? '#000' : '#555'} />
+              <rect x="0" y="7" width="5" height="5" rx="1" fill={viewMode === 'grid' ? '#000' : '#555'} />
+              <rect x="7" y="7" width="5" height="5" rx="1" fill={viewMode === 'grid' ? '#000' : '#555'} />
+            </svg>
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className="px-2.5 h-7 flex items-center transition-colors"
+            style={{ background: viewMode === 'list' ? '#0EA5E9' : '#111111' }}
+            title="Lista"
+          >
+            <svg width="13" height="13" viewBox="0 0 12 12" fill="none">
+              <rect x="0" y="1" width="12" height="2" rx="1" fill={viewMode === 'list' ? '#000' : '#555'} />
+              <rect x="0" y="5" width="12" height="2" rx="1" fill={viewMode === 'list' ? '#000' : '#555'} />
+              <rect x="0" y="9" width="12" height="2" rx="1" fill={viewMode === 'list' ? '#000' : '#555'} />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {isError && (
@@ -852,36 +990,66 @@ export function LibraryPage() {
                     {section.length}
                   </span>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                  {section.map((book) => (
-                    <BookCard
-                      key={book.id}
-                      book={book}
-                      onStatus={handleStatus}
-                      onProgress={handleProgress}
-                      onFavorite={handleFavorite}
-                      onDelete={handleDelete}
-                      onClick={setEditBook}
-                    />
-                  ))}
-                </div>
+                {viewMode === 'list' ? (
+                  <div className="bg-bg-2 border border-line rounded-xl overflow-hidden">
+                    {section.map((book) => (
+                      <BookRow
+                        key={book.id}
+                        book={book}
+                        onStatus={handleStatus}
+                        onFavorite={handleFavorite}
+                        onDelete={handleDelete}
+                        onClick={setEditBook}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))`, gap: 12 }}>
+                    {section.map((book) => (
+                      <BookCard
+                        key={book.id}
+                        book={book}
+                        onStatus={handleStatus}
+                        onProgress={handleProgress}
+                        onFavorite={handleFavorite}
+                        onDelete={handleDelete}
+                        onClick={setEditBook}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             )
           })
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-            {filtered.map((book) => (
-              <BookCard
-                key={book.id}
-                book={book}
-                onStatus={handleStatus}
-                onProgress={handleProgress}
-                onFavorite={handleFavorite}
-                onDelete={handleDelete}
-                onClick={setEditBook}
-              />
-            ))}
-          </div>
+          viewMode === 'list' ? (
+            <div className="bg-bg-2 border border-line rounded-xl overflow-hidden">
+              {filtered.map((book) => (
+                <BookRow
+                  key={book.id}
+                  book={book}
+                  onStatus={handleStatus}
+                  onFavorite={handleFavorite}
+                  onDelete={handleDelete}
+                  onClick={setEditBook}
+                />
+              ))}
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))`, gap: 12 }}>
+              {filtered.map((book) => (
+                <BookCard
+                  key={book.id}
+                  book={book}
+                  onStatus={handleStatus}
+                  onProgress={handleProgress}
+                  onFavorite={handleFavorite}
+                  onDelete={handleDelete}
+                  onClick={setEditBook}
+                />
+              ))}
+            </div>
+          )
         )
       )}
 

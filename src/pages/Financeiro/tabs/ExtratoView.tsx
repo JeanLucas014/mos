@@ -123,7 +123,7 @@ const SEGMENTS: { id: Natureza; label: string; color: string }[] = [
 export function ExtratoView({ trees }: Props) {
   const [segment, setSegment] = useState<Natureza>('saida')
   const [query, setQuery] = useState('')
-  const [sortOption, setSortOption] = useState<SortOption>('data_desc')
+  const [sortOption, setSortOption] = useState<SortOption>('data_asc')
 
   const allLeaves = flattenLeaves(trees)
   const bySegment = allLeaves.filter(i => i.natureza === segment)
