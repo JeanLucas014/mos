@@ -515,9 +515,15 @@ export function IntegrationsPage() {
         <VercelCard />
       </div>
 
-      {/* TESTE - Open Finance */}
-      <div style={{ background: 'red', color: 'white', padding: 20, marginTop: 24 }}>
-        OPEN FINANCE AQUI
+      <div className="mt-6 bg-[#111111] border border-[#1f1f1f] rounded-xl p-5">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="w-2 h-2 rounded-full bg-[#22c55e]" />
+          <span className="text-sm font-semibold font-[Sora] text-white">Open Finance</span>
+        </div>
+        <p className="text-xs text-[#555] mb-4">
+          Transações automáticas no Financeiro · Pluggy
+        </p>
+        <PluggyConnect />
       </div>
     </div>
   )

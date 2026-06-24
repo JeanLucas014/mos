@@ -27,7 +27,7 @@ export function PluggyConnect() {
   useEffect(() => { loadConnections() }, [])
 
   async function loadConnections() {
-    const { data, error } = await supabase.from('pluggy_connections').select('*').order('created_at')
+    const { data, error } = await (supabase as any).from('pluggy_connections').select('*').order('created_at')
     if (error) console.error('PluggyConnect error:', error)
     setConnections(data ?? [])
     setLoading(false)
@@ -69,7 +69,7 @@ export function PluggyConnect() {
       accountId = ad.results?.[0]?.id ?? ''
     } catch {}
 
-    await supabase.from('pluggy_connections').insert({
+    await (supabase as any).from('pluggy_connections').insert({
       item_id:      item.id,
       bank_name:    pendingBank.name,
       account_type: pendingBank.type,
@@ -83,7 +83,7 @@ export function PluggyConnect() {
 
   async function handleDisconnect(id: string) {
     if (!confirm('Desconectar este banco? Transações já inseridas são mantidas.')) return
-    await supabase.from('pluggy_connections').delete().eq('id', id)
+    await (supabase as any).from('pluggy_connections').delete().eq('id', id)
     loadConnections()
   }
 

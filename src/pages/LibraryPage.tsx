@@ -666,9 +666,8 @@ function EditModal({
 }
 
 /* ── BookRow (list mode) ────────────────────────────────────────────── */
-function BookRow({ book, onStatus, onFavorite, onDelete, onClick }: {
+function BookRow({ book, onFavorite, onDelete, onClick }: {
   book: Book
-  onStatus: (id: string, s: BookStatus) => void
   onFavorite: (id: string, fav: boolean) => void
   onDelete: (id: string) => void
   onClick: (book: Book) => void
@@ -996,7 +995,6 @@ export function LibraryPage() {
                       <BookRow
                         key={book.id}
                         book={book}
-                        onStatus={handleStatus}
                         onFavorite={handleFavorite}
                         onDelete={handleDelete}
                         onClick={setEditBook}
@@ -1028,7 +1026,6 @@ export function LibraryPage() {
                 <BookRow
                   key={book.id}
                   book={book}
-                  onStatus={handleStatus}
                   onFavorite={handleFavorite}
                   onDelete={handleDelete}
                   onClick={setEditBook}
