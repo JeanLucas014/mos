@@ -3,14 +3,25 @@ import { supabase } from '@/lib/supabase'
 import { X, Flag, Calendar, FolderOpen, RotateCcw, Plus, Trash2 } from 'lucide-react'
 import type { Task, TaskProject, Priority, TaskComment } from '../types'
 import { PRIORITY_CFG } from '../types'
+import { DatePicker } from './DatePicker'
 
 const RECURRENCE_OPTIONS = [
-  { id: '',          label: 'Não repete' },
-  { id: 'daily',     label: 'Diariamente' },
-  { id: 'weekdays',  label: 'Dias úteis (seg–sex)' },
-  { id: 'weekly',    label: 'Semanalmente' },
-  { id: 'monthly',   label: 'Mensalmente' },
-  { id: 'yearly',    label: 'Todo ano' },
+  { id: '',         label: 'Não repete' },
+  { id: 'daily',    label: 'Diariamente' },
+  { id: 'weekdays', label: 'Dias úteis (seg–sex)' },
+  { id: 'weekly',   label: 'Semanalmente' },
+  { id: 'monthly',  label: 'Mensalmente' },
+  { id: 'yearly',   label: 'Todo ano' },
+]
+
+const WEEK_DAYS = [
+  { id: 'sun', label: 'D' },
+  { id: 'mon', label: 'S' },
+  { id: 'tue', label: 'T' },
+  { id: 'wed', label: 'Q' },
+  { id: 'thu', label: 'Q' },
+  { id: 'fri', label: 'S' },
+  { id: 'sat', label: 'S' },
 ]
 
 interface Props {
@@ -28,9 +39,10 @@ export function TaskModal({ task, projects, onSave, onClose, onDelete }: Props) 
   const [description, setDesc]      = useState(task.description ?? '')
   const [priority, setPriority]     = useState<Priority>(task.priority ?? 4)
   const [projectId, setProjectId]   = useState<string | null>(task.project_id ?? null)
-  const [dueDate, setDueDate]       = useState(task.due_date ?? '')
+  const [dueDate, setDueDate]       = useState<string | null>(task.due_date ?? null)
   const [dueTime, setDueTime]       = useState(task.due_time ?? '')
   const [recurrence, setRecurrence] = useState('')
+  const [recDays, setRecDays]       = useState<string[]>([])
   const [comments, setComments]     = useState<TaskComment[]>([])
   const [newComment, setNewComment] = useState('')
   const [saving, setSaving]         = useState(false)
@@ -50,7 +62,10 @@ export function TaskModal({ task, projects, onSave, onClose, onDelete }: Props) 
   async function loadRecurrence() {
     const { data } = await (supabase as any)
       .from('task_recurrence').select('*').eq('task_id', task.id!).maybeSingle()
-    if (data) setRecurrence(data.freq)
+    if (data) {
+      setRecurrence(data.freq)
+      setRecDays(data.days_of_week ?? [])
+    }
   }
 
   async function handleSave() {
@@ -72,7 +87,11 @@ export function TaskModal({ task, projects, onSave, onClose, onDelete }: Props) 
       if (recurrence) {
         const nextDue = dueDate || new Date().toISOString().slice(0, 10)
         await (supabase as any).from('task_recurrence').insert({
-          task_id: task.id, freq: recurrence, interval_n: 1, next_due: nextDue,
+          task_id:      task.id,
+          freq:         recurrence,
+          interval_n:   1,
+          days_of_week: recurrence === 'weekly' ? recDays : null,
+          next_due:     nextDue,
         })
       }
     }
@@ -209,15 +228,10 @@ export function TaskModal({ task, projects, onSave, onClose, onDelete }: Props) 
                 </div>
 
                 {/* Due date */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Calendar size={14} className="text-[#555] shrink-0" />
                   <span className="text-xs text-[#555] w-20 shrink-0">Vencimento</span>
-                  <input
-                    type="date"
-                    value={dueDate}
-                    onChange={e => setDueDate(e.target.value)}
-                    className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-[#0EA5E9]/60"
-                  />
+                  <DatePicker value={dueDate} onChange={setDueDate} />
                   {dueDate && (
                     <input
                       type="time"
@@ -229,18 +243,43 @@ export function TaskModal({ task, projects, onSave, onClose, onDelete }: Props) 
                 </div>
 
                 {/* Recurrence */}
-                <div className="flex items-center gap-2">
-                  <RotateCcw size={14} className="text-[#555] shrink-0" />
-                  <span className="text-xs text-[#555] w-20 shrink-0">Repetir</span>
-                  <select
-                    value={recurrence}
-                    onChange={e => setRecurrence(e.target.value)}
-                    className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-[#0EA5E9]/60"
-                  >
-                    {RECURRENCE_OPTIONS.map(o => (
-                      <option key={o.id} value={o.id}>{o.label}</option>
-                    ))}
-                  </select>
+                <div className="flex items-start gap-2">
+                  <RotateCcw size={14} className="text-[#555] shrink-0 mt-1.5" />
+                  <span className="text-xs text-[#555] w-20 shrink-0 mt-1.5">Repetir</span>
+                  <div className="flex-1 space-y-2">
+                    <select
+                      value={recurrence}
+                      onChange={e => setRecurrence(e.target.value)}
+                      className="w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-[#0EA5E9]/60"
+                    >
+                      {RECURRENCE_OPTIONS.map(o => (
+                        <option key={o.id} value={o.id}>{o.label}</option>
+                      ))}
+                    </select>
+                    {recurrence === 'weekly' && (
+                      <div className="space-y-1.5">
+                        <div className="text-[10px] text-[#555]">Dias da semana:</div>
+                        <div className="flex gap-1.5">
+                          {WEEK_DAYS.map(d => (
+                            <button
+                              key={d.id}
+                              onClick={() => setRecDays(prev =>
+                                prev.includes(d.id) ? prev.filter(x => x !== d.id) : [...prev, d.id]
+                              )}
+                              className={[
+                                'w-8 h-8 text-xs rounded-full border transition-colors font-medium',
+                                recDays.includes(d.id)
+                                  ? 'border-[#0EA5E9] bg-[#0EA5E9]/20 text-[#0EA5E9]'
+                                  : 'border-[#1f1f1f] text-[#555] hover:text-white',
+                              ].join(' ')}
+                            >
+                              {d.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

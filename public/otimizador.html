@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Otimizador de Imagens</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  :root{
+    --bg:#0e0e10;
+    --panel:#17171a;
+    --panel-2:#1f1f23;
+    --border:#2a2a30;
+    --border-2:#36363e;
+    --text:#f2f2f0;
+    --text-2:#a0a0a8;
+    --text-3:#6b6b73;
+    --red:#e23b3b;
+    --red-soft:#3a1414;
+    --green:#3ecf8e;
+    --green-soft:#0f2a1e;
+    --accent:#e23b3b;
+    --radius:10px;
+    --radius-lg:14px;
+    --mono:'SF Mono',ui-monospace,'Cascadia Code',Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased;font-size:15px;line-height:1.5}
+  ::selection{background:var(--red);color:#fff}
+  .wrap{max-width:920px;margin:0 auto;padding:32px 20px 80px}
+
+  header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:28px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:13px}
+  .logo{width:42px;height:42px;border-radius:11px;background:var(--red);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .logo svg{width:23px;height:23px;stroke:#fff;fill:none;stroke-width:1.8}
+  .brand h1{font-size:20px;font-weight:600;letter-spacing:-.3px}
+  .brand p{font-size:12.5px;color:var(--text-2);margin-top:1px}
+  .badge{display:inline-flex;align-items:center;gap:6px;background:var(--green-soft);color:var(--green);font-size:12px;font-weight:500;padding:6px 12px;border-radius:8px;border:1px solid rgba(62,207,142,.2)}
+  .badge svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
+
+  .drop{border:1.5px dashed var(--border-2);border-radius:var(--radius-lg);padding:34px 20px;text-align:center;background:var(--panel);cursor:pointer;transition:.18s;margin-bottom:18px}
+  .drop:hover,.drop.over{border-color:var(--red);background:var(--panel-2)}
+  .drop.over{transform:scale(.995)}
+  .drop svg.up{width:36px;height:36px;stroke:var(--text-3);fill:none;stroke-width:1.5;margin-bottom:10px;transition:.18s}
+  .drop:hover svg.up,.drop.over svg.up{stroke:var(--red)}
+  .drop h3{font-size:15.5px;font-weight:600;margin-bottom:3px}
+  .drop p{font-size:13px;color:var(--text-2)}
+  .drop .more{font-size:12px;color:var(--text-3);margin-top:7px}
+  .pick-row{display:flex;gap:10px;justify-content:center;margin-top:14px}
+  .pick{display:inline-flex;align-items:center;gap:8px;background:var(--panel-2);border:1px solid var(--border-2);color:var(--text);font-size:13.5px;font-weight:500;padding:9px 16px;border-radius:9px;cursor:pointer;font-family:var(--sans);transition:.15s}
+  .pick:hover{border-color:var(--red);color:#fff}
+  .pick svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.7}
+
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 22px;margin-bottom:18px}
+  .panel-title{font-size:13px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:18px}
+
+  .field{margin-bottom:20px}
+  .field:last-child{margin-bottom:0}
+  .field>label{display:block;font-size:13px;color:var(--text-2);margin-bottom:9px;font-weight:500}
+
+  .seg{display:flex;gap:7px}
+  .seg button{flex:1;background:transparent;border:1px solid var(--border-2);color:var(--text-2);font-size:13.5px;font-weight:500;padding:9px 0;border-radius:9px;cursor:pointer;font-family:var(--sans);transition:.15s}
+  .seg button:hover{border-color:var(--text-3);color:var(--text)}
+  .seg button.on{background:var(--red);border-color:var(--red);color:#fff}
+
+  .slider-row{display:flex;align-items:center;gap:14px}
+  .slider-row label{font-size:13px;color:var(--text-2);min-width:96px;font-weight:500}
+  input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:5px;border-radius:5px;background:var(--border-2);outline:none;cursor:pointer}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--red);cursor:pointer;border:3px solid var(--panel);box-shadow:0 0 0 1px var(--red)}
+  input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--red);cursor:pointer;border:3px solid var(--panel);box-shadow:0 0 0 1px var(--red)}
+  .val{font-size:14px;font-weight:600;min-width:52px;text-align:right;font-family:var(--mono)}
+  .hint{font-size:12px;color:var(--text-3);margin:9px 0 0 110px}
+  .hint.q{margin-left:110px}
+
+  .resize-mode{display:flex;gap:7px;margin-bottom:12px}
+  .resize-mode button{background:transparent;border:1px solid var(--border-2);color:var(--text-2);font-size:12.5px;padding:6px 13px;border-radius:8px;cursor:pointer;font-family:var(--sans);transition:.15s}
+  .resize-mode button:hover{border-color:var(--text-3)}
+  .resize-mode button.on{background:var(--panel-2);border-color:var(--red);color:var(--text)}
+  .px-input{display:flex;align-items:center;gap:10px}
+  .px-input label{font-size:13px;color:var(--text-2);min-width:96px;font-weight:500}
+  .px-input input[type=number]{width:130px;background:var(--panel-2);border:1px solid var(--border-2);color:var(--text);font-size:14px;padding:9px 12px;border-radius:9px;font-family:var(--mono);outline:none}
+  .px-input input[type=number]:focus{border-color:var(--red)}
+  .px-input span{font-size:12.5px;color:var(--text-3)}
+
+  .list-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;padding:0 2px}
+  .list-head .cnt{font-size:14px;font-weight:600}
+  .list-head .save{font-size:13px;color:var(--green);font-weight:500;font-family:var(--mono)}
+  .list-head .clear{font-size:12.5px;color:var(--text-3);cursor:pointer;background:none;border:none;font-family:var(--sans)}
+  .list-head .clear:hover{color:var(--red)}
+
+  .list{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+  .item{display:flex;align-items:center;gap:13px;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:10px 13px}
+  .thumb{width:46px;height:46px;border-radius:8px;background:var(--panel-2);flex-shrink:0;object-fit:cover;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .thumb svg{width:20px;height:20px;stroke:var(--text-3);fill:none;stroke-width:1.6}
+  .meta{flex:1;min-width:0}
+  .meta .name{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+  .meta .sub{font-size:12px;color:var(--text-2);margin-top:2px;font-family:var(--mono)}
+  .meta .sub .new{color:var(--green)}
+  .meta .sub .dim{color:var(--text-3)}
+  .pct{font-size:12px;font-weight:600;padding:3px 9px;border-radius:7px;font-family:var(--mono);background:var(--green-soft);color:var(--green);white-space:nowrap}
+  .pct.up{background:var(--red-soft);color:var(--red)}
+  .pct.wait{background:var(--panel-2);color:var(--text-3)}
+  .act{background:none;border:none;cursor:pointer;padding:5px;border-radius:7px;display:flex;color:var(--text-2);transition:.15s}
+  .act:hover{background:var(--panel-2);color:var(--text)}
+  .act svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.7}
+  .act:disabled{opacity:.3;cursor:default}
+  .spin{width:15px;height:15px;border:2px solid var(--border-2);border-top-color:var(--red);border-radius:50%;animation:sp .7s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  .actions{display:flex;gap:11px}
+  .btn{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14.5px;font-weight:600;padding:13px 0;border-radius:11px;cursor:pointer;font-family:var(--sans);border:1px solid var(--border-2);background:transparent;color:var(--text);transition:.15s}
+  .btn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.9}
+  .btn:hover{border-color:var(--text-3);background:var(--panel-2)}
+  .btn.primary{background:var(--red);border-color:var(--red);color:#fff}
+  .btn.primary:hover{background:#c92f2f;border-color:#c92f2f}
+  .btn:disabled{opacity:.4;cursor:default}
+  .btn:disabled:hover{background:transparent;border-color:var(--border-2)}
+  .btn.primary:disabled:hover{background:var(--red)}
+
+  .empty{text-align:center;color:var(--text-3);font-size:13.5px;padding:24px 0}
+  .hidden{display:none!important}
+
+  footer{text-align:center;margin-top:34px;font-size:12px;color:var(--text-3)}
+  footer b{color:var(--text-2);font-weight:500}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      </div>
+      <div>
+        <h1>Otimizador de Imagens</h1>
+        <p>Lote · sem limite de tamanho · roda 100% no seu navegador</p>
+      </div>
+    </div>
+    <span class="badge">
+      <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Privado — nada é enviado
+    </span>
+  </header>
+
+  <div class="drop" id="drop">
+    <svg class="up" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+    <h3>Arraste imagens ou pastas aqui</h3>
+    <p>ou escolha abaixo</p>
+    <div class="pick-row">
+      <button class="pick" id="pickFiles" type="button">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+        Selecionar imagens
+      </button>
+      <button class="pick" id="pickDir" type="button">
+        <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+        Selecionar pasta
+      </button>
+    </div>
+    <div class="more">JPG · PNG · WebP · GIF · BMP — quantas você quiser</div>
+    <input type="file" id="file" accept="image/*" multiple class="hidden">
+    <input type="file" id="fileDir" accept="image/*" multiple webkitdirectory directory class="hidden">
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Configuração global</div>
+
+    <div class="field">
+      <label>Converter para</label>
+      <div class="seg" id="fmt">
+        <button data-fmt="image/webp" class="on">WebP</button>
+        <button data-fmt="image/jpeg">JPEG</button>
+        <button data-fmt="image/png">PNG</button>
+      </div>
+    </div>
+
+    <div class="field" id="qfield">
+      <div class="slider-row">
+        <label>Qualidade</label>
+        <input type="range" id="quality" min="1" max="100" value="80" step="1">
+        <span class="val" id="qval">80%</span>
+      </div>
+      <div class="hint q">Maior = mais nítido e mais pesado. 75–85% é o ponto ideal para web.</div>
+    </div>
+
+    <div class="field">
+      <label>Redimensionar</label>
+      <div class="resize-mode" id="rmode">
+        <button data-mode="pct" class="on">Por porcentagem</button>
+        <button data-mode="px">Por largura máx. (px)</button>
+        <button data-mode="none">Manter original</button>
+      </div>
+
+      <div id="rpct">
+        <div class="slider-row">
+          <label>Escala</label>
+          <input type="range" id="scale" min="10" max="100" value="100" step="5">
+          <span class="val" id="sval">100%</span>
+        </div>
+        <div class="hint">Reduz a resolução proporcionalmente. Proporção sempre mantida.</div>
+      </div>
+
+      <div id="rpx" class="hidden">
+        <div class="px-input">
+          <label>Largura máx.</label>
+          <input type="number" id="maxw" value="1920" min="1" step="1">
+          <span>px — só reduz se a imagem for maior. Altura ajusta sozinha.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="listSection" class="hidden">
+    <div class="list-head">
+      <span class="cnt" id="cnt">0 imagens</span>
+      <span class="save" id="save"></span>
+      <button class="clear" id="clear">Limpar tudo</button>
+    </div>
+    <div class="list" id="list"></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn primary" id="run" disabled>
+      <svg viewBox="0 0 24 24"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg>
+      Otimizar tudo
+    </button>
+    <button class="btn" id="zip" disabled>
+      <svg viewBox="0 0 24 24"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
+      Baixar .zip
+    </button>
+  </div>
+
+  <footer>
+    Feito para <b>Jean / Nata Business</b> · processamento local, suas imagens nunca saem do dispositivo.
+  </footer>
+
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const drop = $('#drop'), fileInput = $('#file');
+const list = $('#list'), listSection = $('#listSection');
+const cntEl = $('#cnt'), saveEl = $('#save');
+const runBtn = $('#run'), zipBtn = $('#zip'), clearBtn = $('#clear');
+
+let items = [];
+let cfg = { fmt:'image/webp', quality:80, rmode:'pct', scale:100, maxw:1920 };
+
+const extFor = m => ({'image/webp':'webp','image/jpeg':'jpg','image/png':'png'})[m] || 'img';
+const fmtBytes = b => {
+  if(b < 1024) return b + ' B';
+  if(b < 1048576) return (b/1024).toFixed(1) + ' KB';
+  return (b/1048576).toFixed(2) + ' MB';
+};
+
+/* ---- config UI ---- */
+$('#fmt').addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  $('#fmt').querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); cfg.fmt = b.dataset.fmt;
+  $('#qfield').style.display = cfg.fmt === 'image/png' ? 'none' : '';
+});
+$('#quality').addEventListener('input', e => { cfg.quality = +e.target.value; $('#qval').textContent = cfg.quality + '%'; });
+$('#scale').addEventListener('input', e => { cfg.scale = +e.target.value; $('#sval').textContent = cfg.scale + '%'; });
+$('#maxw').addEventListener('input', e => { cfg.maxw = Math.max(1, +e.target.value || 1); });
+$('#rmode').addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  $('#rmode').querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); cfg.rmode = b.dataset.mode;
+  $('#rpct').classList.toggle('hidden', cfg.rmode !== 'pct');
+  $('#rpx').classList.toggle('hidden', cfg.rmode !== 'px');
+});
+
+/* ---- file intake ---- */
+const fileDirInput = $('#fileDir');
+$('#pickFiles').addEventListener('click', e => { e.stopPropagation(); fileInput.click(); });
+$('#pickDir').addEventListener('click', e => { e.stopPropagation(); fileDirInput.click(); });
+fileInput.addEventListener('change', e => { addFiles(e.target.files); e.target.value=''; });
+fileDirInput.addEventListener('change', e => { addFiles(e.target.files); e.target.value=''; });
+['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); if(ev==='dragleave' && drop.contains(e.relatedTarget)) return; drop.classList.remove('over'); }));
+drop.addEventListener('drop', async e => {
+  const dt = e.dataTransfer;
+  if(dt.items && dt.items.length && dt.items[0].webkitGetAsEntry){
+    const files = [];
+    await Promise.all([...dt.items].map(it => traverse(it.webkitGetAsEntry(), files)));
+    addFiles(files);
+  } else {
+    addFiles(dt.files);
+  }
+});
+function traverse(entry, out){
+  return new Promise(res => {
+    if(!entry) return res();
+    if(entry.isFile){ entry.file(f => { out.push(f); res(); }, () => res()); }
+    else if(entry.isDirectory){
+      const rd = entry.createReader();
+      const readAll = () => rd.readEntries(async ents => {
+        if(!ents.length) return res();
+        await Promise.all(ents.map(en => traverse(en, out)));
+        readAll();
+      }, () => res());
+      readAll();
+    } else res();
+  });
+}
+
+function addFiles(fileList){
+  const imgs = [...fileList].filter(f => f.type.startsWith('image/'));
+  imgs.forEach(f => {
+    items.push({ id: crypto.randomUUID(), file: f, name: f.name, orig: f.size, status:'pending', blob:null, outName:null, outSize:0, pct:0, url: URL.createObjectURL(f) });
+  });
+  render();
+}
+
+/* ---- core: resize + encode one image ---- */
+function processOne(item){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width:w, height:h } = img;
+      if(cfg.rmode === 'pct'){ const s = cfg.scale/100; w = Math.round(w*s); h = Math.round(h*s); }
+      else if(cfg.rmode === 'px'){ if(w > cfg.maxw){ const r = cfg.maxw/w; w = cfg.maxw; h = Math.round(h*r); } }
+      w = Math.max(1,w); h = Math.max(1,h);
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      const ctx = c.getContext('2d');
+      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, w, h);
+      const q = cfg.fmt === 'image/png' ? undefined : cfg.quality/100;
+      c.toBlob(blob => {
+        if(!blob){ reject(new Error('encode falhou')); return; }
+        const base = item.name.replace(/\.[^.]+$/, '');
+        item.blob = blob; item.outSize = blob.size; item.dimW = w; item.dimH = h;
+        item.outName = base + '.' + extFor(cfg.fmt);
+        item.pct = Math.round((1 - blob.size/item.orig) * 100);
+        item.status = 'done';
+        resolve();
+      }, cfg.fmt, q);
+    };
+    img.onerror = () => { item.status='error'; reject(new Error('load falhou')); };
+    img.src = item.url;
+  });
+}
+
+/* ---- queue runner ---- */
+async function runAll(){
+  runBtn.disabled = true; zipBtn.disabled = true; clearBtn.disabled = true;
+  const queue = items.filter(i => i.status !== 'done');
+  for(const item of queue){
+    item.status = 'processing'; render();
+    try { await processOne(item); }
+    catch(e){ item.status = 'error'; }
+    render();
+    await new Promise(r => setTimeout(r, 0)); // yield to keep UI responsive
+  }
+  clearBtn.disabled = false;
+  updateButtons();
+  render();
+}
+
+/* ---- downloads ---- */
+function downloadBlob(blob, name){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+}
+async function downloadZip(){
+  const done = items.filter(i => i.status==='done' && i.blob);
+  if(!done.length) return;
+  zipBtn.disabled = true; zipBtn.querySelector('svg').outerHTML = '<div class="spin"></div>';
+  const zip = new JSZip();
+  const used = {};
+  done.forEach(i => {
+    let n = i.outName;
+    if(used[n]){ used[n]++; n = n.replace(/(\.[^.]+)$/, `-${used[n]}$1`); } else used[n]=1;
+    zip.file(n, i.blob);
+  });
+  const content = await zip.generateAsync({type:'blob'});
+  downloadBlob(content, 'imagens-otimizadas.zip');
+  zipBtn.innerHTML = '<svg viewBox="0 0 24 24" style="width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.9"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg> Baixar .zip';
+  zipBtn.disabled = false;
+}
+
+/* ---- render ---- */
+function iconImg(){ return '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>'; }
+
+function render(){
+  listSection.classList.toggle('hidden', items.length === 0);
+  if(items.length === 0){ updateButtons(); return; }
+
+  list.innerHTML = items.map(i => {
+    let sub, pctHtml, dlDisabled = 'disabled';
+    if(i.status === 'pending'){
+      sub = `<span class="dim">${fmtBytes(i.orig)} · aguardando</span>`;
+      pctHtml = `<span class="pct wait">—</span>`;
+    } else if(i.status === 'processing'){
+      sub = `<span class="dim">processando…</span>`;
+      pctHtml = `<span class="pct wait"><div class="spin"></div></span>`;
+    } else if(i.status === 'error'){
+      sub = `<span style="color:var(--red)">erro ao processar</span>`;
+      pctHtml = `<span class="pct up">erro</span>`;
+    } else {
+      const cls = i.pct >= 0 ? 'pct' : 'pct up';
+      const sign = i.pct >= 0 ? '−' : '+';
+      sub = `${fmtBytes(i.orig)} → <span class="new">${fmtBytes(i.outSize)}</span> · <span class="dim">${i.dimW}×${i.dimH} · ${extFor(cfg.fmt).toUpperCase()}</span>`;
+      pctHtml = `<span class="${cls}">${sign}${Math.abs(i.pct)}%</span>`;
+      dlDisabled = '';
+    }
+    return `<div class="item">
+      <div class="thumb"><img src="${i.url}" style="width:100%;height:100%;object-fit:cover" onerror="this.outerHTML='${iconImg().replace(/"/g,'&quot;')}'"></div>
+      <div class="meta"><div class="name">${i.name}</div><div class="sub">${sub}</div></div>
+      ${pctHtml}
+      <button class="act dl" data-id="${i.id}" ${dlDisabled} title="Baixar">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+      </button>
+      <button class="act rm" data-id="${i.id}" title="Remover">
+        <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>`;
+  }).join('');
+
+  const done = items.filter(i => i.status === 'done');
+  cntEl.textContent = items.length + (items.length === 1 ? ' imagem' : ' imagens');
+  if(done.length){
+    const o = done.reduce((s,i)=>s+i.orig,0), n = done.reduce((s,i)=>s+i.outSize,0);
+    const tot = Math.round((1 - n/o) * 100);
+    saveEl.textContent = `${fmtBytes(o)} → ${fmtBytes(n)}  (economia ${tot >= 0 ? '−' : '+'}${Math.abs(tot)}%)`;
+  } else saveEl.textContent = '';
+
+  updateButtons();
+}
+
+function updateButtons(){
+  const hasPending = items.some(i => i.status === 'pending' || i.status === 'error');
+  const hasDone = items.some(i => i.status === 'done');
+  runBtn.disabled = !hasPending;
+  zipBtn.disabled = !hasDone;
+}
+
+/* delegated clicks for item buttons */
+list.addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  const item = items.find(i => i.id === b.dataset.id); if(!item) return;
+  if(b.classList.contains('dl') && item.blob) downloadBlob(item.blob, item.outName);
+  if(b.classList.contains('rm')){ URL.revokeObjectURL(item.url); items = items.filter(i => i.id !== item.id); render(); }
+});
+
+runBtn.addEventListener('click', runAll);
+zipBtn.addEventListener('click', downloadZip);
+clearBtn.addEventListener('click', () => { items.forEach(i=>URL.revokeObjectURL(i.url)); items = []; render(); });
+
+render();
+</script>
+</body>
+</html>
