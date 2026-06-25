@@ -84,6 +84,16 @@ const GROUPS = [
           </svg>
         ),
       },
+      {
+        path: '/notas',
+        label: 'Notas',
+        icon: (
+          <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
+            <path d="M3 2.5h7l3 3V13a.5.5 0 0 1-.5.5h-9A.5.5 0 0 1 3 13V2.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+            <path d="M5.5 7.5h5M5.5 10h5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+          </svg>
+        ),
+      },
     ],
   },
   {
@@ -115,12 +125,12 @@ const GROUPS = [
     label: 'Conhecimento',
     items: [
       {
-        path: '/notas',
-        label: 'Notas',
+        path: '/estudos',
+        label: 'Estudos',
         icon: (
           <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
-            <path d="M3 2.5h7l3 3V13a.5.5 0 0 1-.5.5h-9A.5.5 0 0 1 3 13V2.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-            <path d="M5.5 7.5h5M5.5 10h5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+            <path d="M8 2.2L14.5 5 8 7.8 1.5 5 8 2.2z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+            <path d="M4 6.3v3.4c0 .9 1.8 1.8 4 1.8s4-.9 4-1.8V6.3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
           </svg>
         ),
       },
@@ -131,16 +141,6 @@ const GROUPS = [
           <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
             <path d="M2.5 3.5C2.5 3 2.9 2.5 8 2.5V13C2.9 13 2.5 12.5 2.5 12V3.5Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
             <path d="M13.5 3.5C13.5 3 13.1 2.5 8 2.5V13C13.1 13 13.5 12.5 13.5 12V3.5Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-          </svg>
-        ),
-      },
-      {
-        path: '/estudos',
-        label: 'Estudos',
-        icon: (
-          <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
-            <path d="M8 2.2L14.5 5 8 7.8 1.5 5 8 2.2z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-            <path d="M4 6.3v3.4c0 .9 1.8 1.8 4 1.8s4-.9 4-1.8V6.3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
           </svg>
         ),
       },
