@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
-import { Activity, Github, ExternalLink, RefreshCw, Unplug, Check, X } from 'lucide-react'
+import { Activity, ExternalLink, RefreshCw, Unplug, Check, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { PluggyConnect } from '@/components/PluggyConnect'
 
@@ -245,124 +245,6 @@ function StravaCard() {
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   GITHUB
-══════════════════════════════════════════════════════════════════ */
-type Repo = { id: number; name: string; full_name: string; url: string; language: string | null; pushed_at: string; stars: number; private: boolean }
-
-function GitHubCard() {
-  const qc = useQueryClient()
-  const { data: int, isLoading } = useIntegration('github')
-  const connected = int?.connected === true
-
-  const [loading, setLoading] = useState(false)
-  const [repos,   setRepos]   = useState<Repo[]>([])
-  const [fetched, setFetched] = useState(false)
-  const [toast,   setToast]   = useState<{ msg: string; ok: boolean } | null>(null)
-
-  useEffect(() => {
-    if (connected && !fetched) { fetchRepos(); setFetched(true) }
-  }, [connected])
-
-  async function fetchRepos() {
-    try {
-      const resp = await callFn('github-data')
-      const data = await resp.json()
-      if (resp.ok) setRepos(data.repos ?? [])
-    } catch {}
-  }
-
-  async function handleConnect() {
-    setLoading(true)
-    try {
-      const resp = await callFn('github-proxy')
-      if (!resp.ok) throw new Error(await resp.text())
-      const { url } = await resp.json()
-      window.location.href = url
-    } catch {
-      setToast({ msg: 'Erro ao conectar GitHub.', ok: false })
-      setLoading(false)
-    }
-  }
-
-  async function handleDisconnect() {
-    if (!window.confirm('Desconectar GitHub?')) return
-    await (supabase.from('integrations') as any)
-      .update({ connected: false, access_token_cipher: null })
-      .eq('provider', 'github')
-    qc.invalidateQueries({ queryKey: ['integration', 'github'] })
-    setRepos([])
-    setFetched(false)
-  }
-
-  const LANG_COLOR: Record<string, string> = {
-    TypeScript: '#3178c6', JavaScript: '#f7df1e', Python: '#3572A5',
-    Go: '#00add8', Rust: '#dea584', CSS: '#563d7c',
-  }
-
-  return (
-    <>
-      <IntCard
-        logo={<Github size={22} style={{ color: C.tx }} />}
-        title="GitHub"
-        description="Visualize seus repositórios mais recentes diretamente no MOS."
-        connected={connected}
-      >
-        {isLoading ? (
-          <div style={{ height: 36, background: C.card2, borderRadius: 8 }} />
-        ) : connected ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {/* Repos list */}
-            {repos.slice(0, 5).map(r => (
-              <a
-                key={r.id} href={r.url} target="_blank" rel="noreferrer"
-                style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', background: C.card2, borderRadius: 8, border: `1px solid ${C.border}` }}
-              >
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: C.b, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {r.name}
-                    {r.private && <span style={{ marginLeft: 6, fontSize: 9, color: C.dm }}>private</span>}
-                  </div>
-                  <div style={{ fontSize: 10, color: C.dm, marginTop: 1 }}>
-                    {r.language && (
-                      <span>
-                        <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: LANG_COLOR[r.language] ?? C.dm2, marginRight: 4, verticalAlign: 'middle' }} />
-                        {r.language} ·{' '}
-                      </span>
-                    )}
-                    push {fmtRelative(r.pushed_at)}
-                  </div>
-                </div>
-                {r.stars > 0 && <span style={{ fontSize: 10, color: C.a, flexShrink: 0 }}>★{r.stars}</span>}
-                <ExternalLink size={11} style={{ color: C.dm2, flexShrink: 0 }} />
-              </a>
-            ))}
-            <button
-              onClick={handleDisconnect}
-              style={{ alignSelf: 'flex-start', padding: '8px 14px', borderRadius: 9, background: 'transparent', border: `1px solid ${C.border}`, color: C.dm, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}
-            >
-              <Unplug size={13} /> Desconectar
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={handleConnect} disabled={loading}
-            style={{
-              width: '100%', padding: '11px 16px', borderRadius: 9,
-              background: 'rgba(255,255,255,.06)', border: `1px solid ${C.border}`,
-              color: C.tx, fontSize: 13, fontWeight: 600,
-              cursor: loading ? 'not-allowed' : 'pointer',
-            }}
-          >
-            {loading ? 'Redirecionando...' : 'Conectar GitHub'}
-          </button>
-        )}
-      </IntCard>
-      {toast && <Toast msg={toast.msg} ok={toast.ok} onClose={() => setToast(null)} />}
-    </>
-  )
-}
-
-/* ══════════════════════════════════════════════════════════════════
    VERCEL
 ══════════════════════════════════════════════════════════════════ */
 type Deploy = { id: string; name: string; url: string; state: string; createdAt: number }
@@ -511,7 +393,6 @@ export function IntegrationsPage() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
         <StravaCard />
-        <GitHubCard />
         <VercelCard />
       </div>
 
