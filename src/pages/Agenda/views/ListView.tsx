@@ -42,10 +42,15 @@ export function ListView({ events, onSelectEvent }: Props) {
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-white">{ev.title}</div>
                     {!ev.all_day && (
-                      <div className="text-[11px] text-[#555] mt-0.5">
-                        {new Date(ev.start_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                        {' – '}
-                        {new Date(ev.end_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      <div className="text-[11px] text-[#555] mt-0.5 flex items-center gap-2">
+                        <span>
+                          {new Date(ev.start_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                          {' – '}
+                          {new Date(ev.end_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                        {ev.recurrence_rule && (
+                          <span className="text-[10px] text-[#555]">↻ Recorrente</span>
+                        )}
                       </div>
                     )}
                     {ev.location && (

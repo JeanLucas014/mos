@@ -178,7 +178,10 @@ export function WeekView({ events, currentDate, onSelectEvent, onSelectSlot }: P
                     borderLeft: `2px solid ${ev.color}`,
                   }}
                 >
-                  <div className="text-white text-[10px] font-semibold truncate">{ev.title}</div>
+                  <div className="text-white text-[10px] font-semibold truncate flex items-center gap-1">
+                    <span className="truncate">{ev.title}</span>
+                    {ev.recurrence_rule && <span style={{ fontSize: 9, opacity: 0.7, flexShrink: 0 }}>↻</span>}
+                  </div>
                   {!isMobile && (
                     <div className="text-white/70 text-[9px]">
                       {new Date(ev.start_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
