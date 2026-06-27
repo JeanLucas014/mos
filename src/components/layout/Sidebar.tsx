@@ -1,16 +1,6 @@
-import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { ChevronDown, ChevronRight } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useUIStore } from '../../stores/useUIStore'
-
-const NAV_LINK_CLASS = (isActive: boolean) =>
-  [
-    'flex items-center gap-2.5 px-[10px] py-2 rounded-input transition-colors duration-[180ms] cursor-pointer select-none',
-    isActive ? 'nav-active bg-bg-3 text-ink' : 'text-ink-2 hover:bg-bg-3 hover:text-ink',
-  ].join(' ')
-
-const NAV_LINK_STYLE = { fontSize: 13, fontWeight: 500, textDecoration: 'none' as const }
 
 const GROUPS = [
   {
@@ -132,6 +122,43 @@ const GROUPS = [
     ],
   },
   {
+    label: 'Conhecimento',
+    items: [
+      {
+        path: '/estudos',
+        label: 'Estudos',
+        icon: (
+          <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
+            <path d="M8 2.2L14.5 5 8 7.8 1.5 5 8 2.2z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+            <path d="M4 6.3v3.4c0 .9 1.8 1.8 4 1.8s4-.9 4-1.8V6.3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+          </svg>
+        ),
+      },
+      {
+        path: '/senhas',
+        label: 'Senhas',
+        icon: (
+          <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
+            <rect x="2.5" y="7" width="11" height="7" rx="1.4" stroke="currentColor" strokeWidth="1.3" />
+            <path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" strokeWidth="1.3" />
+            <circle cx="8" cy="10.3" r="1" fill="currentColor" />
+          </svg>
+        ),
+      },
+      {
+        path: '/sistemas',
+        label: 'Sistemas',
+        icon: (
+          <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
+            <rect x="1.5" y="2.5" width="13" height="9" rx="1.4" stroke="currentColor" strokeWidth="1.3" />
+            <path d="M5.5 13.5h5M8 11.5v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+            <path d="M4.5 6h2M4.5 8h7" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+          </svg>
+        ),
+      },
+    ],
+  },
+  {
     label: 'Vida',
     items: [
       {
@@ -169,41 +196,10 @@ const GROUPS = [
   },
 ]
 
-const ESTUDOS_ICON = (
-  <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
-    <path d="M8 2.2L14.5 5 8 7.8 1.5 5 8 2.2z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-    <path d="M4 6.3v3.4c0 .9 1.8 1.8 4 1.8s4-.9 4-1.8V6.3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-  </svg>
-)
-
-const BIBLIOTECA_ICON = (
-  <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
-    <path d="M2.5 3.5C2.5 3 2.9 2.5 8 2.5V13C2.9 13 2.5 12.5 2.5 12V3.5Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-    <path d="M13.5 3.5C13.5 3 13.1 2.5 8 2.5V13C13.1 13 13.5 12.5 13.5 12V3.5Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-  </svg>
-)
-
-const SENHAS_ICON = (
-  <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
-    <rect x="2.5" y="7" width="11" height="7" rx="1.4" stroke="currentColor" strokeWidth="1.3" />
-    <path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" strokeWidth="1.3" />
-    <circle cx="8" cy="10.3" r="1" fill="currentColor" />
-  </svg>
-)
-
-const SISTEMAS_ICON = (
-  <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
-    <rect x="1.5" y="2.5" width="13" height="9" rx="1.4" stroke="currentColor" strokeWidth="1.3" />
-    <path d="M5.5 13.5h5M8 11.5v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-    <path d="M4.5 6h2M4.5 8h7" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
-  </svg>
-)
-
 export function Sidebar() {
   const { signOut } = useAuth()
   const setSidebarOpen = useUIStore((s) => s.setSidebarOpen)
   const navigate = useNavigate()
-  const [estudosOpen, setEstudosOpen] = useState(true)
 
   async function handleSignOut() {
     await signOut()
@@ -240,8 +236,15 @@ export function Sidebar() {
                 to={item.path}
                 end={'end' in item ? item.end : false}
                 onClick={handleNavClick}
-                className={({ isActive }) => NAV_LINK_CLASS(isActive)}
-                style={NAV_LINK_STYLE}
+                className={({ isActive }) =>
+                  [
+                    'flex items-center gap-2.5 px-[10px] py-2 rounded-input transition-colors duration-[180ms] cursor-pointer select-none',
+                    isActive
+                      ? 'nav-active bg-bg-3 text-ink'
+                      : 'text-ink-2 hover:bg-bg-3 hover:text-ink',
+                  ].join(' ')
+                }
+                style={{ fontSize: 13, fontWeight: 500, textDecoration: 'none' }}
               >
                 {item.icon}
                 <span>{item.label}</span>
@@ -249,76 +252,6 @@ export function Sidebar() {
             ))}
           </div>
         ))}
-
-        {/* Conhecimento group — Estudos expansível com Biblioteca como sub-item */}
-        <div className="mb-4">
-          <h5
-            className="px-2 mb-1 text-ink-3 uppercase tracking-[0.13em]"
-            style={{ fontSize: 10, fontWeight: 600 }}
-          >
-            Conhecimento
-          </h5>
-
-          {/* Estudos + toggle */}
-          <div>
-            <div className="flex items-center gap-0">
-              <NavLink
-                to="/estudos"
-                onClick={handleNavClick}
-                className={({ isActive }) =>
-                  NAV_LINK_CLASS(isActive) + ' flex-1'
-                }
-                style={NAV_LINK_STYLE}
-              >
-                {ESTUDOS_ICON}
-                <span>Estudos</span>
-              </NavLink>
-              <button
-                onClick={() => setEstudosOpen(v => !v)}
-                className="p-1 text-[#555] hover:text-white transition-colors shrink-0"
-                aria-label={estudosOpen ? 'Recolher Estudos' : 'Expandir Estudos'}
-              >
-                {estudosOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-              </button>
-            </div>
-
-            {estudosOpen && (
-              <div className="ml-6 border-l border-[#1f1f1f] pl-2 mt-0.5">
-                <NavLink
-                  to="/biblioteca"
-                  onClick={handleNavClick}
-                  className={({ isActive }) => NAV_LINK_CLASS(isActive)}
-                  style={{ ...NAV_LINK_STYLE, fontSize: 12 }}
-                >
-                  {BIBLIOTECA_ICON}
-                  <span>Biblioteca</span>
-                </NavLink>
-              </div>
-            )}
-          </div>
-
-          {/* Senhas */}
-          <NavLink
-            to="/senhas"
-            onClick={handleNavClick}
-            className={({ isActive }) => NAV_LINK_CLASS(isActive)}
-            style={NAV_LINK_STYLE}
-          >
-            {SENHAS_ICON}
-            <span>Senhas</span>
-          </NavLink>
-
-          {/* Sistemas */}
-          <NavLink
-            to="/sistemas"
-            onClick={handleNavClick}
-            className={({ isActive }) => NAV_LINK_CLASS(isActive)}
-            style={NAV_LINK_STYLE}
-          >
-            {SISTEMAS_ICON}
-            <span>Sistemas</span>
-          </NavLink>
-        </div>
       </nav>
 
       {/* Footer */}
@@ -326,8 +259,15 @@ export function Sidebar() {
         <NavLink
           to="/perfil"
           onClick={handleNavClick}
-          className={({ isActive }) => NAV_LINK_CLASS(isActive)}
-          style={NAV_LINK_STYLE}
+          className={({ isActive }) =>
+            [
+              'flex items-center gap-2.5 px-[10px] py-2 rounded-input transition-colors duration-[180ms] cursor-pointer select-none',
+              isActive
+                ? 'nav-active bg-bg-3 text-ink'
+                : 'text-ink-2 hover:bg-bg-3 hover:text-ink',
+            ].join(' ')
+          }
+          style={{ fontSize: 13, fontWeight: 500, textDecoration: 'none' }}
         >
           <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
             <circle cx="8" cy="5.5" r="2.8" stroke="currentColor" strokeWidth="1.3" />
