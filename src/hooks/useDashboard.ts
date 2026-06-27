@@ -48,15 +48,17 @@ function calcStreak(logs: HabitLog[]): number {
 /* ── Tasks ────────────────────────────────────────────────────── */
 export function useDashTasks() {
   return useQuery({
-    queryKey: ['tasks'],
+    queryKey: ['dash_tasks'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
-        .eq('done', false)
-        .order('created_at', { ascending: false })
+        .is('completed_at', null)
+        .is('parent_id', null)
+        .order('due_date', { ascending: true, nullsFirst: false })
+        .limit(5)
       if (error) throw error
-      return data as Task[]
+      return data ?? []
     },
   })
 }

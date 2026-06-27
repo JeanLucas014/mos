@@ -1,4 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useUIStore } from '../../stores/useUIStore'
 
@@ -198,7 +199,9 @@ const GROUPS = [
 
 export function Sidebar() {
   const { signOut } = useAuth()
-  const setSidebarOpen = useUIStore((s) => s.setSidebarOpen)
+  const setSidebarOpen        = useUIStore((s) => s.setSidebarOpen)
+  const sidebarCollapsed      = useUIStore((s) => s.sidebarCollapsed)
+  const toggleSidebarCollapsed = useUIStore((s) => s.toggleSidebarCollapsed)
   const navigate = useNavigate()
 
   async function handleSignOut() {
@@ -210,35 +213,43 @@ export function Sidebar() {
     setSidebarOpen(false)
   }
 
+  const c = sidebarCollapsed
+
   return (
     <aside
-      className="flex flex-col h-full overflow-y-auto"
+      className="flex flex-col h-full overflow-y-auto overflow-x-hidden"
       style={{ fontFamily: 'Manrope, sans-serif' }}
     >
       {/* Brand */}
-      <div className="flex items-center gap-2.5 px-[14px] h-[52px] flex-shrink-0 border-b border-line">
-        <img src="/logo.png" alt="MOS" className="h-8 w-auto" />
+      <div className={['flex items-center h-[52px] flex-shrink-0 border-b border-line', c ? 'justify-center px-2' : 'gap-2.5 px-[14px]'].join(' ')}>
+        {!c && <img src="/logo.png" alt="MOS" className="h-8 w-auto" />}
+        {c  && <img src="/logo.png" alt="MOS" className="h-6 w-auto" />}
       </div>
 
       {/* Nav */}
       <nav className="flex-1 py-3 px-2 overflow-y-auto">
         {GROUPS.map((group) => (
           <div key={group.label} className="mb-4">
-            <h5
-              className="px-2 mb-1 text-ink-3 uppercase tracking-[0.13em]"
-              style={{ fontSize: 10, fontWeight: 600 }}
-            >
-              {group.label}
-            </h5>
+            {!c && (
+              <h5
+                className="px-2 mb-1 text-ink-3 uppercase tracking-[0.13em]"
+                style={{ fontSize: 10, fontWeight: 600 }}
+              >
+                {group.label}
+              </h5>
+            )}
+            {c && <div className="mb-1 border-t border-line mx-1" />}
             {group.items.map((item) => (
               <NavLink
                 key={item.label}
                 to={item.path}
                 end={'end' in item ? item.end : false}
                 onClick={handleNavClick}
+                title={c ? item.label : undefined}
                 className={({ isActive }) =>
                   [
-                    'flex items-center gap-2.5 px-[10px] py-2 rounded-input transition-colors duration-[180ms] cursor-pointer select-none',
+                    'flex items-center rounded-input transition-colors duration-[180ms] cursor-pointer select-none',
+                    c ? 'justify-center px-0 py-2 w-full' : 'gap-2.5 px-[10px] py-2',
                     isActive
                       ? 'nav-active bg-bg-3 text-ink'
                       : 'text-ink-2 hover:bg-bg-3 hover:text-ink',
@@ -247,7 +258,7 @@ export function Sidebar() {
                 style={{ fontSize: 13, fontWeight: 500, textDecoration: 'none' }}
               >
                 {item.icon}
-                <span>{item.label}</span>
+                {!c && <span>{item.label}</span>}
               </NavLink>
             ))}
           </div>
@@ -255,13 +266,15 @@ export function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="px-2 py-3 border-t border-line flex-shrink-0 space-y-0.5">
+      <div className={['border-t border-line flex-shrink-0 space-y-0.5', c ? 'px-1 py-2' : 'px-2 py-3'].join(' ')}>
         <NavLink
           to="/perfil"
           onClick={handleNavClick}
+          title={c ? 'Perfil' : undefined}
           className={({ isActive }) =>
             [
-              'flex items-center gap-2.5 px-[10px] py-2 rounded-input transition-colors duration-[180ms] cursor-pointer select-none',
+              'flex items-center rounded-input transition-colors duration-[180ms] cursor-pointer select-none',
+              c ? 'justify-center px-0 py-2 w-full' : 'gap-2.5 px-[10px] py-2',
               isActive
                 ? 'nav-active bg-bg-3 text-ink'
                 : 'text-ink-2 hover:bg-bg-3 hover:text-ink',
@@ -269,23 +282,34 @@ export function Sidebar() {
           }
           style={{ fontSize: 13, fontWeight: 500, textDecoration: 'none' }}
         >
-          <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
+          <svg className="w-[15px] h-[15px] shrink-0" viewBox="0 0 16 16" fill="none">
             <circle cx="8" cy="5.5" r="2.8" stroke="currentColor" strokeWidth="1.3" />
             <path d="M2 13.5c0-2.5 2.7-4 6-4s6 1.5 6 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
           </svg>
-          <span>Perfil</span>
+          {!c && <span>Perfil</span>}
         </NavLink>
 
         <button
           onClick={handleSignOut}
-          className="flex items-center gap-2.5 px-[10px] py-2 rounded-input text-ink-2 hover:bg-bg-3 hover:text-ink transition-colors duration-[180ms] w-full"
+          title={c ? 'Sair' : undefined}
+          className={['flex items-center rounded-input text-ink-2 hover:bg-bg-3 hover:text-ink transition-colors duration-[180ms] w-full', c ? 'justify-center px-0 py-2' : 'gap-2.5 px-[10px] py-2'].join(' ')}
           style={{ fontSize: 13, fontWeight: 500 }}
         >
-          <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
+          <svg className="w-[15px] h-[15px] shrink-0" viewBox="0 0 16 16" fill="none">
             <path d="M9 3L4 8L9 13" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
             <path d="M4 8h9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
           </svg>
-          Sair
+          {!c && <span>Sair</span>}
+        </button>
+
+        {/* Collapse toggle — desktop only */}
+        <button
+          onClick={toggleSidebarCollapsed}
+          title={c ? 'Expandir menu' : 'Colapsar menu'}
+          className={['hidden lg:flex items-center rounded-input text-[#555] hover:text-white hover:bg-bg-3 transition-colors w-full', c ? 'justify-center px-0 py-2' : 'gap-2.5 px-[10px] py-2'].join(' ')}
+        >
+          {c ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          {!c && <span style={{ fontSize: 13, fontWeight: 500 }}>Colapsar</span>}
         </button>
       </div>
     </aside>

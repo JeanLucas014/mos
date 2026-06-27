@@ -591,17 +591,35 @@ function MotoTab() {
                 {/* Week header */}
                 <button
                   onClick={() => setExpandedWeek(isExpanded ? null : weekNum)}
-                  style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 16px', background:'none', border:'none', cursor:'pointer', gap:12 }}
+                  style={{
+                    width: '100%', display: 'grid',
+                    gridTemplateColumns: 'auto 1fr auto',
+                    alignItems: 'center',
+                    padding: '12px 16px',
+                    background: 'none', border: 'none',
+                    cursor: 'pointer', gap: 8,
+                  }}
                 >
-                  <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                    <span style={{ fontSize:13, fontWeight:700, color:C.tx }}>Semana {weekNum}</span>
-                    <span style={{ fontSize:11, color:C.dm }}>— {weekLabel(days)}</span>
-                  </div>
-                  <div style={{ display:'flex', alignItems:'center', gap:12, flexShrink:0 }}>
-                    {wt.e > 0 && <span style={{ fontSize:11, color:C.g, fontFamily:'JetBrains Mono, monospace' }}>+{fmt(wt.e)}</span>}
-                    {wt.g > 0 && <span style={{ fontSize:11, color:C.r, fontFamily:'JetBrains Mono, monospace' }}>-{fmt(wt.g)}</span>}
-                    {(wt.e > 0 || wt.g > 0) && <span style={{ fontSize:11, fontWeight:700, fontFamily:'JetBrains Mono, monospace', color: wt.res >= 0 ? C.g : C.r }}>{fmt(wt.res)}</span>}
-                    <span style={{ color:C.dm, fontSize:10 }}>{isExpanded ? '▲' : '▼'}</span>
+                  <span style={{ fontSize:13, fontWeight:700, color:C.tx, whiteSpace:'nowrap' }}>
+                    Semana {weekNum}
+                  </span>
+                  <span style={{ fontSize:11, color:C.dm, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', textAlign:'left' }}>
+                    {weekLabel(days)}
+                  </span>
+                  <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
+                    <span style={{ fontSize:11, fontWeight:700, color:C.g, fontFamily:'JetBrains Mono, monospace', whiteSpace:'nowrap' }}>
+                      +{fmt(wt.e)}
+                    </span>
+                    <span style={{ fontSize:11, fontWeight:700, color:C.r, fontFamily:'JetBrains Mono, monospace', whiteSpace:'nowrap' }}>
+                      -{fmt(wt.g)}
+                    </span>
+                    <span style={{ fontSize:11, fontWeight:700, color:wt.res >= 0 ? C.g : C.r, fontFamily:'JetBrains Mono, monospace', whiteSpace:'nowrap' }}>
+                      {fmt(wt.res)}
+                    </span>
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"
+                      style={{ transform:isExpanded ? 'rotate(180deg)' : 'rotate(0)', transition:'transform .2s', flexShrink:0, color:C.dm }}>
+                      <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
                   </div>
                 </button>
 

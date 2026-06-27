@@ -5,7 +5,8 @@ import { MobileScrim } from './MobileScrim'
 import { useUIStore } from '../../stores/useUIStore'
 
 export function AppShell() {
-  const sidebarOpen = useUIStore((s) => s.sidebarOpen)
+  const sidebarOpen      = useUIStore((s) => s.sidebarOpen)
+  const sidebarCollapsed = useUIStore((s) => s.sidebarCollapsed)
 
   return (
     <div className="flex h-screen overflow-hidden bg-bg">
@@ -13,11 +14,11 @@ export function AppShell() {
       <div
         className={[
           'fixed lg:relative z-30 lg:z-auto h-full bg-bg-2 border-r border-line',
-          'transition-transform duration-[280ms] ease-smooth',
+          'transition-all duration-[280ms] ease-smooth',
           'lg:translate-x-0',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full',
         ].join(' ')}
-        style={{ width: 220, flexShrink: 0 }}
+        style={{ width: sidebarCollapsed ? 56 : 220, flexShrink: 0 }}
       >
         <Sidebar />
       </div>

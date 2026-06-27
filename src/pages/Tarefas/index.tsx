@@ -274,7 +274,7 @@ export default function TarefasPage() {
         </div>
 
         {/* Task list */}
-        <div className="flex-1 overflow-y-auto px-2 py-3 pb-20 lg:pb-3">
+        <div className="flex-1 overflow-y-auto px-2 py-3 pb-24 lg:pb-3">
           {loading ? (
             <div className="text-[#555] text-sm text-center py-12">Carregando...</div>
           ) : shown.length === 0 ? (
@@ -335,9 +335,9 @@ export default function TarefasPage() {
           )}
         </div>
 
-        {/* Quick-add bar (hidden on historico, hidden on mobile where bottom tabs show) */}
+        {/* Quick-add bar — hidden on mobile (bottom nav handles input) */}
         {viewId !== 'historico' && (
-          <div className="shrink-0 px-4 pb-4 pb-20 lg:pb-4 max-w-2xl mx-auto w-full">
+          <div className="hidden lg:block shrink-0 px-4 pb-4 max-w-2xl mx-auto w-full">
             <div className="flex items-center gap-2 bg-[#111111] border border-[#1f1f1f] rounded-xl px-4 py-3 focus-within:border-[#0EA5E9]/50 transition-colors">
               <Plus size={15} className="text-[#444] shrink-0" />
               <input
@@ -353,7 +353,8 @@ export default function TarefasPage() {
       </div>
 
       {/* Mobile bottom navigation */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#0a0a0a] border-t border-[#1f1f1f] flex">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#0a0a0a] border-t border-[#1f1f1f] flex"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
         {[
           { id: 'inbox',     label: 'Inbox',  Icon: Inbox    },
           { id: 'hoje',      label: 'Hoje',   Icon: Sun      },

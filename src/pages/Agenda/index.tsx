@@ -8,6 +8,7 @@ import { DayView }    from './views/DayView'
 import { ListView }   from './views/ListView'
 import { EventModal } from './components/EventModal'
 import { RotinaTab }  from './components/RotinaTab'
+import { expandRecurringEvents } from './utils/expandRecurrence'
 
 type Tab = 'agenda' | 'rotina'
 
@@ -52,11 +53,30 @@ export default function AgendaPage() {
   const [modal,       setModal]       = useState<Partial<CalendarEvent> | null>(null)
 
   const loadEvents = useCallback(async () => {
-    const { data } = await (supabase as any)
+    // Determine visible range (±90 days from today as a safe window)
+    const from = new Date(); from.setDate(from.getDate() - 7)
+    const to   = new Date(); to.setDate(to.getDate() + 90)
+
+    // Query 1: non-recurring events in the range
+    const { data: normalEvents } = await (supabase as any)
       .from('calendar_events')
       .select('*')
+      .gte('start_at', from.toISOString())
+      .lte('start_at', to.toISOString())
+      .is('recurrence_rule', null)
       .order('start_at')
-    if (data) setEvents(data as CalendarEvent[])
+
+    // Query 2: recurring events (may have started before the range)
+    const { data: recurringEvents } = await (supabase as any)
+      .from('calendar_events')
+      .select('*')
+      .not('recurrence_rule', 'is', null)
+      .lte('start_at', to.toISOString())
+      .order('start_at')
+
+    const all      = [...(normalEvents ?? []), ...(recurringEvents ?? [])] as CalendarEvent[]
+    const expanded = expandRecurringEvents(all, from, to)
+    setEvents(expanded)
   }, [])
 
   const loadRotinas = useCallback(async () => {
@@ -81,8 +101,12 @@ export default function AgendaPage() {
   }
 
   async function handleSave(ev: Partial<CalendarEvent>) {
-    if (ev.id) {
-      await (supabase as any).from('calendar_events').update(ev).eq('id', ev.id)
+    // Expanded recurring events have synthetic IDs like "uuid_2024-01-01" — strip the suffix
+    const realId = ev.id?.includes('_') && ev.id.length > 40
+      ? ev.id.slice(0, ev.id.lastIndexOf('_'))
+      : ev.id
+    if (realId) {
+      await (supabase as any).from('calendar_events').update({ ...ev, id: realId }).eq('id', realId)
     } else {
       await (supabase as any).from('calendar_events').insert(ev)
     }
@@ -93,7 +117,10 @@ export default function AgendaPage() {
   async function handleDelete() {
     if (!modal?.id) return
     if (!window.confirm('Excluir este evento?')) return
-    await (supabase as any).from('calendar_events').delete().eq('id', modal.id)
+    const realId = modal.id.includes('_') && modal.id.length > 40
+      ? modal.id.slice(0, modal.id.lastIndexOf('_'))
+      : modal.id
+    await (supabase as any).from('calendar_events').delete().eq('id', realId)
     setModal(null)
     loadEvents()
   }

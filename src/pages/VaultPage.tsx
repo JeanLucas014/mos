@@ -272,6 +272,7 @@ function VaultRow({
   const [decryptedPw,      setDecryptedPw]      = useState<string | null>(null)
   const [revealLoading,    setRevealLoading]     = useState(false)
   const [decryptError,     setDecryptError]      = useState(false)
+  const [showMenu,         setShowMenu]          = useState(false)
 
   async function tryDecrypt(): Promise<string | null> {
     if (decryptedPw !== null) return decryptedPw
@@ -303,7 +304,7 @@ function VaultRow({
   }
 
   return (
-    <div className="group flex items-center gap-3 px-4 py-3 rounded-xl border border-line bg-bg-2 hover:border-white/10 transition-colors">
+    <div className="group flex items-center gap-3 px-4 py-3 rounded-xl border border-line bg-bg-2 hover:border-white/10 transition-colors overflow-hidden">
       {/* Service + username */}
       <div className="flex-1 min-w-0">
         <div
@@ -320,7 +321,7 @@ function VaultRow({
       </div>
 
       {/* Password area */}
-      <div className="flex items-center gap-1 flex-shrink-0" style={{ maxWidth: '45%' }}>
+      <div className="flex items-center gap-1 flex-shrink-0" style={{ maxWidth: 'min(45%, 160px)' }}>
         {decryptError && (
           <span style={{ fontSize: 10, color: '#f87171' }}>
             Senha incorreta
@@ -340,7 +341,7 @@ function VaultRow({
               whiteSpace: 'nowrap',
             }}
           >
-            {revealed && decryptedPw ? decryptedPw : '••••••••'}
+            {revealed && decryptedPw ? decryptedPw : '••••••'}
           </div>
         )}
 
@@ -370,8 +371,37 @@ function VaultRow({
         {/* Copy button */}
         <CopyBtn getValue={getCopyValue} />
 
-        {/* Edit + delete (always visible on mobile, hover on desktop) */}
-        <div className="flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+        {/* Mobile: botão "..." com dropdown */}
+        <div className="sm:hidden relative">
+          <button
+            onClick={() => setShowMenu(v => !v)}
+            className="w-8 h-8 flex items-center justify-center text-[#555] hover:text-white rounded-lg hover:bg-[#1f1f1f]"
+          >
+            ···
+          </button>
+          {showMenu && (
+            <div className="absolute right-0 bottom-10 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl overflow-hidden z-20 shadow-xl min-w-[120px]">
+              <button
+                onClick={() => { onEdit(item); setShowMenu(false) }}
+                className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-[#ccc] hover:bg-[#222] transition-colors text-left"
+              >
+                Editar
+              </button>
+              <button
+                onClick={() => {
+                  if (window.confirm(`Remover "${item.service}"?`)) onDelete(item.id)
+                  setShowMenu(false)
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-[#ef4444] hover:bg-[#222] transition-colors text-left"
+              >
+                Remover
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Desktop: botões no hover */}
+        <div className="hidden sm:flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
           <IconBtn title="Editar" onClick={() => onEdit(item)}>
             <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
               <path d="M11.5 2.5l2 2L5 13H3v-2L11.5 2.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
