@@ -208,18 +208,18 @@ export function useDashEvents() {
   return useQuery({
     queryKey: ['dash_events'],
     queryFn: async () => {
-      const { data, error } = await (supabase.from('events') as any)
-        .select('id, title, starts_at, ends_at, category')
-        .gte('starts_at', new Date().toISOString())
-        .order('starts_at', { ascending: true })
-        .limit(3)
+      const { data, error } = await (supabase.from('calendar_events') as any)
+        .select('id, title, start_at, end_at, color')
+        .gte('start_at', new Date().toISOString())
+        .order('start_at', { ascending: true })
+        .limit(4)
       if (error) throw error
       return (data ?? []) as {
         id: string
         title: string
-        starts_at: string
-        ends_at: string | null
-        category: string
+        start_at: string
+        end_at: string | null
+        color: string
       }[]
     },
   })

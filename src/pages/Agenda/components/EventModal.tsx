@@ -1,7 +1,8 @@
-import { useState } from 'react'
-import { X, Trash2, MapPin, AlignLeft, Clock } from 'lucide-react'
-import type { CalendarEvent } from '../types'
+import { useState, useEffect } from 'react'
+import { X, Trash2, MapPin, AlignLeft, Clock, Tag } from 'lucide-react'
+import type { CalendarEvent, CalendarTag } from '../types'
 import { EVENT_COLORS } from '../types'
+import { supabase } from '../../../lib/supabase'
 
 interface Props {
   event: Partial<CalendarEvent>
@@ -31,6 +32,13 @@ export function EventModal({ event, onSave, onDelete, onClose }: Props) {
   const [color,    setColor]    = useState(event.color    ?? '#0EA5E9')
   const [location, setLocation] = useState(event.location ?? '')
   const [saving,   setSaving]   = useState(false)
+  const [tags,     setTags]     = useState<string[]>(event.tags ?? [])
+  const [allTags,  setAllTags]  = useState<CalendarTag[]>([])
+
+  useEffect(() => {
+    ;(supabase as any).from('calendar_tags').select('*').order('name')
+      .then(({ data }: { data: CalendarTag[] | null }) => setAllTags(data ?? []))
+  }, [])
 
   async function handleSave() {
     if (!title.trim() || !startAt) return
@@ -44,6 +52,7 @@ export function EventModal({ event, onSave, onDelete, onClose }: Props) {
       all_day:     allDay,
       color,
       location:    location.trim() || null,
+      tags,
     })
     setSaving(false)
   }
@@ -149,6 +158,35 @@ export function EventModal({ event, onSave, onDelete, onClose }: Props) {
               className="flex-1 bg-transparent text-sm text-[#aaa] outline-none resize-none placeholder:text-[#2a2a2a]"
             />
           </div>
+
+          {/* Tags */}
+          {allTags.length > 0 && (
+            <div className="flex items-start gap-2">
+              <Tag size={14} className="text-[#555] shrink-0 mt-0.5" />
+              <div className="flex flex-wrap gap-1.5">
+                {allTags.map(t => {
+                  const active = tags.includes(t.id)
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setTags(prev =>
+                        active ? prev.filter(id => id !== t.id) : [...prev, t.id]
+                      )}
+                      className="px-2.5 py-0.5 rounded-full text-xs font-medium transition-all"
+                      style={{
+                        background: active ? t.color + '33' : '#1f1f1f',
+                        color:      active ? t.color : '#555',
+                        border:     `1px solid ${active ? t.color + '66' : '#2a2a2a'}`,
+                      }}
+                    >
+                      {t.name}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer */}

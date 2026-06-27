@@ -1,7 +1,7 @@
 import {
   CheckSquare, Flame, FolderOpen, Target,
-  Receipt, Activity, FileText, BookOpen, Zap,
-  ArrowRight, CalendarDays, Triangle,
+  Activity, FileText, BookOpen, Zap,
+  ArrowRight, CalendarDays,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
@@ -11,12 +11,10 @@ import {
   useDashHabits,
   useDashProjects,
   useDashGoals,
-  useDashInvoices,
   useDashSports,
   useDashNotes,
   useDashBooks,
   useDashEvents,
-  useDashVercel,
 } from '../hooks/useDashboard'
 
 /* ══════════════════════════════════════════════════════════════════
@@ -185,28 +183,14 @@ function HabitsWidget() {
    WIDGET — AGENDA (próximos eventos)
 ══════════════════════════════════════════════════════════════════ */
 
-const EVENT_CAT_COLOR: Record<string, string> = {
-  treino:  '#22c55e',
-  reuniao: '#0EA5E9',
-  estudo:  '#f59e0b',
-  geral:   '#71717a',
-}
-
-const EVENT_CAT_LABEL: Record<string, string> = {
-  treino:  'Treino',
-  reuniao: 'Reunião',
-  estudo:  'Estudo',
-  geral:   'Geral',
-}
-
 function fmtEventTime(iso: string): string {
-  const ev   = new Date(iso)
-  const now  = new Date()
+  const ev       = new Date(iso)
+  const now      = new Date()
   const todayStr = now.toISOString().slice(0, 10)
   const evStr    = ev.toISOString().slice(0, 10)
-  const tmw = new Date(now); tmw.setDate(now.getDate() + 1)
+  const tmw      = new Date(now); tmw.setDate(now.getDate() + 1)
   const tmwStr   = tmw.toISOString().slice(0, 10)
-  const hhmm = `${String(ev.getHours()).padStart(2,'0')}:${String(ev.getMinutes()).padStart(2,'0')}`
+  const hhmm     = `${String(ev.getHours()).padStart(2,'0')}:${String(ev.getMinutes()).padStart(2,'0')}`
   if (evStr === todayStr) return `Hoje, ${hhmm}`
   if (evStr === tmwStr)   return `Amanhã, ${hhmm}`
   const weekday = ev.toLocaleDateString('pt-BR', { weekday: 'short' })
@@ -232,38 +216,23 @@ function AgendaWidget() {
         <p className="text-ink-3 text-xs mt-1">Nenhum evento próximo.</p>
       ) : (
         <ul className="space-y-2">
-          {events.map(ev => {
-            const color = EVENT_CAT_COLOR[ev.category] ?? EVENT_CAT_COLOR.geral
-            const label = EVENT_CAT_LABEL[ev.category] ?? 'Geral'
-            return (
-              <li
-                key={ev.id}
-                className="rounded-xl px-3 py-2 bg-bg"
-                style={{ borderLeft: `3px solid ${color}` }}
+          {events.map(ev => (
+            <li
+              key={ev.id}
+              className="rounded-xl px-3 py-2 bg-bg"
+              style={{ borderLeft: `3px solid ${ev.color ?? '#0EA5E9'}` }}
+            >
+              <div
+                className="text-ink text-xs font-semibold truncate mb-0.5"
+                style={{ fontFamily: 'Sora, sans-serif' }}
               >
-                <div
-                  className="text-ink text-xs font-semibold truncate mb-1"
-                  style={{ fontFamily: 'Sora, sans-serif' }}
-                >
-                  {ev.title}
-                </div>
-                <div className="flex items-center gap-2">
-                  <span
-                    style={{
-                      fontSize: 9, fontWeight: 700, padding: '1px 7px',
-                      borderRadius: 20, background: color + '20', color,
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {label}
-                  </span>
-                  <span className="text-ink-3" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10 }}>
-                    {fmtEventTime(ev.starts_at)}
-                  </span>
-                </div>
-              </li>
-            )
-          })}
+                {ev.title}
+              </div>
+              <div className="text-ink-3" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10 }}>
+                {fmtEventTime(ev.start_at)}
+              </div>
+            </li>
+          ))}
         </ul>
       )}
     </Widget>
@@ -678,16 +647,14 @@ export function DashboardPage() {
       {/* Widget grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <TasksWidget />
-        <HabitsWidget />
+        <NotesWidget />
         <AgendaWidget />
         <ProjectsWidget />
         <GoalsWidget />
-        <InvoicesWidget />
         <SportsWidget />
-        <NotesWidget />
+        <HabitsWidget />
         <LibraryWidget />
         <StreakWidget />
-        <VercelWidget />
       </div>
     </div>
   )

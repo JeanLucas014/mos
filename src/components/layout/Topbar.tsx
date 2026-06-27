@@ -7,7 +7,7 @@ const VIEW_LABELS: Record<string, string> = {
   '/': 'Dashboard',
   '/dashboard': 'Dashboard',
   '/agenda': 'Agenda',
-  '/tarefas': 'Tarefas & To-do',
+  '/tarefas': 'Tarefas',
   '/projetos': 'Projetos',
   '/metas': 'Metas',
   '/habitos': 'Hábitos',

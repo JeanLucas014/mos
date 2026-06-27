@@ -1,3 +1,10 @@
+export interface CalendarTag {
+  id: string
+  user_id: string
+  name: string
+  color: string
+}
+
 export interface CalendarEvent {
   id: string
   user_id: string
@@ -9,6 +16,7 @@ export interface CalendarEvent {
   color: string
   location: string | null
   recurrence_rule: string | null
+  tags?: string[]
   created_at: string
 }
 

@@ -36,7 +36,7 @@ const GROUPS = [
       },
       {
         path: '/tarefas',
-        label: 'Tarefas & To-do',
+        label: 'Tarefas',
         icon: (
           <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
             <path d="M2 4l1.6 1.6L6 3M2 11l1.6 1.6L6 10M9 4.3h5M9 11.3h5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />

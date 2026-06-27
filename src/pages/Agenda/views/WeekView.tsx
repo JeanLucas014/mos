@@ -13,7 +13,9 @@ interface Props {
 
 function startOfWeek(d: Date): Date {
   const r = new Date(d)
-  r.setDate(d.getDate() - d.getDay())
+  const day = d.getDay()
+  const diff = day === 0 ? -6 : 1 - day
+  r.setDate(d.getDate() + diff)
   r.setHours(0, 0, 0, 0)
   return r
 }

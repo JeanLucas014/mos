@@ -6,39 +6,6 @@ import { useVaultItems, type VaultItem } from '../hooks/useVaultItems'
 import { deriveKey, encrypt, decrypt, makeUserSalt } from '../lib/crypto'
 
 /* ══════════════════════════════════════════════════════════════
-   SERVICE ICON — coloured circle with first letter
-══════════════════════════════════════════════════════════════ */
-const ICON_COLORS = [
-  '#0EA5E9', '#34d399', '#a78bfa', '#fbbf24',
-  '#f87171', '#60a5fa', '#f59e0b', '#6ee7b7',
-]
-
-function serviceColor(service: string): string {
-  let h = 0
-  for (let i = 0; i < service.length; i++) h = (h * 31 + service.charCodeAt(i)) >>> 0
-  return ICON_COLORS[h % ICON_COLORS.length]
-}
-
-function ServiceIcon({ name }: { name: string }) {
-  const color = serviceColor(name)
-  return (
-    <div
-      className="flex-shrink-0 flex items-center justify-center rounded-xl text-white font-bold"
-      style={{
-        width: 40, height: 40,
-        background: color + '22',
-        color,
-        fontSize: 15,
-        fontFamily: 'Sora, sans-serif',
-        border: `1px solid ${color}33`,
-      }}
-    >
-      {name[0]?.toUpperCase() ?? '?'}
-    </div>
-  )
-}
-
-/* ══════════════════════════════════════════════════════════════
    ICON BUTTONS
 ══════════════════════════════════════════════════════════════ */
 function IconBtn({
@@ -337,8 +304,6 @@ function VaultRow({
 
   return (
     <div className="group flex items-center gap-3 px-4 py-3 rounded-xl border border-line bg-bg-2 hover:border-white/10 transition-colors">
-      <ServiceIcon name={item.service} />
-
       {/* Service + username */}
       <div className="flex-1 min-w-0">
         <div

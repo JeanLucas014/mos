@@ -47,7 +47,7 @@ export default function TarefasPage() {
     })()
     const pendingTasks = tasks.filter(t => !t.parent_id && !t.completed_at)
     switch (view) {
-      case 'inbox':     return pendingTasks.filter(t => !t.project_id && !t.due_date)
+      case 'inbox':     return pendingTasks.filter(t => !t.project_id)
       case 'hoje':      return pendingTasks.filter(t => t.due_date != null && t.due_date <= todayStr)
       case 'proximos7': return pendingTasks.filter(t => t.due_date != null && t.due_date <= t7)
       case 'historico': return [...tasks.filter(t => !!t.completed_at && !t.parent_id)]

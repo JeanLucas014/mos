@@ -1,6 +1,6 @@
 import type { CalendarEvent } from '../types'
 
-const DAYS_PT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+const DAYS_PT = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
 
 interface Props {
   events: CalendarEvent[]
@@ -21,7 +21,8 @@ export function MonthView({ events, currentDate, onSelectEvent, onSelectSlot }: 
   const month   = currentDate.getMonth()
   const first   = new Date(year, month, 1)
   const last    = new Date(year, month + 1, 0)
-  const offset  = first.getDay()
+  const rawOffset = first.getDay()
+  const offset    = rawOffset === 0 ? 6 : rawOffset - 1
 
   const cells: (Date | null)[] = [
     ...Array(offset).fill(null),
