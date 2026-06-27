@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Eye, EyeOff, Lock } from 'lucide-react'
+import { Eye, EyeOff, Lock, Upload } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useVaultStore } from '../stores/useVaultStore'
 import { useVaultItems, type VaultItem } from '../hooks/useVaultItems'
@@ -555,6 +555,50 @@ function UnlockScreen({
 }
 
 /* ══════════════════════════════════════════════════════════════
+   NOTION IMPORT
+══════════════════════════════════════════════════════════════ */
+interface NotionEntry { service: string; username: string | null; password: string }
+
+function parseNotionPasswords(text: string): NotionEntry[] {
+  const entries: NotionEntry[] = []
+  const lines = text.split('\n')
+  let i = 0
+
+  while (i < lines.length) {
+    const line = lines[i].trim()
+
+    if (line.startsWith('- ')) {
+      const service = line.slice(2).trim()
+      if (!service) { i++; continue }
+
+      const sublines: string[] = []
+      i++
+      while (i < lines.length && (lines[i].startsWith('    ') || lines[i].startsWith('\t') || lines[i].trim() === '')) {
+        const sub = lines[i].trim()
+        if (sub) sublines.push(sub)
+        i++
+      }
+
+      // First subline that is not a URL and not a 2FA code and has content
+      const password = sublines.find(s =>
+        s.length > 0 &&
+        !s.startsWith('http://') &&
+        !s.startsWith('https://') &&
+        !/^\d{4}[\s-]\d{4}$/.test(s),
+      ) ?? sublines[0] ?? ''
+
+      if (password) {
+        entries.push({ service, username: null, password })
+      }
+    } else {
+      i++
+    }
+  }
+
+  return entries
+}
+
+/* ══════════════════════════════════════════════════════════════
    PAGE
 ══════════════════════════════════════════════════════════════ */
 export function VaultPage() {
@@ -607,6 +651,48 @@ export function VaultPage() {
     }
   }
 
+  /* ── Notion import ── */
+  async function handleNotionImport(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!cryptoKey) return
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const text = await file.text()
+    const entries = parseNotionPasswords(text)
+
+    if (entries.length === 0) {
+      alert('Nenhuma senha encontrada no arquivo.')
+      e.target.value = ''
+      return
+    }
+
+    if (!window.confirm(`Importar ${entries.length} senha${entries.length !== 1 ? 's' : ''} do Notion?`)) {
+      e.target.value = ''
+      return
+    }
+
+    let imported = 0
+    let errors = 0
+
+    for (const entry of entries) {
+      try {
+        const { cipher, iv } = await encrypt(entry.password, cryptoKey)
+        await addItem.mutateAsync({
+          service: entry.service,
+          username: entry.username,
+          password_cipher: cipher,
+          password_iv: iv,
+        })
+        imported++
+      } catch {
+        errors++
+      }
+    }
+
+    alert(`Importação concluída: ${imported} senha${imported !== 1 ? 's' : ''} importada${imported !== 1 ? 's' : ''}${errors > 0 ? `, ${errors} erro${errors !== 1 ? 's' : ''}` : ''}.`)
+    e.target.value = ''
+  }
+
   /* ── Locked ── */
   if (!cryptoKey) {
     return (
@@ -656,6 +742,17 @@ export function VaultPage() {
             </svg>
             Travar
           </button>
+
+          {/* Import from Notion */}
+          <label
+            className="flex items-center gap-1.5 text-xs text-ink-2 hover:text-ink cursor-pointer transition-colors px-3 rounded-input border border-line hover:bg-bg-3 hover:border-white/20"
+            style={{ minHeight: 40 }}
+            title="Importar senhas de arquivo .md exportado do Notion"
+          >
+            <Upload size={13} />
+            Importar Notion
+            <input type="file" accept=".md,.txt" className="hidden" onChange={handleNotionImport} />
+          </label>
 
           {/* Add */}
           <button
