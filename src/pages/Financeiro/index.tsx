@@ -60,14 +60,14 @@ export default function FinanceiroPage() {
         <select
           value={selectedYear}
           onChange={e => setSelectedYear(Number(e.target.value))}
-          className="bg-[#111111] border border-[#1f1f1f] text-white text-sm rounded-lg px-3 py-1.5 outline-none focus:border-[#0EA5E9]/60 transition-colors"
+          className="bg-[#111111] border border-[#1f1f1f] text-white text-sm rounded-lg px-3 py-1.5 outline-none focus:border-[#0EA5E9]/60 transition-colors max-w-[120px] sm:max-w-none"
         >
           {anos.map(a => <option key={a.id} value={a.ano}>{a.ano}</option>)}
         </select>
       </div>
 
       {/* Tab bar */}
-      <div className="flex overflow-x-auto border-b border-[#1f1f1f] mt-5 mb-6">
+      <div className="flex overflow-x-auto border-b border-[#1f1f1f] mt-5 mb-6 scrollbar-none -mx-4 px-4 lg:mx-0 lg:px-0">
         {TABS.map(t => (
           <button
             key={t.id}

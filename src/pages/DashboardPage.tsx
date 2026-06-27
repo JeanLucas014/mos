@@ -676,7 +676,7 @@ export function DashboardPage() {
       </div>
 
       {/* Widget grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <TasksWidget />
         <HabitsWidget />
         <AgendaWidget />

@@ -391,7 +391,7 @@ export function IntegrationsPage() {
         Conecte seus serviços e importe dados automaticamente.
       </p>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <StravaCard />
         <VercelCard />
       </div>

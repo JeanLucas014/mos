@@ -174,12 +174,12 @@ function VaultModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
       style={{ background: 'rgba(0,0,0,.85)' }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
       <div
-        className="w-full max-w-md rounded-2xl border border-line p-6 space-y-4"
+        className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-line p-6 space-y-4 max-h-[90vh] overflow-y-auto"
         style={{ background: '#111111' }}
       >
         <div className="flex items-center justify-between">
@@ -405,8 +405,8 @@ function VaultRow({
         {/* Copy button */}
         <CopyBtn getValue={getCopyValue} />
 
-        {/* Edit + delete (show on hover) */}
-        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* Edit + delete (always visible on mobile, hover on desktop) */}
+        <div className="flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
           <IconBtn title="Editar" onClick={() => onEdit(item)}>
             <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
               <path d="M11.5 2.5l2 2L5 13H3v-2L11.5 2.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
@@ -475,7 +475,7 @@ function UnlockScreen({
   }
 
   return (
-    <div className="min-h-[60vh] flex items-center justify-center">
+    <div className="min-h-screen flex items-start pt-[20vh] sm:items-center sm:pt-0 sm:min-h-[60vh] justify-center px-4">
       <div className="w-full max-w-[360px]">
         {/* Icon */}
         <div

@@ -52,27 +52,28 @@ export function MonthView({ events, currentDate, onSelectEvent, onSelectSlot }: 
           return (
             <div key={i}
               onClick={() => day && onSelectSlot(day)}
-              className={['bg-[#0a0a0a] p-1.5 cursor-pointer transition-colors hover:bg-[#111111] min-h-[80px]',
+              className={['bg-[#0a0a0a] p-1 cursor-pointer transition-colors hover:bg-[#111111] min-h-[60px] sm:min-h-[80px]',
                 !day ? 'opacity-0 pointer-events-none' : '',
               ].join(' ')}>
               {day && (
                 <>
-                  <div className={['w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mb-1',
+                  <div className={['rounded-full flex items-center justify-center font-bold mb-0.5',
+                    'text-[10px] sm:text-xs w-5 h-5 sm:w-6 sm:h-6',
                     isToday ? 'bg-[#0EA5E9] text-black' : 'text-[#888]',
                   ].join(' ')}>
                     {day.getDate()}
                   </div>
                   <div className="space-y-0.5">
-                    {dayEvs.slice(0, 3).map(ev => (
+                    {dayEvs.slice(0, window.innerWidth < 640 ? 1 : 3).map(ev => (
                       <div key={ev.id}
                         onClick={e => { e.stopPropagation(); onSelectEvent(ev) }}
-                        className="text-[10px] text-white rounded px-1 py-0.5 cursor-pointer truncate"
+                        className="text-[9px] sm:text-[10px] text-white rounded px-0.5 sm:px-1 py-0.5 cursor-pointer truncate max-w-full"
                         style={{ background: ev.color + 'cc' }}>
                         {ev.title}
                       </div>
                     ))}
-                    {dayEvs.length > 3 && (
-                      <div className="text-[10px] text-[#555]">+{dayEvs.length - 3} mais</div>
+                    {dayEvs.length > (window.innerWidth < 640 ? 1 : 3) && (
+                      <div className="text-[9px] text-[#555]">+{dayEvs.length - (window.innerWidth < 640 ? 1 : 3)} mais</div>
                     )}
                   </div>
                 </>

@@ -120,64 +120,70 @@ export default function AgendaPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] -mx-4 lg:-mx-7 -mt-4 lg:-mt-7 overflow-hidden">
       {/* Top bar */}
-      <div className="shrink-0 flex items-center gap-3 px-4 lg:px-6 py-3 border-b border-[#1f1f1f]">
-        {/* Tabs */}
-        <div className="flex gap-0 border border-[#1f1f1f] rounded-lg overflow-hidden">
-          {(['agenda', 'rotina'] as Tab[]).map(t => (
-            <button key={t} onClick={() => setTab(t)}
-              className={['px-3 py-1.5 text-xs font-medium capitalize transition-colors',
-                tab === t ? 'bg-[#1f1f1f] text-white' : 'text-[#555] hover:text-white',
-              ].join(' ')}>
-              {t === 'agenda' ? 'Agenda' : 'Rotina'}
-            </button>
-          ))}
+      <div className="shrink-0 flex flex-wrap items-center gap-2 px-3 lg:px-6 py-2.5 border-b border-[#1f1f1f]">
+        {/* Row 1: Tabs + nav controls + new event */}
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          {/* Tabs */}
+          <div className="flex gap-0 border border-[#1f1f1f] rounded-lg overflow-hidden shrink-0">
+            {(['agenda', 'rotina'] as Tab[]).map(t => (
+              <button key={t} onClick={() => setTab(t)}
+                className={['px-3 py-1.5 text-xs font-medium capitalize transition-colors',
+                  tab === t ? 'bg-[#1f1f1f] text-white' : 'text-[#555] hover:text-white',
+                ].join(' ')}>
+                {t === 'agenda' ? 'Agenda' : 'Rotina'}
+              </button>
+            ))}
+          </div>
+
+          {tab === 'agenda' && (
+            <>
+              {/* Today */}
+              <button onClick={goToday}
+                className="px-2.5 py-1.5 text-xs text-[#555] border border-[#1f1f1f] rounded-lg hover:text-white transition-colors shrink-0">
+                Hoje
+              </button>
+
+              {/* Nav arrows */}
+              <button onClick={() => navigate(-1)} className="text-[#555] hover:text-white transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center">
+                <ChevronLeft size={16} />
+              </button>
+              <button onClick={() => navigate(1)} className="text-[#555] hover:text-white transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center">
+                <ChevronRight size={16} />
+              </button>
+
+              {/* Period label */}
+              <span className="text-xs sm:text-sm font-semibold text-white capitalize truncate min-w-0">
+                {headerLabel(view, currentDate)}
+              </span>
+
+              <div className="flex-1" />
+
+              {/* New event */}
+              <button
+                onClick={() => openNewEvent(new Date())}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-[#0EA5E9] text-black rounded-lg hover:bg-[#38bdf8] transition-colors shrink-0"
+              >
+                <Plus size={13} />
+                <span className="hidden sm:inline">Evento</span>
+              </button>
+            </>
+          )}
         </div>
 
+        {/* Row 2 on mobile: view switcher (full width) */}
         {tab === 'agenda' && (
-          <>
-            {/* Today */}
-            <button onClick={goToday}
-              className="px-3 py-1.5 text-xs text-[#555] border border-[#1f1f1f] rounded-lg hover:text-white transition-colors">
-              Hoje
-            </button>
-
-            {/* Nav arrows */}
-            <button onClick={() => navigate(-1)} className="text-[#555] hover:text-white transition-colors">
-              <ChevronLeft size={16} />
-            </button>
-            <button onClick={() => navigate(1)} className="text-[#555] hover:text-white transition-colors">
-              <ChevronRight size={16} />
-            </button>
-
-            {/* Period label */}
-            <span className="text-sm font-semibold text-white capitalize hidden sm:block">
-              {headerLabel(view, currentDate)}
-            </span>
-
-            <div className="flex-1" />
-
-            {/* View switcher */}
-            <div className="flex gap-0 border border-[#1f1f1f] rounded-lg overflow-hidden">
-              {VIEWS.map(v => (
-                <button key={v.id} onClick={() => setView(v.id)}
-                  title={v.label}
-                  className={['flex items-center gap-1.5 px-3 py-1.5 text-xs transition-colors',
-                    view === v.id ? 'bg-[#1f1f1f] text-white' : 'text-[#555] hover:text-white',
-                  ].join(' ')}>
-                  {v.icon}
-                  <span className="hidden md:inline">{v.label}</span>
-                </button>
-              ))}
-            </div>
-
-            {/* New event */}
-            <button
-              onClick={() => openNewEvent(new Date())}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-[#0EA5E9] text-black rounded-lg hover:bg-[#38bdf8] transition-colors"
-            >
-              <Plus size={13} /> Evento
-            </button>
-          </>
+          <div className="flex items-center gap-0 border border-[#1f1f1f] rounded-lg overflow-hidden w-full sm:w-auto justify-center sm:justify-start">
+            {VIEWS.map(v => (
+              <button key={v.id} onClick={() => setView(v.id)}
+                title={v.label}
+                className={['flex items-center gap-1.5 px-3 py-1.5 text-xs transition-colors flex-1 sm:flex-none justify-center',
+                  view === v.id ? 'bg-[#1f1f1f] text-white' : 'text-[#555] hover:text-white',
+                ].join(' ')}>
+                {v.icon}
+                <span className="hidden md:inline">{v.label}</span>
+              </button>
+            ))}
+          </div>
         )}
       </div>
 

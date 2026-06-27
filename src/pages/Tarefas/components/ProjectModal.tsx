@@ -21,11 +21,11 @@ export function ProjectModal({ project, onSave, onDelete, onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black/75 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
       onClick={onClose}
     >
       <div
-        className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-5 w-80 space-y-4"
+        className="bg-[#111111] border border-[#1f1f1f] rounded-t-2xl sm:rounded-xl p-5 w-full sm:w-80 space-y-4 max-h-[90vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">

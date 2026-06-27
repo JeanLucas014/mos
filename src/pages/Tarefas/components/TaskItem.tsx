@@ -36,7 +36,7 @@ export function TaskItem({ task, subtasks, project, showProject, onComplete, onD
       onMouseLeave={() => setHovering(false)}
     >
       <div className={[
-        'flex items-start gap-3 py-2.5 px-3 rounded-lg transition-colors',
+        'flex items-start gap-3 py-2.5 px-3 rounded-lg transition-colors min-h-[44px]',
         hovering && !isDone ? 'bg-[#111111]' : '',
       ].join(' ')}>
         {/* Subtask toggle */}
@@ -56,7 +56,7 @@ export function TaskItem({ task, subtasks, project, showProject, onComplete, onD
             'w-4 h-4 rounded-full border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all',
             isDone ? 'border-[#555] bg-[#555]' : 'hover:border-[#0EA5E9]',
           ].join(' ')}
-          style={{ borderColor: isDone ? '#555' : cfg.color }}
+          style={{ borderColor: isDone ? '#555' : cfg.color, minWidth: 28, minHeight: 28, margin: '-6px 0' }}
         >
           {isDone && (
             <svg width="8" height="8" viewBox="0 0 8 8" fill="none">

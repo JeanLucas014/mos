@@ -339,16 +339,18 @@ export function MesTab({ ano, initialMonth }: Props) {
   return (
     <div>
       {/* ── Month selector ── */}
-      <div className="flex items-center gap-3 mb-5 flex-wrap">
-        <select
-          value={month}
-          onChange={e => setMonth(Number(e.target.value))}
-          className="bg-[#111111] border border-[#1f1f1f] text-white text-sm rounded-lg px-3 py-1.5 outline-none focus:border-[#0EA5E9]/60"
-        >
-          {MS_OPT.map((m, i) => <option key={i + 1} value={i + 1}>{m}</option>)}
-        </select>
-        <span className="text-[#555] text-sm">{MS_FULL[month - 1]} · {ano.ano}</span>
-        <span className="ml-auto text-xs text-[#555]">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-5">
+        <div className="flex items-center gap-3">
+          <select
+            value={month}
+            onChange={e => setMonth(Number(e.target.value))}
+            className="bg-[#111111] border border-[#1f1f1f] text-white text-sm rounded-lg px-3 py-1.5 outline-none focus:border-[#0EA5E9]/60"
+          >
+            {MS_OPT.map((m, i) => <option key={i + 1} value={i + 1}>{m}</option>)}
+          </select>
+          <span className="text-[#555] text-sm">{MS_FULL[month - 1]} · {ano.ano}</span>
+        </div>
+        <span className="sm:ml-auto text-xs text-[#555]">
           Abertura: <span className="text-white tabular-nums">{BRL(saldoAbertura)}</span>
         </span>
       </div>

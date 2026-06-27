@@ -1,9 +1,8 @@
-import { useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { CalendarEvent } from '../types'
 
-const HOUR_H  = 60
-const TIME_W  = 52
-const DAYS_PT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+const DAYS_PT    = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+const DAYS_SHORT = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
 
 interface Props {
   events: CalendarEvent[]
@@ -26,23 +25,41 @@ function isSameDay(a: Date, b: Date): boolean {
 }
 
 export function WeekView({ events, currentDate, onSelectEvent, onSelectSlot }: Props) {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640)
   const scrollRef = useRef<HTMLDivElement>(null)
   const today     = new Date()
+
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 640)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
+
+  const HOUR_H = isMobile ? 48 : 60
+  const TIME_W = isMobile ? 36 : 52
+
   const weekStart = startOfWeek(currentDate)
-  const days      = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(weekStart)
-    d.setDate(weekStart.getDate() + i)
-    return d
-  })
+  const days      = isMobile
+    ? Array.from({ length: 3 }, (_, i) => {
+        const d = new Date(currentDate)
+        d.setDate(currentDate.getDate() + i)
+        return d
+      })
+    : Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(weekStart)
+        d.setDate(weekStart.getDate() + i)
+        return d
+      })
+
   const hours  = Array.from({ length: 24 }, (_, i) => i)
   const now    = new Date()
-  const nowTop = now.getHours() * HOUR_H + now.getMinutes()
+  const nowTop = now.getHours() * HOUR_H + now.getMinutes() * (HOUR_H / 60)
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = Math.max(0, nowTop - 120)
     }
-  }, [])
+  }, [isMobile])
 
   function getEventsByDay(day: Date): CalendarEvent[] {
     return events.filter(e => !e.all_day && isSameDay(new Date(e.start_at), day))
@@ -54,12 +71,12 @@ export function WeekView({ events, currentDate, onSelectEvent, onSelectSlot }: P
 
   function eventTop(ev: CalendarEvent): number {
     const s = new Date(ev.start_at)
-    return s.getHours() * HOUR_H + s.getMinutes()
+    return s.getHours() * HOUR_H + s.getMinutes() * (HOUR_H / 60)
   }
 
   function eventHeight(ev: CalendarEvent): number {
     const ms = new Date(ev.end_at).getTime() - new Date(ev.start_at).getTime()
-    return Math.max(ms / (1000 * 60), 30)
+    return Math.max(ms / (1000 * 60) * (HOUR_H / 60), isMobile ? 24 : 30)
   }
 
   return (
@@ -70,20 +87,24 @@ export function WeekView({ events, currentDate, onSelectEvent, onSelectSlot }: P
           const isToday = isSameDay(day, today)
           return (
             <div key={i} className="flex-1 text-center py-2 border-l border-[#1f1f1f]">
-              <div className={['text-[10px] uppercase tracking-wider mb-1',
+              <div className={['uppercase tracking-wider mb-1',
+                isMobile ? 'text-[9px]' : 'text-[10px]',
                 isToday ? 'text-[#0EA5E9]' : 'text-[#555]'].join(' ')}>
-                {DAYS_PT[day.getDay()]}
+                {isMobile ? DAYS_SHORT[day.getDay()] : DAYS_PT[day.getDay()]}
               </div>
-              <div className={['text-lg font-bold w-8 h-8 rounded-full flex items-center justify-center mx-auto',
-                isToday ? 'bg-[#0EA5E9] text-black' : 'text-white'].join(' ')}>
+              <div className={[
+                'rounded-full flex items-center justify-center mx-auto font-bold',
+                isMobile ? 'text-sm w-6 h-6' : 'text-lg w-8 h-8',
+                isToday ? 'bg-[#0EA5E9] text-black' : 'text-white',
+              ].join(' ')}>
                 {day.getDate()}
               </div>
               <div className="min-h-[4px]">
                 {getAllDayByDay(day).map(ev => (
                   <div key={ev.id} onClick={() => onSelectEvent(ev)}
-                    className="text-[10px] text-white rounded px-1 py-0.5 mb-0.5 cursor-pointer truncate mx-1"
+                    className="text-[10px] text-white rounded px-1 py-0.5 mb-0.5 cursor-pointer truncate mx-0.5"
                     style={{ background: ev.color }}>
-                    {ev.title}
+                    {!isMobile && ev.title}
                   </div>
                 ))}
               </div>
@@ -100,7 +121,7 @@ export function WeekView({ events, currentDate, onSelectEvent, onSelectSlot }: P
             {hours.map(h => (
               <div key={h}
                 style={{ position: 'absolute', top: h * HOUR_H - 8, left: 0, right: 0 }}
-                className="text-[10px] text-[#444] text-right pr-2 select-none">
+                className="text-[9px] text-[#444] text-right pr-1.5 select-none">
                 {h === 0 ? '' : `${String(h).padStart(2, '0')}:00`}
               </div>
             ))}
@@ -144,21 +165,23 @@ export function WeekView({ events, currentDate, onSelectEvent, onSelectSlot }: P
               {getEventsByDay(day).map(ev => (
                 <div key={ev.id}
                   onClick={e => { e.stopPropagation(); onSelectEvent(ev) }}
-                  className="absolute rounded-lg px-2 py-1 cursor-pointer hover:opacity-90 transition-opacity overflow-hidden"
+                  className="absolute rounded-lg px-1.5 py-0.5 cursor-pointer hover:opacity-90 transition-opacity overflow-hidden"
                   style={{
-                    top:         eventTop(ev),
-                    height:      eventHeight(ev),
-                    left:        2,
-                    right:       2,
-                    zIndex:      10,
-                    background:  ev.color + 'dd',
-                    borderLeft:  `3px solid ${ev.color}`,
+                    top:        eventTop(ev),
+                    height:     eventHeight(ev),
+                    left:       1,
+                    right:      1,
+                    zIndex:     10,
+                    background: ev.color + 'dd',
+                    borderLeft: `2px solid ${ev.color}`,
                   }}
                 >
-                  <div className="text-white text-[11px] font-semibold truncate">{ev.title}</div>
-                  <div className="text-white/70 text-[10px]">
-                    {new Date(ev.start_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                  </div>
+                  <div className="text-white text-[10px] font-semibold truncate">{ev.title}</div>
+                  {!isMobile && (
+                    <div className="text-white/70 text-[9px]">
+                      {new Date(ev.start_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

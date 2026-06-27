@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Plus, Inbox, Sun, Calendar, FolderOpen, Menu, ChevronDown, ChevronRight, History, Settings } from 'lucide-react'
+import { Plus, Inbox, Sun, Calendar, FolderOpen, ChevronDown, ChevronRight, History, Settings } from 'lucide-react'
 import type { Task, TaskProject, ViewId } from './types'
 import { TaskItem } from './components/TaskItem'
 import { TaskModal } from './components/TaskModal'
@@ -24,8 +24,8 @@ export default function TarefasPage() {
   const [editingProject, setEditingProject] = useState<TaskProject | null>(null)
   const [quickTitle, setQuickTitle] = useState('')
   const [loading, setLoading]       = useState(true)
-  const [sidebarOpen, setSidebarOpen]   = useState(false)
-  const [projectsOpen, setProjectsOpen] = useState(true)
+  const [showProjectDrawer, setShowProjectDrawer] = useState(false)
+  const [projectsOpen, setProjectsOpen]           = useState(true)
 
   useEffect(() => { loadAll() }, [])
 
@@ -157,6 +157,18 @@ export default function TarefasPage() {
     })
   }
 
+  function projectCount(projectId: string) {
+    return tasks.filter(t => t.project_id === projectId && !t.parent_id && !t.completed_at).length
+  }
+
+  function handleAddProject() {
+    setShowProjectDrawer(false)
+    setEditingProject({
+      id: 'new', user_id: '', name: '', color: '#0EA5E9',
+      ordem: projects.length, created_at: '',
+    })
+  }
+
   const SidebarContent = () => (
     <div className="flex flex-col h-full bg-[#0a0a0a] border-r border-[#1a1a1a] w-56 shrink-0">
       <div className="px-3 pt-4 pb-2">
@@ -166,7 +178,7 @@ export default function TarefasPage() {
         {NAV_VIEWS.map(v => (
           <button
             key={v.id}
-            onClick={() => { setViewId(v.id); setSidebarOpen(false) }}
+            onClick={() => { setViewId(v.id); setShowProjectDrawer(false) }}
             className={[
               'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-colors',
               viewId === v.id ? 'bg-[#1a1a1a] text-white' : 'text-[#666] hover:text-[#ccc] hover:bg-[#111]',
@@ -198,7 +210,7 @@ export default function TarefasPage() {
             return (
               <div key={p.id} className="group relative">
                 <button
-                  onClick={() => { setViewId(p.id); setSidebarOpen(false) }}
+                  onClick={() => { setViewId(p.id); setShowProjectDrawer(false) }}
                   className={[
                     'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-colors pr-7',
                     viewId === p.id ? 'bg-[#1a1a1a] text-white' : 'text-[#666] hover:text-[#ccc] hover:bg-[#111]',
@@ -241,30 +253,14 @@ export default function TarefasPage() {
   return (
     <div className="flex h-[calc(100vh-64px)] font-[Manrope] -mx-4 lg:-mx-7 -mt-4 lg:-mt-7">
       {/* Desktop sidebar */}
-      <div className="hidden lg:flex">
+      <div className="hidden lg:flex flex-col">
         <SidebarContent />
       </div>
-
-      {/* Mobile sidebar drawer */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 z-40 flex lg:hidden">
-          <div className="absolute inset-0 bg-black/60" onClick={() => setSidebarOpen(false)} />
-          <div className="relative z-50 flex h-full">
-            <SidebarContent />
-          </div>
-        </div>
-      )}
 
       {/* Main area */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Header */}
         <div className="flex items-center gap-3 px-5 py-4 border-b border-[#1a1a1a] shrink-0">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="lg:hidden text-[#555] hover:text-white transition-colors"
-          >
-            <Menu size={18} />
-          </button>
           <h1 className="text-base font-semibold text-white font-[Sora]">{viewLabel}</h1>
           {viewId !== 'historico' && (
             <button
@@ -278,7 +274,7 @@ export default function TarefasPage() {
         </div>
 
         {/* Task list */}
-        <div className="flex-1 overflow-y-auto px-2 py-3">
+        <div className="flex-1 overflow-y-auto px-2 py-3 pb-20 lg:pb-3">
           {loading ? (
             <div className="text-[#555] text-sm text-center py-12">Carregando...</div>
           ) : shown.length === 0 ? (
@@ -339,9 +335,9 @@ export default function TarefasPage() {
           )}
         </div>
 
-        {/* Quick-add bar (hidden on historico) */}
+        {/* Quick-add bar (hidden on historico, hidden on mobile where bottom tabs show) */}
         {viewId !== 'historico' && (
-          <div className="shrink-0 px-4 pb-4 max-w-2xl mx-auto w-full">
+          <div className="shrink-0 px-4 pb-4 pb-20 lg:pb-4 max-w-2xl mx-auto w-full">
             <div className="flex items-center gap-2 bg-[#111111] border border-[#1f1f1f] rounded-xl px-4 py-3 focus-within:border-[#0EA5E9]/50 transition-colors">
               <Plus size={15} className="text-[#444] shrink-0" />
               <input
@@ -355,6 +351,55 @@ export default function TarefasPage() {
           </div>
         )}
       </div>
+
+      {/* Mobile bottom navigation */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#0a0a0a] border-t border-[#1f1f1f] flex">
+        {[
+          { id: 'inbox',     label: 'Inbox',  Icon: Inbox    },
+          { id: 'hoje',      label: 'Hoje',   Icon: Sun      },
+          { id: 'proximos7', label: '7 dias', Icon: Calendar },
+          { id: 'projetos',  label: 'Projetos', Icon: FolderOpen },
+        ].map(({ id, label, Icon }) => (
+          <button key={id}
+            onClick={() => id === 'projetos' ? setShowProjectDrawer(true) : setViewId(id as ViewId)}
+            className={['flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[10px] relative min-h-[52px]',
+              viewId === id ? 'text-[#0EA5E9]' : 'text-[#555]',
+            ].join(' ')}>
+            <Icon size={18} />
+            {label}
+            {id !== 'projetos' && NAV_VIEWS.find(v => v.id === id)?.count! > 0 && (
+              <span className="absolute top-1.5 right-1/4 translate-x-1/2 w-4 h-4 rounded-full bg-[#0EA5E9] text-black text-[9px] font-bold flex items-center justify-center">
+                {NAV_VIEWS.find(v => v.id === id)?.count}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Mobile project drawer */}
+      {showProjectDrawer && (
+        <div className="lg:hidden fixed inset-0 z-40 flex flex-col justify-end"
+          onClick={() => setShowProjectDrawer(false)}>
+          <div className="bg-[#111111] border-t border-[#1f1f1f] rounded-t-2xl p-4 max-h-[60vh] overflow-y-auto"
+            onClick={e => e.stopPropagation()}>
+            <div className="w-10 h-1 bg-[#333] rounded-full mx-auto mb-4" />
+            <div className="text-xs text-[#555] uppercase tracking-wider mb-3 px-1">Projetos</div>
+            {projects.map(p => (
+              <button key={p.id}
+                onClick={() => { setViewId(p.id); setShowProjectDrawer(false) }}
+                className="w-full flex items-center gap-3 py-3 border-b border-[#1a1a1a] text-left min-h-[44px]">
+                <span className="w-3 h-3 rounded-full shrink-0" style={{ background: p.color }} />
+                <span className="flex-1 text-sm text-white">{p.name}</span>
+                <span className="text-xs text-[#555]">{projectCount(p.id)}</span>
+              </button>
+            ))}
+            <button onClick={handleAddProject}
+              className="w-full flex items-center gap-2 py-3 text-sm text-[#0EA5E9] mt-1 min-h-[44px]">
+              <Plus size={14} /> Novo projeto
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Task modal */}
       {modal && (
