@@ -8,6 +8,7 @@ import { DayView }    from './views/DayView'
 import { ListView }   from './views/ListView'
 import { EventModal } from './components/EventModal'
 import { RotinaTab }  from './components/RotinaTab'
+import { RecurrenceDialog, type RecurrenceScope } from './components/RecurrenceDialog'
 import { expandRecurringEvents } from './utils/expandRecurrence'
 
 type Tab = 'agenda' | 'rotina'
@@ -44,20 +45,36 @@ function navStep(view: CalendarView): number {
   return 1
 }
 
+/* ── Helpers para IDs sintéticos de instâncias recorrentes ── */
+function getOriginalId(eventId: string): string {
+  // Synthetic IDs look like "uuid_YYYY-MM-DD"
+  const match = eventId.match(/^(.+)_(\d{4}-\d{2}-\d{2})$/)
+  return match ? match[1] : eventId
+}
+
+function getInstanceDate(eventId: string): string | null {
+  const match = eventId.match(/^.+_(\d{4}-\d{2}-\d{2})$/)
+  return match ? match[1] : null
+}
+
+function isSyntheticId(eventId: string): boolean {
+  return /^.+_\d{4}-\d{2}-\d{2}$/.test(eventId)
+}
+
 export default function AgendaPage() {
-  const [tab,         setTab]         = useState<Tab>('agenda')
-  const [view,        setView]        = useState<CalendarView>('semana')
-  const [currentDate, setCurrentDate] = useState(new Date())
-  const [events,      setEvents]      = useState<CalendarEvent[]>([])
-  const [rotinas,     setRotinas]     = useState<Rotina[]>([])
-  const [modal,       setModal]       = useState<Partial<CalendarEvent> | null>(null)
+  const [tab,               setTab]               = useState<Tab>('agenda')
+  const [view,              setView]              = useState<CalendarView>('semana')
+  const [currentDate,       setCurrentDate]       = useState(new Date())
+  const [events,            setEvents]            = useState<CalendarEvent[]>([])
+  const [rotinas,           setRotinas]           = useState<Rotina[]>([])
+  const [modal,             setModal]             = useState<Partial<CalendarEvent> | null>(null)
+  const [recurrenceDialog,  setRecurrenceDialog]  = useState<{ mode: 'edit' | 'delete'; event: Partial<CalendarEvent> } | null>(null)
+  const [pendingScope,      setPendingScope]      = useState<RecurrenceScope | undefined>()
 
   const loadEvents = useCallback(async () => {
-    // Determine visible range (±90 days from today as a safe window)
     const from = new Date(); from.setDate(from.getDate() - 7)
     const to   = new Date(); to.setDate(to.getDate() + 90)
 
-    // Query 1: non-recurring events in the range
     const { data: normalEvents } = await (supabase as any)
       .from('calendar_events')
       .select('*')
@@ -66,7 +83,6 @@ export default function AgendaPage() {
       .is('recurrence_rule', null)
       .order('start_at')
 
-    // Query 2: recurring events (may have started before the range)
     const { data: recurringEvents } = await (supabase as any)
       .from('calendar_events')
       .select('*')
@@ -100,29 +116,136 @@ export default function AgendaPage() {
     setCurrentDate(new Date())
   }
 
-  async function handleSave(ev: Partial<CalendarEvent>) {
-    // Expanded recurring events have synthetic IDs like "uuid_2024-01-01" — strip the suffix
-    const realId = ev.id?.includes('_') && ev.id.length > 40
-      ? ev.id.slice(0, ev.id.lastIndexOf('_'))
-      : ev.id
-    if (realId) {
-      await (supabase as any).from('calendar_events').update({ ...ev, id: realId }).eq('id', realId)
-    } else {
-      await (supabase as any).from('calendar_events').insert(ev)
+  /* ── Delete ─────────────────────────────────────────────────── */
+  async function deleteEvent(id: string, scope?: RecurrenceScope) {
+    const originalId   = getOriginalId(id)
+    const instanceDate = getInstanceDate(id)
+
+    if (!scope || scope === 'this') {
+      if (instanceDate) {
+        // Add EXDATE to parent to skip this occurrence
+        const { data: parent } = await (supabase as any)
+          .from('calendar_events').select('recurrence_rule').eq('id', originalId).single()
+        if (parent) {
+          const timeStr = modal?.start_at
+            ? new Date(modal.start_at).toISOString().slice(11, 19).replace(/:/g, '')
+            : '000000'
+          const exdate  = `;EXDATE:${instanceDate.replace(/-/g, '')}T${timeStr}Z`
+          await (supabase as any).from('calendar_events').update({
+            recurrence_rule: (parent.recurrence_rule ?? '') + exdate,
+          }).eq('id', originalId)
+        }
+      } else {
+        await (supabase as any).from('calendar_events').delete().eq('id', originalId)
+      }
+    } else if (scope === 'this_and_following') {
+      if (instanceDate) {
+        const until = new Date(instanceDate)
+        until.setDate(until.getDate() - 1)
+        const untilStr = until.toISOString().slice(0, 10).replace(/-/g, '') + 'T235959Z'
+        const { data: parent } = await (supabase as any)
+          .from('calendar_events').select('recurrence_rule').eq('id', originalId).single()
+        if (parent) {
+          const rule = (parent.recurrence_rule ?? '')
+            .split(';').filter((p: string) => !p.startsWith('UNTIL')).join(';')
+          await (supabase as any).from('calendar_events').update({
+            recurrence_rule: rule + `;UNTIL=${untilStr}`,
+          }).eq('id', originalId)
+        }
+      }
+    } else if (scope === 'all') {
+      await (supabase as any).from('calendar_events').delete().eq('id', originalId)
     }
+
     setModal(null)
+    setRecurrenceDialog(null)
     loadEvents()
   }
 
-  async function handleDelete() {
-    if (!modal?.id) return
-    if (!window.confirm('Excluir este evento?')) return
-    const realId = modal.id.includes('_') && modal.id.length > 40
-      ? modal.id.slice(0, modal.id.lastIndexOf('_'))
-      : modal.id
-    await (supabase as any).from('calendar_events').delete().eq('id', realId)
+  /* ── Save ───────────────────────────────────────────────────── */
+  async function saveEvent(ev: Partial<CalendarEvent>, scope?: RecurrenceScope) {
+    const originalId   = ev.id ? getOriginalId(ev.id) : null
+    const instanceDate = ev.id ? getInstanceDate(ev.id) : null
+    const isNew        = !ev.id || (!originalId && !instanceDate)
+
+    const payload = {
+      title:           ev.title,
+      description:     ev.description,
+      start_at:        ev.start_at,
+      end_at:          ev.end_at,
+      all_day:         ev.all_day,
+      color:           ev.color,
+      location:        ev.location,
+      recurrence_rule: ev.recurrence_rule,
+      tags:            ev.tags,
+    }
+
+    if (isNew) {
+      await (supabase as any).from('calendar_events').insert(payload)
+    } else if (!instanceDate || !scope || scope === 'all') {
+      // Edit the master event
+      await (supabase as any).from('calendar_events')
+        .update(payload).eq('id', originalId)
+    } else if (scope === 'this') {
+      // Create a standalone event for this date, exclude from parent
+      await (supabase as any).from('calendar_events').insert({ ...payload, recurrence_rule: null })
+      if (originalId && instanceDate) {
+        const { data: parent } = await (supabase as any)
+          .from('calendar_events').select('recurrence_rule').eq('id', originalId).single()
+        if (parent) {
+          const timeStr = ev.start_at
+            ? new Date(ev.start_at).toISOString().slice(11, 19).replace(/:/g, '')
+            : '000000'
+          const exdate  = `;EXDATE:${instanceDate.replace(/-/g, '')}T${timeStr}Z`
+          await (supabase as any).from('calendar_events').update({
+            recurrence_rule: (parent.recurrence_rule ?? '') + exdate,
+          }).eq('id', originalId)
+        }
+      }
+    } else if (scope === 'this_and_following') {
+      if (originalId && instanceDate) {
+        // Cap parent recurrence before this date
+        const until    = new Date(instanceDate)
+        until.setDate(until.getDate() - 1)
+        const untilStr = until.toISOString().slice(0, 10).replace(/-/g, '') + 'T235959Z'
+        const { data: parent } = await (supabase as any)
+          .from('calendar_events').select('recurrence_rule').eq('id', originalId).single()
+        if (parent) {
+          const rule = (parent.recurrence_rule ?? '')
+            .split(';').filter((p: string) => !p.startsWith('UNTIL')).join(';')
+          await (supabase as any).from('calendar_events').update({
+            recurrence_rule: rule + `;UNTIL=${untilStr}`,
+          }).eq('id', originalId)
+        }
+        // Create new series from this date
+        await (supabase as any).from('calendar_events').insert(payload)
+      }
+    }
+
     setModal(null)
+    setRecurrenceDialog(null)
+    setPendingScope(undefined)
     loadEvents()
+  }
+
+  /* ── Handlers ───────────────────────────────────────────────── */
+  function handleSelectEvent(ev: Partial<CalendarEvent>) {
+    if (ev.id && isSyntheticId(ev.id)) {
+      // Recurring instance — ask scope before editing
+      setRecurrenceDialog({ mode: 'edit', event: ev })
+    } else {
+      setModal(ev)
+    }
+  }
+
+  function handleDeleteFromModal() {
+    if (!modal?.id) return
+    if (isSyntheticId(modal.id) || modal.recurrence_rule) {
+      setRecurrenceDialog({ mode: 'delete', event: modal })
+      setModal(null)
+    } else {
+      deleteEvent(modal.id)
+    }
   }
 
   function openNewEvent(start: Date) {
@@ -140,7 +263,7 @@ export default function AgendaPage() {
   const sharedViewProps = {
     events,
     currentDate,
-    onSelectEvent: (ev: Partial<CalendarEvent>) => setModal(ev),
+    onSelectEvent: handleSelectEvent,
     onSelectSlot:  (start: Date) => openNewEvent(start),
   }
 
@@ -148,7 +271,6 @@ export default function AgendaPage() {
     <div className="flex flex-col h-[calc(100vh-4rem)] -mx-4 lg:-mx-7 -mt-4 lg:-mt-7 overflow-hidden">
       {/* Top bar */}
       <div className="shrink-0 flex flex-wrap items-center gap-2 px-3 lg:px-6 py-2.5 border-b border-[#1f1f1f]">
-        {/* Row 1: Tabs + nav controls + new event */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {/* Tabs */}
           <div className="flex gap-0 border border-[#1f1f1f] rounded-lg overflow-hidden shrink-0">
@@ -164,28 +286,20 @@ export default function AgendaPage() {
 
           {tab === 'agenda' && (
             <>
-              {/* Today */}
               <button onClick={goToday}
                 className="px-2.5 py-1.5 text-xs text-[#555] border border-[#1f1f1f] rounded-lg hover:text-white transition-colors shrink-0">
                 Hoje
               </button>
-
-              {/* Nav arrows */}
               <button onClick={() => navigate(-1)} className="text-[#555] hover:text-white transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center">
                 <ChevronLeft size={16} />
               </button>
               <button onClick={() => navigate(1)} className="text-[#555] hover:text-white transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center">
                 <ChevronRight size={16} />
               </button>
-
-              {/* Period label */}
               <span className="text-xs sm:text-sm font-semibold text-white capitalize truncate min-w-0">
                 {headerLabel(view, currentDate)}
               </span>
-
               <div className="flex-1" />
-
-              {/* New event */}
               <button
                 onClick={() => openNewEvent(new Date())}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-[#0EA5E9] text-black rounded-lg hover:bg-[#38bdf8] transition-colors shrink-0"
@@ -197,7 +311,6 @@ export default function AgendaPage() {
           )}
         </div>
 
-        {/* Row 2 on mobile: view switcher (full width) */}
         {tab === 'agenda' && (
           <div className="flex items-center gap-0 border border-[#1f1f1f] rounded-lg overflow-hidden w-full sm:w-auto justify-center sm:justify-start">
             {VIEWS.map(v => (
@@ -231,13 +344,31 @@ export default function AgendaPage() {
         )}
       </div>
 
-      {/* Modal */}
+      {/* Event modal */}
       {modal && (
         <EventModal
           event={modal}
-          onSave={handleSave}
-          onDelete={modal.id ? handleDelete : undefined}
-          onClose={() => setModal(null)}
+          onSave={ev => saveEvent(ev, pendingScope)}
+          onDelete={modal.id ? handleDeleteFromModal : undefined}
+          onClose={() => { setModal(null); setPendingScope(undefined) }}
+        />
+      )}
+
+      {/* Recurrence scope dialog */}
+      {recurrenceDialog && (
+        <RecurrenceDialog
+          mode={recurrenceDialog.mode}
+          onConfirm={async (scope) => {
+            if (recurrenceDialog.mode === 'delete') {
+              await deleteEvent(recurrenceDialog.event.id!, scope)
+            } else {
+              // Edit: store scope then open EventModal
+              setPendingScope(scope)
+              setModal(recurrenceDialog.event)
+              setRecurrenceDialog(null)
+            }
+          }}
+          onClose={() => setRecurrenceDialog(null)}
         />
       )}
     </div>
