@@ -74,7 +74,7 @@ export function ShoppingPage() {
   }
 
   return (
-    <div className="pb-[88px] lg:pb-0">
+    <div className="pb-[104px] lg:pb-0">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -214,40 +214,47 @@ export function ShoppingPage() {
             {/* ── Input ── */}
             <form
               onSubmit={handleAdd}
-              className="lg:flex lg:items-center lg:gap-2 lg:px-4 lg:py-3 lg:border-t lg:border-line lg:static
-                         fixed bottom-0 left-0 right-0 z-20 flex items-center gap-2 px-4 py-3 border-t border-line"
+              className="flex flex-col sm:flex-row sm:items-center gap-2 px-4 py-3 border-t border-line
+                         fixed bottom-0 left-0 right-0 z-20 lg:static"
               style={{ background: '#111111' }}
             >
-              {/* Seletor de categoria */}
-              <select
-                value={draftCat}
-                onChange={e => setDraftCat(e.target.value)}
-                className="bg-bg border border-line rounded-input px-2 text-ink text-sm focus:outline-none focus:border-brand transition-colors flex-shrink-0"
-                style={{ minHeight: 44 }}
-              >
-                {ADD_CATEGORIES.map(c => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-
-              <input
-                ref={inputRef}
-                value={draft}
-                onChange={e => setDraft(e.target.value)}
-                onKeyDown={handleKey}
-                placeholder="Novo item…"
-                className="flex-1 bg-bg border border-line rounded-input px-3 text-ink text-sm placeholder:text-ink-3 focus:outline-none focus:border-brand transition-colors"
-                style={{ minHeight: 44 }}
-                autoComplete="off"
-              />
-              <button
-                type="submit"
-                disabled={!draft.trim() || addItem.isPending}
-                className="bg-brand text-white rounded-input px-4 font-semibold text-sm hover:brightness-110 active:scale-[.97] transition-all disabled:opacity-40 flex-shrink-0"
-                style={{ minHeight: 44 }}
-              >
-                Adicionar
-              </button>
+              {/* Linha 1 mobile: select */}
+              <div className="flex items-center gap-2">
+                <select
+                  value={draftCat}
+                  onChange={e => setDraftCat(e.target.value)}
+                  className="flex-1 sm:flex-none bg-bg border border-line rounded-input px-2
+                             text-ink text-sm focus:outline-none focus:border-brand transition-colors"
+                  style={{ minHeight: 40 }}
+                >
+                  {ADD_CATEGORIES.map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+              {/* Linha 2 mobile: input + botão adicionar */}
+              <div className="flex items-center gap-2 flex-1">
+                <input
+                  ref={inputRef}
+                  value={draft}
+                  onChange={e => setDraft(e.target.value)}
+                  onKeyDown={handleKey}
+                  placeholder="Novo item…"
+                  className="flex-1 bg-bg border border-line rounded-input px-3 text-ink text-sm
+                             placeholder:text-ink-3 focus:outline-none focus:border-brand transition-colors"
+                  style={{ minHeight: 40 }}
+                  autoComplete="off"
+                />
+                <button
+                  type="submit"
+                  disabled={!draft.trim() || addItem.isPending}
+                  className="bg-brand text-white rounded-input px-4 font-semibold text-sm
+                             hover:brightness-110 active:scale-[.97] transition-all disabled:opacity-40 flex-shrink-0"
+                  style={{ minHeight: 40 }}
+                >
+                  Adicionar
+                </button>
+              </div>
             </form>
           </div>
         </>

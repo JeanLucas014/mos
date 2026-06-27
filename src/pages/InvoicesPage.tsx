@@ -563,18 +563,18 @@ function MotoTab() {
       </div>
 
       {/* Summary tiles */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, marginBottom:22 }}>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(100px, 1fr))', gap:10, marginBottom:22 }}>
         <div style={{ background:C.card, borderRadius:12, padding:'16px 18px', border:'1px solid '+C.border }}>
           <div style={{ color:C.dm, fontSize:10, fontWeight:600, textTransform:'uppercase', letterSpacing:'.06em', marginBottom:6 }}>Entradas</div>
-          <div style={{ fontFamily:'JetBrains Mono, monospace', fontSize:15, fontWeight:700, color:C.g }}>{fmt(entradas)}</div>
+          <div style={{ fontFamily:'JetBrains Mono, monospace', fontSize:'clamp(11px, 3vw, 15px)', fontWeight:700, color:C.g }}>{fmt(entradas)}</div>
         </div>
         <div style={{ background:C.card, borderRadius:12, padding:'16px 18px', border:'1px solid '+C.border }}>
           <div style={{ color:C.dm, fontSize:10, fontWeight:600, textTransform:'uppercase', letterSpacing:'.06em', marginBottom:6 }}>Gastos</div>
-          <div style={{ fontFamily:'JetBrains Mono, monospace', fontSize:15, fontWeight:700, color:C.r }}>{fmt(gastos)}</div>
+          <div style={{ fontFamily:'JetBrains Mono, monospace', fontSize:'clamp(11px, 3vw, 15px)', fontWeight:700, color:C.r }}>{fmt(gastos)}</div>
         </div>
         <div style={{ background:C.card, borderRadius:12, padding:'16px 18px', border:'1px solid '+C.border }}>
           <div style={{ color:C.dm, fontSize:10, fontWeight:600, textTransform:'uppercase', letterSpacing:'.06em', marginBottom:6 }}>Resultado</div>
-          <div style={{ fontFamily:'JetBrains Mono, monospace', fontSize:15, fontWeight:700, color:resultado >= 0 ? C.g : C.r }}>{fmt(resultado)}</div>
+          <div style={{ fontFamily:'JetBrains Mono, monospace', fontSize:'clamp(11px, 3vw, 15px)', fontWeight:700, color:resultado >= 0 ? C.g : C.r }}>{fmt(resultado)}</div>
         </div>
       </div>
 

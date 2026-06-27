@@ -954,14 +954,14 @@ export function SportsPage() {
 
       {/* Sport tabs */}
       <div
-        className="flex gap-1.5 mb-6 p-1 rounded-xl border border-line"
-        style={{ background: '#111111', width: 'fit-content' }}
+        className="flex gap-1.5 mb-6 p-1 rounded-xl border border-line overflow-x-auto"
+        style={{ background: '#111111' }}
       >
         {SPORTS.map((s) => (
           <button
             key={s.key}
             onClick={() => setSport(s.key)}
-            className="flex items-center gap-2 px-5 rounded-lg transition-colors font-semibold"
+            className="flex items-center gap-2 px-4 sm:px-5 rounded-lg transition-colors font-semibold flex-shrink-0"
             style={{
               minHeight: 40,
               fontSize: 13,
@@ -969,6 +969,7 @@ export function SportsPage() {
               color: sport === s.key ? '#fff' : '#888',
               border: sport === s.key ? '1px solid rgba(255,255,255,.08)' : '1px solid transparent',
               fontFamily: 'Manrope, sans-serif',
+              whiteSpace: 'nowrap',
             }}
           >
             <span>{s.icon}</span>

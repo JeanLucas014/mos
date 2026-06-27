@@ -320,7 +320,7 @@ function VaultRow({
       </div>
 
       {/* Password area */}
-      <div className="flex items-center gap-1 flex-shrink-0">
+      <div className="flex items-center gap-1 flex-shrink-0" style={{ maxWidth: '45%' }}>
         {decryptError && (
           <span style={{ fontSize: 10, color: '#f87171' }}>
             Senha incorreta
@@ -680,50 +680,53 @@ export function VaultPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 mb-5">
-        <div>
-          <h1
-            className="text-2xl lg:text-[30px]"
-            style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.05 }}
-          >
-            Senhas
-          </h1>
-          <p className="text-ink-2 mt-1 text-sm">
-            {filtered.length} credencial{filtered.length !== 1 ? 'ais' : ''}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {/* Lock */}
+      <div className="mb-5">
+        {/* Linha 1: título + travar */}
+        <div className="flex items-start justify-between gap-2 mb-3">
+          <div>
+            <h1
+              className="text-2xl lg:text-[30px]"
+              style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.05 }}
+            >
+              Senhas
+            </h1>
+            <p className="text-ink-2 mt-1 text-sm">
+              {filtered.length} credencial{filtered.length !== 1 ? 'ais' : ''}
+            </p>
+          </div>
           <button
             onClick={lock}
             title="Travar cofre"
-            className="flex items-center gap-1.5 px-3 rounded-input border border-line text-ink-2 hover:text-ink hover:border-white/20 hover:bg-bg-3 transition-colors text-sm"
-            style={{ minHeight: 40 }}
+            className="flex items-center gap-1.5 px-3 rounded-input border border-line
+                       text-ink-2 hover:text-ink hover:bg-bg-3 transition-colors text-sm flex-shrink-0"
+            style={{ minHeight: 36 }}
           >
             <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
               <rect x="2.5" y="7" width="11" height="7" rx="1.4" stroke="currentColor" strokeWidth="1.3" />
               <path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" strokeWidth="1.3" />
             </svg>
-            Travar
+            <span className="hidden sm:inline">Travar</span>
           </button>
+        </div>
 
-          {/* Import from Notion */}
+        {/* Linha 2: importar + adicionar */}
+        <div className="flex gap-2">
           <label
-            className="flex items-center gap-1.5 text-xs text-ink-2 hover:text-ink cursor-pointer transition-colors px-3 rounded-input border border-line hover:bg-bg-3 hover:border-white/20"
-            style={{ minHeight: 40 }}
+            className="flex items-center gap-1.5 text-xs text-ink-2 hover:text-ink cursor-pointer
+                       transition-colors px-3 rounded-input border border-line hover:bg-bg-3 flex-shrink-0"
+            style={{ minHeight: 36 }}
             title="Importar senhas de arquivo .md exportado do Notion"
           >
             <Upload size={13} />
-            Importar Notion
+            <span className="hidden sm:inline">Importar Notion</span>
+            <span className="sm:hidden">Importar</span>
             <input type="file" accept=".md,.txt" className="hidden" onChange={handleNotionImport} />
           </label>
-
-          {/* Add */}
           <button
             onClick={() => setModal({ kind: 'add' })}
-            className="flex items-center gap-1.5 bg-brand text-white rounded-input px-4 font-semibold text-sm hover:brightness-110 transition-all"
-            style={{ minHeight: 40 }}
+            className="flex-1 flex items-center justify-center gap-1.5 bg-brand text-white
+                       rounded-input px-4 font-semibold text-sm hover:brightness-110 transition-all"
+            style={{ minHeight: 36 }}
           >
             + Adicionar
           </button>
