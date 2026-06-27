@@ -34,9 +34,6 @@ function longDate(): string {
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
-function fmtBRL(n: number): string {
-  return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-}
 
 function daysUntil(dateStr: string): number {
   const t = new Date(); t.setHours(0, 0, 0, 0)
@@ -342,34 +339,6 @@ function GoalsWidget() {
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   WIDGET 6 — FATURAMENTO
-══════════════════════════════════════════════════════════════════ */
-function InvoicesWidget() {
-  const { data, isLoading } = useDashInvoices()
-
-  return (
-    <Widget icon={<Receipt size={14} />} title="Faturamento" to="/faturamento">
-      {isLoading ? (
-        <div className="space-y-2"><Sk w="w-32" h="h-6" /><Sk w="w-24" /></div>
-      ) : (
-        <>
-          <BigStat value={fmtBRL(data?.total ?? 0)} label="a receber" color="#0EA5E9" />
-          <div className="mt-2 flex items-center gap-1.5">
-            <div
-              className="w-1.5 h-1.5 rounded-full"
-              style={{ background: (data?.count ?? 0) > 0 ? '#fbbf24' : '#34d399' }}
-            />
-            <span className="text-ink-3" style={{ fontSize: 11 }}>
-              {data?.count ?? 0} fatura{(data?.count ?? 0) !== 1 ? 's' : ''} pendente{(data?.count ?? 0) !== 1 ? 's' : ''}
-            </span>
-          </div>
-        </>
-      )}
-    </Widget>
-  )
-}
-
-/* ══════════════════════════════════════════════════════════════════
    WIDGET 7 — ESPORTES
 ══════════════════════════════════════════════════════════════════ */
 function SportsWidget() {
@@ -511,62 +480,6 @@ function LibraryWidget() {
             </p>
           )}
         </>
-      )}
-    </Widget>
-  )
-}
-
-/* ══════════════════════════════════════════════════════════════════
-   WIDGET — VERCEL DEPLOYS
-══════════════════════════════════════════════════════════════════ */
-const VERCEL_STATE: Record<string, { label: string; color: string }> = {
-  READY:    { label: 'Ready',    color: '#34d399' },
-  ERROR:    { label: 'Error',    color: '#f87171' },
-  BUILDING: { label: 'Building', color: '#fbbf24' },
-  CANCELED: { label: 'Canceled', color: '#888888' },
-  QUEUED:   { label: 'Queued',   color: '#888888' },
-}
-
-function fmtRelMs(ms: number): string {
-  const diffH = Math.round((Date.now() - ms) / 3_600_000)
-  if (diffH < 1)  return 'agora'
-  if (diffH < 24) return `${diffH}h atrás`
-  const diffD = Math.round(diffH / 24)
-  return `${diffD}d atrás`
-}
-
-function VercelWidget() {
-  const { data, isLoading } = useDashVercel()
-
-  if (!isLoading && data === null) return null // not connected — hide widget
-
-  return (
-    <Widget icon={<Triangle size={12} />} title="Vercel" to="/integracoes">
-      {isLoading ? (
-        <div className="space-y-2">
-          <Sk w="w-full" h="h-10" />
-          <Sk w="w-4/5" h="h-10" />
-          <Sk w="w-full" h="h-10" />
-        </div>
-      ) : !data || data.length === 0 ? (
-        <p className="text-ink-3 text-xs mt-1">Nenhum deploy recente.</p>
-      ) : (
-        <ul className="space-y-1.5">
-          {data.slice(0, 3).map(d => {
-            const cfg = VERCEL_STATE[d.state] ?? { label: d.state, color: '#888' }
-            return (
-              <li key={d.id} className="flex items-center gap-2 bg-bg rounded-xl px-3 py-2">
-                <div className="flex-1 min-w-0">
-                  <div className="text-ink text-xs font-semibold truncate" style={{ fontFamily: 'Sora, sans-serif' }}>{d.name}</div>
-                  <div className="text-ink-3" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9 }}>{fmtRelMs(d.createdAt)}</div>
-                </div>
-                <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 20, background: cfg.color + '18', color: cfg.color, flexShrink: 0 }}>
-                  {cfg.label}
-                </span>
-              </li>
-            )
-          })}
-        </ul>
       )}
     </Widget>
   )
