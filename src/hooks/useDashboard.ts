@@ -8,7 +8,6 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import type { Database } from '../types/db'
 
-type Task     = Database['public']['Tables']['tasks']['Row']
 type Habit    = Database['public']['Tables']['habits']['Row']
 type HabitLog = Database['public']['Tables']['habit_logs']['Row']
 type Project  = Database['public']['Tables']['projects']['Row']
@@ -45,20 +44,29 @@ function calcStreak(logs: HabitLog[]): number {
   return streak
 }
 
+type DashTask = {
+  id: string
+  title: string
+  priority: number
+  due_date: string | null
+  project_id: string | null
+  completed_at: string | null
+}
+
 /* ── Tasks ────────────────────────────────────────────────────── */
 export function useDashTasks() {
   return useQuery({
     queryKey: ['dash_tasks'],
-    queryFn: async () => {
+    queryFn: async (): Promise<DashTask[]> => {
       const { data, error } = await supabase
         .from('tasks')
-        .select('*')
+        .select('id, title, priority, due_date, project_id, completed_at')
         .is('completed_at', null)
         .is('parent_id', null)
         .order('due_date', { ascending: true, nullsFirst: false })
         .limit(5)
       if (error) throw error
-      return data ?? []
+      return (data ?? []) as any
     },
   })
 }

@@ -112,8 +112,12 @@ function BigStat({ value, label, color = '#fff' }: { value: string | number; lab
 ══════════════════════════════════════════════════════════════════ */
 function TasksWidget() {
   const { data, isLoading } = useDashTasks()
-  const pending = data ?? []
-  const top3    = pending.slice(0, 3)
+  const tasks = (data ?? []) as {
+    id: string; title: string; priority: number
+    due_date: string | null; project_id: string | null
+  }[]
+  const pending = tasks
+  const top3    = tasks.slice(0, 3)
 
   return (
     <Widget icon={<CheckSquare size={14} />} title="Tarefas" to="/tarefas">
