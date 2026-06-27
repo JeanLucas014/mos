@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { FileText, Film, Link as LinkIcon, Paperclip, GraduationCap, FolderOpen } from 'lucide-react'
 import { useStudies } from '../hooks/useStudies'
 import type { Database } from '../types/db'
+import { LibraryPage } from '@/pages/LibraryPage'
 
 type Study = Database['public']['Tables']['studies']['Row']
 type StudyFile = Database['public']['Tables']['study_files']['Row']
@@ -437,6 +438,7 @@ function AddFileForm({
 
 /* ── Page ─────────────────────────────────────────────────────────── */
 export function StudiesPage() {
+  const [tab, setTab] = useState<'estudos' | 'biblioteca'>('estudos')
   const { studies: studiesQ, files: filesQ, addStudy, updateStudy, deleteStudy, addFile, deleteFile } = useStudies()
 
   const studies = studiesQ.data ?? []
@@ -470,6 +472,11 @@ export function StudiesPage() {
     deleteFile.mutate(id)
   }
 
+  const TABS: { id: 'estudos' | 'biblioteca'; label: string }[] = [
+    { id: 'estudos',   label: 'Estudos' },
+    { id: 'biblioteca', label: 'Biblioteca' },
+  ]
+
   return (
     <div>
       {/* Header */}
@@ -477,23 +484,46 @@ export function StudiesPage() {
         className="text-2xl lg:text-[30px]"
         style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.05 }}
       >
-        Estudos
+        {tab === 'biblioteca' ? 'Biblioteca' : 'Estudos'}
       </h1>
-      <p className="text-ink-2 mt-1 text-sm">
-        {isLoading
-          ? 'Carregando...'
-          : `${activeCount} em curso · ${completedCount} concluído${completedCount !== 1 ? 's' : ''}`}
-      </p>
+      {tab === 'estudos' && (
+        <p className="text-ink-2 mt-1 text-sm">
+          {isLoading
+            ? 'Carregando...'
+            : `${activeCount} em curso · ${completedCount} concluído${completedCount !== 1 ? 's' : ''}`}
+        </p>
+      )}
 
-      {(studiesQ.isError || filesQ.isError) && (
+      {/* Tab bar */}
+      <div className="flex gap-0 border-b border-line mt-4 mb-6">
+        {TABS.map(t => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className={[
+              'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
+              tab === t.id
+                ? 'border-brand text-ink'
+                : 'border-transparent text-ink-3 hover:text-ink-2',
+            ].join(' ')}
+            style={{ fontFamily: 'Manrope, sans-serif' }}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'biblioteca' && <LibraryPage />}
+
+      {tab === 'estudos' && (studiesQ.isError || filesQ.isError) && (
         <p className="text-red-400 text-sm mt-3">
           Erro: {((studiesQ.error || filesQ.error) as Error).message}
         </p>
       )}
 
-      {isLoading && <Skeleton />}
+      {tab === 'estudos' && isLoading && <Skeleton />}
 
-      {!isLoading && studies.length === 0 && files.length === 0 && (
+      {tab === 'estudos' && !isLoading && studies.length === 0 && files.length === 0 && (
         <div className="mt-8 flex flex-col items-center gap-3 text-ink-3 py-12">
           <GraduationCap size={40} className="text-ink-3" />
           <p className="text-sm text-center">Nenhum estudo ainda.<br />Adicione o primeiro abaixo.</p>
@@ -501,7 +531,7 @@ export function StudiesPage() {
       )}
 
       {/* Two-column grid */}
-      {!isLoading && (
+      {tab === 'estudos' && !isLoading && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-6">
 
           {/* ── Em curso ── */}
