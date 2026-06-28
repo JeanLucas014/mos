@@ -105,9 +105,9 @@ export function CommandPalette() {
       (supabase as any).from('shopping_items').select('id,title')
         .ilike('title', term).eq('done', false).limit(4),
       (supabase as any).from('goals').select('id,title')
-        .ilike('title', term).limit(4),
+        .ilike('title', term).limit(4).catch(() => ({ data: [] as any[] })),
       (supabase as any).from('projects').select('id,name')
-        .ilike('name', term).limit(4),
+        .ilike('name', term).limit(4).catch(() => ({ data: [] as any[] })),
       supabase.from('notes').select('id,title')
         .ilike('title', term).limit(4),
     ])
@@ -146,13 +146,15 @@ export function CommandPalette() {
       url: '/compras', color: TYPE_CONFIG.compra.color,
       icon: TYPE_CONFIG.compra.icon,
     }))
-    goals?.forEach((g: any) => found.push({
-      id: g.id, type: 'meta', title: g.title,
+    const goalsData = (goals as any)?.data ?? goals ?? []
+    ;(goalsData as any[]).forEach((g: any) => found.push({
+      id: g.id, type: 'meta' as const, title: g.title ?? '',
       url: '/metas', color: TYPE_CONFIG.meta.color,
       icon: TYPE_CONFIG.meta.icon,
     }))
-    projects?.forEach((p: any) => found.push({
-      id: p.id, type: 'projeto', title: p.name,
+    const projectsData = (projects as any)?.data ?? projects ?? []
+    ;(projectsData as any[]).forEach((p: any) => found.push({
+      id: p.id, type: 'projeto' as const, title: p.name ?? '',
       url: '/projetos', color: TYPE_CONFIG.projeto.color,
       icon: TYPE_CONFIG.projeto.icon,
     }))
