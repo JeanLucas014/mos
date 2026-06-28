@@ -5,6 +5,7 @@ import {
   Search, CheckSquare, Calendar, DollarSign,
   BookOpen, Lock, ShoppingCart, Target,
   Folder, FileText, X, ChevronRight,
+  Home, Activity, RefreshCw, Link,
 } from 'lucide-react'
 
 interface Result {
@@ -30,18 +31,18 @@ const TYPE_CONFIG = {
 }
 
 const NAVIGATION = [
-  { title: 'Dashboard',   url: '/',            icon: '🏠' },
-  { title: 'Agenda',      url: '/agenda',      icon: '📅' },
-  { title: 'Tarefas',     url: '/tarefas',     icon: '✅' },
-  { title: 'Financeiro',  url: '/financeiro',  icon: '💰' },
-  { title: 'Esportes',    url: '/esportes',    icon: '🏃' },
-  { title: 'Biblioteca',  url: '/biblioteca',  icon: '📚' },
-  { title: 'Senhas',      url: '/senhas',      icon: '🔑' },
-  { title: 'Notas',       url: '/notas',       icon: '📝' },
-  { title: 'Projetos',    url: '/projetos',    icon: '📁' },
-  { title: 'Metas',       url: '/metas',       icon: '🎯' },
-  { title: 'Hábitos',     url: '/habitos',     icon: '🔁' },
-  { title: 'Integrações', url: '/integracoes', icon: '🔗' },
+  { title: 'Dashboard',   url: '/',            icon: <Home        size={14} /> },
+  { title: 'Agenda',      url: '/agenda',      icon: <Calendar    size={14} /> },
+  { title: 'Tarefas',     url: '/tarefas',     icon: <CheckSquare size={14} /> },
+  { title: 'Financeiro',  url: '/financeiro',  icon: <DollarSign  size={14} /> },
+  { title: 'Esportes',    url: '/esportes',    icon: <Activity    size={14} /> },
+  { title: 'Biblioteca',  url: '/biblioteca',  icon: <BookOpen    size={14} /> },
+  { title: 'Senhas',      url: '/senhas',      icon: <Lock        size={14} /> },
+  { title: 'Notas',       url: '/notas',       icon: <FileText    size={14} /> },
+  { title: 'Projetos',    url: '/projetos',    icon: <Folder      size={14} /> },
+  { title: 'Metas',       url: '/metas',       icon: <Target      size={14} /> },
+  { title: 'Hábitos',     url: '/habitos',     icon: <RefreshCw   size={14} /> },
+  { title: 'Integrações', url: '/integracoes', icon: <Link        size={14} /> },
 ]
 
 export function CommandPalette() {
@@ -274,7 +275,7 @@ export function CommandPalette() {
                   style={{ background: selected === i ? 'rgba(255,255,255,.05)' : 'transparent' }}
                   onMouseEnter={() => setSelected(i)}
                 >
-                  <span className="text-base w-7 text-center shrink-0">{item.icon}</span>
+                  <span className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-[#555]">{item.icon}</span>
                   <span className="text-sm text-[#ccc]">{item.title}</span>
                   <ChevronRight size={12} className="text-[#333] ml-auto shrink-0" />
                 </button>
