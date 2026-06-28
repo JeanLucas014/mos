@@ -82,83 +82,81 @@ export function CommandPalette() {
     const found: Result[] = []
 
     const [
-      { data: tasks },
-      { data: events },
-      { data: lancamentos },
-      { data: books },
-      { data: vault },
-      { data: shopping },
-      { data: goals },
-      { data: projects },
-      { data: notes },
+      tasksRes,
+      eventsRes,
+      lancamentosRes,
+      booksRes,
+      vaultRes,
+      shoppingRes,
+      goalsRes,
+      projectsRes,
+      notesRes,
     ] = await Promise.all([
-      supabase.from('tasks').select('id,title')
-        .ilike('title', term).is('completed_at', null).limit(4),
-      (supabase as any).from('calendar_events').select('id,title,start_at,color')
-        .ilike('title', term).limit(4),
-      (supabase as any).from('fin_lancamentos').select('id,nome,valor')
-        .ilike('nome', term).eq('is_grupo', false).limit(4),
-      supabase.from('books').select('id,title,author')
-        .ilike('title', term).limit(4),
-      (supabase as any).from('vault_items').select('id,service,username')
-        .ilike('service', term).limit(4),
-      (supabase as any).from('shopping_items').select('id,title')
-        .ilike('title', term).eq('done', false).limit(4),
-      (supabase as any).from('goals').select('id,title')
-        .ilike('title', term).limit(4).catch(() => ({ data: [] as any[] })),
-      (supabase as any).from('projects').select('id,name')
-        .ilike('name', term).limit(4).catch(() => ({ data: [] as any[] })),
-      supabase.from('notes').select('id,title')
-        .ilike('title', term).limit(4),
-    ])
+      supabase.from('tasks').select('id,title').ilike('title', term)
+        .is('completed_at', null).limit(4).then(r => r.data ?? []),
+      (supabase as any).from('calendar_events').select('id,title,start_at,color').ilike('title', term)
+        .limit(4).then((r: any) => r.data ?? []),
+      (supabase as any).from('fin_lancamentos').select('id,nome,valor').ilike('nome', term)
+        .eq('is_grupo', false).limit(4).then((r: any) => r.data ?? []),
+      supabase.from('books').select('id,title,author').ilike('title', term)
+        .limit(4).then(r => r.data ?? []),
+      (supabase as any).from('vault_items').select('id,service,username').ilike('service', term)
+        .limit(4).then((r: any) => r.data ?? []),
+      (supabase as any).from('shopping_items').select('id,title').ilike('title', term)
+        .eq('done', false).limit(4).then((r: any) => r.data ?? []),
+      (supabase as any).from('goals').select('id,title').ilike('title', term)
+        .limit(4).then((r: any) => r.data ?? []).catch(() => []),
+      (supabase as any).from('projects').select('id,name').ilike('name', term)
+        .limit(4).then((r: any) => r.data ?? []).catch(() => []),
+      supabase.from('notes').select('id,title').ilike('title', term)
+        .limit(4).then(r => r.data ?? []),
+    ]) as [any[], any[], any[], any[], any[], any[], any[], any[], any[]]
 
-    tasks?.forEach(t => found.push({
-      id: t.id, type: 'tarefa', title: t.title,
+    ;(tasksRes).forEach((t: any) => found.push({
+      id: t.id, type: 'tarefa', title: t.title ?? '',
       url: '/tarefas', color: TYPE_CONFIG.tarefa.color,
       icon: TYPE_CONFIG.tarefa.icon,
     }))
-    events?.forEach((e: any) => found.push({
-      id: e.id, type: 'evento', title: e.title,
+    ;(eventsRes).forEach((e: any) => found.push({
+      id: e.id, type: 'evento', title: e.title ?? '',
       subtitle: e.start_at ? new Date(e.start_at).toLocaleDateString('pt-BR') : undefined,
       url: '/agenda', color: e.color ?? TYPE_CONFIG.evento.color,
       icon: TYPE_CONFIG.evento.icon,
     }))
-    lancamentos?.forEach((l: any) => found.push({
-      id: l.id, type: 'lancamento', title: l.nome,
+    ;(lancamentosRes).forEach((l: any) => found.push({
+      id: l.id, type: 'lancamento', title: l.nome ?? '',
       subtitle: l.valor != null ? `R$ ${Number(l.valor).toFixed(2)}` : undefined,
       url: '/financeiro', color: TYPE_CONFIG.lancamento.color,
       icon: TYPE_CONFIG.lancamento.icon,
     }))
-    books?.forEach(b => found.push({
-      id: b.id, type: 'livro', title: b.title,
-      subtitle: (b as any).author ?? undefined,
+    ;(booksRes).forEach((b: any) => found.push({
+      id: b.id, type: 'livro', title: b.title ?? '',
+      subtitle: b.author ?? undefined,
       url: '/biblioteca', color: TYPE_CONFIG.livro.color,
       icon: TYPE_CONFIG.livro.icon,
     }))
-    vault?.forEach((v: any) => found.push({
-      id: v.id, type: 'senha', title: v.service,
+    ;(vaultRes).forEach((v: any) => found.push({
+      id: v.id, type: 'senha', title: v.service ?? '',
       subtitle: v.username ?? undefined,
       url: '/senhas', color: TYPE_CONFIG.senha.color,
       icon: TYPE_CONFIG.senha.icon,
     }))
-    shopping?.forEach((s: any) => found.push({
-      id: s.id, type: 'compra', title: s.title,
+    ;(shoppingRes).forEach((s: any) => found.push({
+      id: s.id, type: 'compra', title: s.title ?? '',
       url: '/compras', color: TYPE_CONFIG.compra.color,
       icon: TYPE_CONFIG.compra.icon,
     }))
-    const goalsData = (goals as any)?.data ?? goals ?? []
-    ;(goalsData as any[]).forEach((g: any) => found.push({
-      id: g.id, type: 'meta' as const, title: g.title ?? '',
+    ;(goalsRes).forEach((g: any) => found.push({
+      id: g.id, type: 'meta', title: g.title ?? '',
       url: '/metas', color: TYPE_CONFIG.meta.color,
       icon: TYPE_CONFIG.meta.icon,
     }))
-    const projectsData = (projects as any)?.data ?? projects ?? []
-    ;(projectsData as any[]).forEach((p: any) => found.push({
-      id: p.id, type: 'projeto' as const, title: p.name ?? '',
+    ;(projectsRes).forEach((p: any) => found.push({
+      id: p.id, type: 'projeto', title: p.name ?? '',
       url: '/projetos', color: TYPE_CONFIG.projeto.color,
       icon: TYPE_CONFIG.projeto.icon,
     }))
-    notes?.forEach(n => found.push({
+    ;(notesRes).forEach((n: any) => found.push({
       id: n.id, type: 'nota', title: n.title ?? '(sem título)',
       url: '/notas', color: TYPE_CONFIG.nota.color,
       icon: TYPE_CONFIG.nota.icon,
