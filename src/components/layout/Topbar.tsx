@@ -1,6 +1,7 @@
 import { useLocation } from 'react-router-dom'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { Search } from 'lucide-react'
 import { useUIStore } from '../../stores/useUIStore'
 
 const VIEW_LABELS: Record<string, string> = {
@@ -54,6 +55,15 @@ export function Topbar() {
           alt="MOS"
           className="h-7 w-auto absolute left-1/2 -translate-x-1/2"
         />
+
+        {/* Botão busca mobile */}
+        <button
+          onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true }))}
+          className="ml-auto flex items-center justify-center w-10 h-10 -mr-1 rounded-input text-ink-2 hover:text-ink hover:bg-bg-3 transition-colors"
+          aria-label="Buscar"
+        >
+          <Search size={18} />
+        </button>
       </div>
 
       {/* ── Desktop layout ── */}
@@ -66,6 +76,14 @@ export function Topbar() {
         </div>
 
         <div className="flex items-center gap-4">
+          <button
+            onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true }))}
+            className="flex items-center gap-2 text-xs text-[#555] hover:text-white border border-[#1f1f1f] rounded-lg px-3 py-1.5 transition-colors hover:border-[#0EA5E9]/40 bg-[#111111]"
+          >
+            <Search size={13} />
+            <span className="hidden sm:inline">Buscar</span>
+            <kbd className="hidden md:inline text-[10px] border border-[#2a2a2a] rounded px-1">⌘K</kbd>
+          </button>
           <span
             className="text-ink-2"
             style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11 }}

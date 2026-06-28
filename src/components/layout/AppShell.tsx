@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
 import { MobileScrim } from './MobileScrim'
+import { CommandPalette } from '../CommandPalette'
 import { useUIStore } from '../../stores/useUIStore'
 
 export function AppShell() {
@@ -9,6 +10,8 @@ export function AppShell() {
   const sidebarCollapsed = useUIStore((s) => s.sidebarCollapsed)
 
   return (
+    <>
+    <CommandPalette />
     <div className="flex h-screen overflow-hidden bg-bg">
       {/* Sidebar — fixed drawer on mobile, static column on lg+ */}
       <div
@@ -36,5 +39,6 @@ export function AppShell() {
         </main>
       </div>
     </div>
+    </>
   )
 }
