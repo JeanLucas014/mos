@@ -7,6 +7,8 @@ import { MesTab } from './tabs/MesTab'
 import { MetasTab } from './tabs/MetasTab'
 import { InvestimentosTab } from './tabs/InvestimentosTab'
 import { ConfigTab } from './tabs/ConfigTab'
+import { FinanceiroGuide } from './components/FinanceiroGuide'
+import { HelpCircle } from 'lucide-react'
 
 type Tab = 'ano' | 'mes' | 'metas' | 'investimentos' | 'config'
 const TABS: { id: Tab; label: string }[] = [
@@ -27,6 +29,17 @@ export default function FinanceiroPage() {
   const [ano, setAno] = useState<FinAno | null>(null)
   const [anos, setAnos] = useState<FinAno[]>([])
   const [loading, setLoading] = useState(true)
+  const [showGuide, setShowGuide] = useState(false)
+
+  useEffect(() => {
+    const seen = localStorage.getItem('mos-financeiro-guide-seen')
+    if (!seen) setShowGuide(true)
+  }, [])
+
+  function closeGuide() {
+    localStorage.setItem('mos-financeiro-guide-seen', 'true')
+    setShowGuide(false)
+  }
 
   useEffect(() => { loadAnos() }, [])
 
@@ -56,7 +69,16 @@ export default function FinanceiroPage() {
     <div className="font-[Manrope]">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold font-[Sora] text-white">Financeiro</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-xl font-semibold font-[Sora] text-white">Financeiro</h1>
+          <button
+            onClick={() => setShowGuide(true)}
+            className="text-[#555] hover:text-[#0EA5E9] transition-colors"
+            title="Como funciona"
+          >
+            <HelpCircle size={15} />
+          </button>
+        </div>
         <select
           value={selectedYear}
           onChange={e => setSelectedYear(Number(e.target.value))}
@@ -101,6 +123,7 @@ export default function FinanceiroPage() {
           {activeTab === 'config'       && <ConfigTab anos={anos} onReload={loadAnos} />}
         </>
       )}
+      {showGuide && <FinanceiroGuide onClose={closeGuide} />}
     </div>
   )
 }
