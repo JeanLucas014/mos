@@ -1,7 +1,9 @@
+import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Search } from 'lucide-react'
+import { supabase } from '../../lib/supabase'
 import { useUIStore } from '../../stores/useUIStore'
 
 const VIEW_LABELS: Record<string, string> = {
@@ -27,11 +29,26 @@ const VIEW_LABELS: Record<string, string> = {
 export function Topbar() {
   const location = useLocation()
   const toggleSidebar = useUIStore((s) => s.toggleSidebar)
+  const [isDemo, setIsDemo] = useState(false)
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setIsDemo(user?.email === 'demo@jlmos.com.br')
+    })
+  }, [])
 
   const currentLabel = VIEW_LABELS[location.pathname] ?? 'MOS'
   const dateStr = format(new Date(), 'EEE dd MMM', { locale: ptBR })
 
   return (
+    <>
+    {isDemo && (
+      <div className="bg-[#f59e0b]/10 border-b border-[#f59e0b]/20 px-4 py-1.5 flex items-center justify-center gap-2 text-xs text-[#f59e0b]">
+        <span>⚡</span>
+        Você está explorando a conta demo do MOS
+        <a href="https://app.jlmos.com.br" className="underline ml-1">Criar sua conta →</a>
+      </div>
+    )}
     <header
       className="topbar-blur sticky top-0 z-10 flex items-center border-b border-line"
       style={{ height: 52, flexShrink: 0 }}
@@ -97,5 +114,6 @@ export function Topbar() {
         </div>
       </div>
     </header>
+    </>
   )
 }
