@@ -29,6 +29,10 @@ export function expandRecurringEvents(
     const until    = rule['UNTIL']
       ? new Date(rule['UNTIL'].replace(/^(\d{4})(\d{2})(\d{2}).*/, '$1-$2-$3'))
       : null
+    // Datas excluídas: formato EXDATE=20260630,20260707
+    const exdates = new Set(
+      (rule['EXDATE'] ?? '').split(',').filter(Boolean)
+    )
 
     const eventStart = new Date(event.start_at)
     const eventEnd   = new Date(event.end_at)
@@ -37,7 +41,6 @@ export function expandRecurringEvents(
 
     const cursor = new Date(viewStart)
     cursor.setHours(eventStart.getHours(), eventStart.getMinutes(), 0, 0)
-    // Don't start before the event's own start
     if (cursor < eventStart) cursor.setTime(eventStart.getTime())
 
     let safetyLimit = 0
@@ -47,37 +50,31 @@ export function expandRecurringEvents(
       let matches = false
 
       if (freq === 'DAILY') {
-        const daysDiff = Math.round(
-          (cursor.getTime() - eventStart.getTime()) / 86_400_000
-        )
+        const daysDiff = Math.round((cursor.getTime() - eventStart.getTime()) / 86_400_000)
         matches = daysDiff >= 0 && daysDiff % interval === 0
       } else if (freq === 'WEEKLY') {
         if (byDay.length > 0) {
           const DAYS = ['SU','MO','TU','WE','TH','FR','SA']
           matches = byDay.includes(DAYS[dayOfWeek])
           if (matches && interval > 1) {
-            const weeksDiff = Math.floor(
-              (cursor.getTime() - eventStart.getTime()) / (7 * 86_400_000)
-            )
+            const weeksDiff = Math.floor((cursor.getTime() - eventStart.getTime()) / (7 * 86_400_000))
             matches = weeksDiff % interval === 0
           }
         } else {
-          const weeksDiff = Math.round(
-            (cursor.getTime() - eventStart.getTime()) / (7 * 86_400_000)
-          )
-          matches = weeksDiff >= 0 && weeksDiff % interval === 0
-            && dayOfWeek === eventStart.getDay()
+          const weeksDiff = Math.round((cursor.getTime() - eventStart.getTime()) / (7 * 86_400_000))
+          matches = weeksDiff >= 0 && weeksDiff % interval === 0 && dayOfWeek === eventStart.getDay()
         }
       } else if (freq === 'MONTHLY') {
-        const monthsDiff =
-          (cursor.getFullYear() - eventStart.getFullYear()) * 12
+        const monthsDiff = (cursor.getFullYear() - eventStart.getFullYear()) * 12
           + (cursor.getMonth() - eventStart.getMonth())
-        matches = cursor.getDate() === eventStart.getDate()
-          && monthsDiff >= 0 && monthsDiff % interval === 0
+        matches = cursor.getDate() === eventStart.getDate() && monthsDiff >= 0 && monthsDiff % interval === 0
       } else if (freq === 'YEARLY') {
-        matches = cursor.getDate()  === eventStart.getDate()
-               && cursor.getMonth() === eventStart.getMonth()
+        matches = cursor.getDate() === eventStart.getDate() && cursor.getMonth() === eventStart.getMonth()
       }
+
+      // Verifica se esta data está excluída
+      const cursorDateKey = cursor.toISOString().slice(0, 10).replace(/-/g, '')
+      if (matches && exdates.has(cursorDateKey)) matches = false
 
       if (matches && cursor >= viewStart) {
         const occEnd = new Date(cursor.getTime() + duration)

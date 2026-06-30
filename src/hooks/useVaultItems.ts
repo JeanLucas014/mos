@@ -2,9 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import type { Database } from '../types/db'
 
-type VaultItem = Database['public']['Tables']['vault_items']['Row']
-
-export type { VaultItem }
+type _VaultItem = Database['public']['Tables']['vault_items']['Row']
+export type VaultItem = _VaultItem & { kind?: string }
 
 export function useVaultItems() {
   const qc = useQueryClient()
@@ -27,6 +26,7 @@ export function useVaultItems() {
       username: string | null
       password_cipher: string
       password_iv: string
+      kind?: string
     }) => {
       const { data, error } = await (supabase.from('vault_items') as any)
         .insert(item)

@@ -6,38 +6,6 @@ import { useVaultItems, type VaultItem } from '../hooks/useVaultItems'
 import { deriveKey, encrypt, decrypt, makeUserSalt } from '../lib/crypto'
 
 /* ══════════════════════════════════════════════════════════════
-   ICON BUTTONS
-══════════════════════════════════════════════════════════════ */
-function IconBtn({
-  title,
-  onClick,
-  danger,
-  children,
-}: {
-  title: string
-  onClick: () => void
-  danger?: boolean
-  children: React.ReactNode
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={title}
-      className={[
-        'flex-shrink-0 flex items-center justify-center rounded-lg transition-colors',
-        danger
-          ? 'text-ink-3 hover:text-red-400 hover:bg-red-400/10'
-          : 'text-ink-3 hover:text-ink hover:bg-bg-3',
-      ].join(' ')}
-      style={{ width: 34, height: 34 }}
-    >
-      {children}
-    </button>
-  )
-}
-
-/* ══════════════════════════════════════════════════════════════
    COPY BUTTON with feedback
 ══════════════════════════════════════════════════════════════ */
 function CopyBtn({ getValue }: { getValue: () => Promise<string | null> }) {
@@ -91,24 +59,36 @@ function VaultModal({
 }: {
   mode: ModalMode
   cryptoKey: CryptoKey
-  onSave: (service: string, username: string, password: string, itemId?: string) => Promise<void>
+  onSave: (service: string, username: string, password: string, kind: string, itemId?: string) => Promise<void>
   onClose: () => void
 }) {
-  const [service,  setService]  = useState(mode.kind === 'edit' ? mode.item.service  : '')
-  const [username, setUsername] = useState(mode.kind === 'edit' ? (mode.item.username ?? '') : '')
+  const editItem = mode.kind === 'edit' ? mode.item : null
+  const [itemKind, setItemKind] = useState<'senha' | 'chave_api'>(
+    (editItem as any)?.kind === 'chave_api' ? 'chave_api' : 'senha'
+  )
+  const [service,  setService]  = useState(editItem?.service  ?? '')
+  const [username, setUsername] = useState(editItem?.username ?? '')
   const [password, setPassword] = useState('')
   const [showPw,   setShowPw]   = useState(false)
   const [loading,  setLoading]  = useState(false)
   const [error,    setError]    = useState('')
   const [loadingCurrent, setLoadingCurrent] = useState(false)
 
+  const isApiKey = itemKind === 'chave_api'
+  const serviceLabel   = isApiKey ? 'Nome da chave *' : 'Serviço *'
+  const servicePh      = isApiKey ? 'OpenAI, Stripe, Supabase…' : 'GitHub, Google, Netflix…'
+  const usernameLabel  = isApiKey ? 'Ambiente (opcional)' : 'Usuário / E-mail'
+  const usernamePh     = isApiKey ? 'Produção, Sandbox…' : 'jean@exemplo.com'
+  const passwordLabel  = isApiKey ? 'Chave *' : 'Senha *'
+  const passwordPh     = mode.kind === 'edit' ? '(deixe em branco para não alterar)' : isApiKey ? 'sk_live_…' : '••••••••'
+
   /* For edit: decrypt current password to pre-fill */
   const [currentLoaded, setCurrentLoaded] = useState(false)
   async function loadCurrent() {
-    if (mode.kind !== 'edit' || currentLoaded) return
+    if (!editItem || currentLoaded) return
     setLoadingCurrent(true)
     try {
-      const plain = await decrypt(mode.item.password_cipher, mode.item.password_iv, cryptoKey)
+      const plain = await decrypt(editItem.password_cipher, editItem.password_iv, cryptoKey)
       setPassword(plain)
       setCurrentLoaded(true)
     } catch {
@@ -127,7 +107,8 @@ function VaultModal({
         service.trim(),
         username.trim(),
         password,
-        mode.kind === 'edit' ? mode.item.id : undefined,
+        itemKind,
+        editItem?.id,
       )
       onClose()
     } catch (err) {
@@ -160,16 +141,35 @@ function VaultModal({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
+          {/* Kind selector */}
+          <div className="flex gap-2">
+            {(['senha', 'chave_api'] as const).map(k => (
+              <button
+                key={k}
+                type="button"
+                onClick={() => setItemKind(k)}
+                className="flex-1 py-2 rounded-lg text-xs font-semibold border transition-colors"
+                style={{
+                  borderColor: itemKind === k ? '#0EA5E9' : '#1f1f1f',
+                  background:  itemKind === k ? 'rgba(14,165,233,.1)' : 'transparent',
+                  color:       itemKind === k ? '#0EA5E9' : '#555',
+                }}
+              >
+                {k === 'senha' ? 'Senha' : 'Chave de API'}
+              </button>
+            ))}
+          </div>
+
           {/* Service */}
           <div>
             <label className="block text-ink-2 mb-1.5" style={{ fontSize: 12, fontWeight: 600 }}>
-              Serviço *
+              {serviceLabel}
             </label>
             <input
               autoFocus
               value={service}
               onChange={(e) => setService(e.target.value)}
-              placeholder="GitHub, Google, Netflix…"
+              placeholder={servicePh}
               className={inputCls}
               style={h}
             />
@@ -178,24 +178,24 @@ function VaultModal({
           {/* Username */}
           <div>
             <label className="block text-ink-2 mb-1.5" style={{ fontSize: 12, fontWeight: 600 }}>
-              Usuário / E-mail
+              {usernameLabel}
             </label>
             <input
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="jean@exemplo.com"
+              placeholder={usernamePh}
               className={inputCls}
               style={h}
             />
           </div>
 
-          {/* Password */}
+          {/* Password / Key */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-ink-2" style={{ fontSize: 12, fontWeight: 600 }}>
-                Senha *
+                {passwordLabel}
               </label>
-              {mode.kind === 'edit' && !currentLoaded && (
+              {editItem && !currentLoaded && (
                 <button
                   type="button"
                   onClick={loadCurrent}
@@ -211,7 +211,7 @@ function VaultModal({
                 type={showPw ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder={mode.kind === 'edit' ? '(deixe em branco para não alterar)' : '••••••••'}
+                placeholder={passwordPh}
                 className={inputCls + ' pr-10'}
                 style={{ ...h, fontFamily: showPw ? 'JetBrains Mono, monospace' : undefined }}
               />
@@ -268,11 +268,11 @@ function VaultRow({
   onEdit: (item: VaultItem) => void
   onDelete: (id: string) => void
 }) {
-  const [revealed,         setRevealed]         = useState(false)
-  const [decryptedPw,      setDecryptedPw]      = useState<string | null>(null)
-  const [revealLoading,    setRevealLoading]     = useState(false)
-  const [decryptError,     setDecryptError]      = useState(false)
-  const [showMenu,         setShowMenu]          = useState(false)
+  const [revealed,      setRevealed]      = useState(false)
+  const [decryptedPw,   setDecryptedPw]   = useState<string | null>(null)
+  const [revealLoading, setRevealLoading] = useState(false)
+  const [decryptError,  setDecryptError]  = useState(false)
+  const [showMenu,      setShowMenu]      = useState(false)
 
   async function tryDecrypt(): Promise<string | null> {
     if (decryptedPw !== null) return decryptedPw
@@ -287,10 +287,7 @@ function VaultRow({
   }
 
   async function handleToggleReveal() {
-    if (revealed) {
-      setRevealed(false)
-      return
-    }
+    if (revealed) { setRevealed(false); return }
     setRevealLoading(true)
     setDecryptError(false)
     const plain = await tryDecrypt()
@@ -303,121 +300,82 @@ function VaultRow({
     return tryDecrypt()
   }
 
+  const isApiKey = (item as any).kind === 'chave_api'
+
   return (
-    <div className="group flex items-center gap-3 px-4 py-3 rounded-xl border border-line bg-bg-2 hover:border-white/10 transition-colors overflow-hidden">
-      {/* Service + username */}
-      <div className="flex-1 min-w-0">
-        <div
-          className="text-ink font-semibold truncate"
-          style={{ fontFamily: 'Sora, sans-serif', fontSize: 13.5 }}
-        >
-          {item.service}
+    <div className="group flex items-center gap-2 px-4 py-3 rounded-xl border border-line bg-bg-2 hover:border-white/10 transition-colors overflow-hidden">
+      {/* Nome + usuário — clicável para revelar */}
+      <button
+        onClick={handleToggleReveal}
+        className="flex-1 min-w-0 text-left"
+      >
+        <div className="flex items-center gap-1.5">
+          <span
+            className="text-ink font-semibold truncate"
+            style={{ fontFamily: 'Sora, sans-serif', fontSize: 13.5 }}
+          >
+            {item.service}
+          </span>
+          {isApiKey && (
+            <span style={{ fontSize: 9, fontWeight: 700, color: '#a78bfa', background: 'rgba(167,139,250,.12)', padding: '1px 5px', borderRadius: 4, flexShrink: 0 }}>
+              API
+            </span>
+          )}
         </div>
-        {item.username && (
+
+        {revealLoading ? (
+          <div className="text-ink-3" style={{ fontSize: 11 }}>Descriptografando…</div>
+        ) : decryptError ? (
+          <div style={{ fontSize: 11, color: '#f87171' }}>Erro ao descriptografar</div>
+        ) : revealed && decryptedPw ? (
+          <div
+            className="text-[#0EA5E9] truncate select-text"
+            style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}
+          >
+            {decryptedPw}
+          </div>
+        ) : item.username ? (
           <div className="text-ink-2 truncate" style={{ fontSize: 11.5 }}>
             {item.username}
           </div>
+        ) : (
+          <div className="text-ink-3" style={{ fontSize: 11 }}>Toque para revelar</div>
         )}
-      </div>
+      </button>
 
-      {/* Password area */}
-      <div className="flex items-center gap-1 flex-shrink-0" style={{ maxWidth: 'min(45%, 160px)' }}>
-        {decryptError && (
-          <span style={{ fontSize: 10, color: '#f87171' }}>
-            Senha incorreta
-          </span>
-        )}
-        {!decryptError && (
-          <div
-            className="text-ink-2 select-none"
-            style={{
-              fontFamily: 'JetBrains Mono, monospace',
-              fontSize: 12,
-              letterSpacing: revealed ? '0.02em' : '0.15em',
-              minWidth: 80,
-              maxWidth: 140,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {revealed && decryptedPw ? decryptedPw : '••••••'}
-          </div>
-        )}
-
-        {/* Reveal button */}
-        <IconBtn
-          title={revealed ? 'Ocultar senha' : 'Revelar senha'}
-          onClick={handleToggleReveal}
-        >
-          {revealLoading ? (
-            <div className="w-3 h-3 rounded-full border border-current border-t-transparent animate-spin" />
-          ) : revealed ? (
-            /* eye-off */
-            <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-              <path d="M2 2l12 12M6.5 6.6A2 2 0 0 0 9.4 9.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-              <path d="M4.2 4.3C2.7 5.2 1.5 6.5 1 8c1.1 3.2 4 5 7 5a7 7 0 0 0 3.2-.8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-              <path d="M9.8 3.5A7 7 0 0 1 15 8c-.4 1.1-1 2.1-1.8 3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-            </svg>
-          ) : (
-            /* eye */
-            <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-              <ellipse cx="8" cy="8" rx="7" ry="4" stroke="currentColor" strokeWidth="1.3" />
-              <circle cx="8" cy="8" r="2" stroke="currentColor" strokeWidth="1.3" />
-            </svg>
-          )}
-        </IconBtn>
-
-        {/* Copy button */}
+      {/* Ações: copiar + menu */}
+      <div className="flex items-center gap-0.5 flex-shrink-0">
         <CopyBtn getValue={getCopyValue} />
 
-        {/* Mobile: botão "..." com dropdown */}
-        <div className="sm:hidden relative">
+        <div className="relative">
           <button
             onClick={() => setShowMenu(v => !v)}
-            className="w-8 h-8 flex items-center justify-center text-[#555] hover:text-white rounded-lg hover:bg-[#1f1f1f]"
+            className="w-8 h-8 flex items-center justify-center text-[#555] hover:text-white rounded-lg hover:bg-[#1f1f1f] transition-colors"
           >
             ···
           </button>
           {showMenu && (
-            <div className="absolute right-0 bottom-10 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl overflow-hidden z-20 shadow-xl min-w-[120px]">
-              <button
-                onClick={() => { onEdit(item); setShowMenu(false) }}
-                className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-[#ccc] hover:bg-[#222] transition-colors text-left"
-              >
-                Editar
-              </button>
-              <button
-                onClick={() => {
-                  if (window.confirm(`Remover "${item.service}"?`)) onDelete(item.id)
-                  setShowMenu(false)
-                }}
-                className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-[#ef4444] hover:bg-[#222] transition-colors text-left"
-              >
-                Remover
-              </button>
-            </div>
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
+              <div className="absolute right-0 top-9 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl overflow-hidden z-20 shadow-xl min-w-[120px]">
+                <button
+                  onClick={() => { onEdit(item); setShowMenu(false) }}
+                  className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-[#ccc] hover:bg-[#222] transition-colors text-left"
+                >
+                  Editar
+                </button>
+                <button
+                  onClick={() => {
+                    if (window.confirm(`Remover "${item.service}"?`)) onDelete(item.id)
+                    setShowMenu(false)
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-[#ef4444] hover:bg-[#222] transition-colors text-left"
+                >
+                  Remover
+                </button>
+              </div>
+            </>
           )}
-        </div>
-
-        {/* Desktop: botões no hover */}
-        <div className="hidden sm:flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-          <IconBtn title="Editar" onClick={() => onEdit(item)}>
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-              <path d="M11.5 2.5l2 2L5 13H3v-2L11.5 2.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-            </svg>
-          </IconBtn>
-          <IconBtn
-            title="Remover"
-            danger
-            onClick={() => {
-              if (window.confirm(`Remover "${item.service}"?`)) onDelete(item.id)
-            }}
-          >
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-              <path d="M3 4h10M5 4V3h6v1M6 7v5M10 7v5M4 4l.6 9h6.8L12 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </IconBtn>
         </div>
       </div>
     </div>
@@ -616,13 +574,14 @@ export function VaultPage() {
     service: string,
     username: string,
     password: string,
+    kind: string,
     itemId?: string,
   ) {
     if (!cryptoKey) return
 
     /* Only re-encrypt if password was provided (for edit, blank = keep old) */
     if (itemId && !password) {
-      await updateItem.mutateAsync({ id: itemId, service, username: username || null })
+      await updateItem.mutateAsync({ id: itemId, service, username: username || null, kind })
       return
     }
 
@@ -635,6 +594,7 @@ export function VaultPage() {
         username: username || null,
         password_cipher: cipher,
         password_iv: iv,
+        kind,
       })
     } else {
       await addItem.mutateAsync({
@@ -642,6 +602,7 @@ export function VaultPage() {
         username: username || null,
         password_cipher: cipher,
         password_iv: iv,
+        kind,
       })
     }
   }

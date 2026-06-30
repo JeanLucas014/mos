@@ -111,7 +111,6 @@ function InvoiceModal({ initial, onClose }: ModalProps) {
 
   async function handleSave() {
     if (!service.trim()) { setErr('Preencha o serviço');   return }
-    if (!client.trim())  { setErr('Preencha o cliente');   return }
     const cents = Math.round(parseFloat(amount.replace(',', '.')) * 100)
     if (isNaN(cents) || cents <= 0) { setErr('Valor inválido'); return }
     setErr('')
@@ -129,7 +128,7 @@ function InvoiceModal({ initial, onClose }: ModalProps) {
 
   const fs: React.CSSProperties = {
     width: '100%', boxSizing: 'border-box', marginBottom: 12,
-    background: 'rgba(255,255,255,.05)',
+    background: '#1a1a1a',
     border: '1px solid ' + C.border,
     borderRadius: 8, padding: '10px 12px',
     color: C.tx, fontSize: 13, outline: 'none',
@@ -172,8 +171,8 @@ function InvoiceModal({ initial, onClose }: ModalProps) {
         <label style={labelStyle}>Serviço</label>
         <input value={service} onChange={e => setService(e.target.value)} placeholder="Plugin reservas v2.1" style={fs} autoFocus />
 
-        <label style={labelStyle}>Cliente</label>
-        <input value={client} onChange={e => setClient(e.target.value)} placeholder="Super Kart BH" style={fs} />
+        <label style={labelStyle}>Cliente / Parceiro (opcional)</label>
+        <input value={client} onChange={e => setClient(e.target.value)} placeholder="Cliente, parceiro ou serviço (opcional)" style={fs} />
 
         <label style={labelStyle}>Valor (R$)</label>
         <input
@@ -184,7 +183,7 @@ function InvoiceModal({ initial, onClose }: ModalProps) {
         />
 
         <label style={labelStyle}>Status</label>
-        <select value={status} onChange={e => setStatus(e.target.value as Status)} style={{ ...fs, cursor: 'pointer' }}>
+        <select value={status} onChange={e => setStatus(e.target.value as Status)} style={{ ...fs, cursor: 'pointer', colorScheme: 'dark' }}>
           {ALL_STATUSES.map(s => (
             <option key={s} value={s}>{STATUS_CFG[s].label}</option>
           ))}
@@ -448,7 +447,7 @@ function MotoAddModal({
         </div>
 
         <label style={labelStyle}>Categoria</label>
-        <select value={category} onChange={e => setCategory(e.target.value)} style={{ ...fs, cursor:'pointer' }}>
+        <select value={category} onChange={e => setCategory(e.target.value)} style={{ ...fs, cursor:'pointer', colorScheme: 'dark' }}>
           {cats.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
 

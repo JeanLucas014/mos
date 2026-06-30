@@ -214,6 +214,7 @@ export default function SettingsPage() {
   const { data: profile, isLoading: profileLoading, updateProfile } = useProfile()
   const { data: settings, isLoading: settingsLoading, toggleModule } = useUserSettings()
 
+  const [tab,          setTab]          = useState<'perfil' | 'seguranca' | 'modulos'>('perfil')
   const [name,         setName]         = useState('')
   const [editingName,  setEditingName]  = useState(false)
   const [savingName,   setSavingName]   = useState(false)
@@ -249,8 +250,14 @@ export default function SettingsPage() {
     navigate('/login')
   }
 
+  const TABS = [
+    { id: 'perfil',    label: 'Perfil' },
+    { id: 'seguranca', label: 'Segurança' },
+    { id: 'modulos',   label: 'Módulos' },
+  ] as const
+
   return (
-    <div className="max-w-2xl space-y-8">
+    <div className="max-w-4xl space-y-6">
       <div>
         <h1 className="text-2xl lg:text-[30px]" style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.05 }}>
           Configurações
@@ -258,123 +265,141 @@ export default function SettingsPage() {
         <p className="text-ink-2 mt-1 text-sm">Perfil, módulos e preferências.</p>
       </div>
 
-      {/* ── PROFILE ── */}
-      <section className="space-y-3">
-        <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.12em', color: '#555' }}>Perfil</div>
-
-        {/* Avatar + name display */}
-        <div className="rounded-xl border border-line p-5 flex items-center gap-5" style={{ background: '#111111' }}>
-          <div className="flex-shrink-0 flex items-center justify-center rounded-full text-white" style={{ width: 64, height: 64, background: '#0EA5E9', fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 24 }}>
-            {initials(displayName, email)}
-          </div>
-          <div className="flex-1 min-w-0">
-            {profileLoading ? (
-              <div className="space-y-1.5">
-                <div className="h-4 bg-bg-3 rounded w-32 animate-pulse" />
-                <div className="h-3 bg-bg-3 rounded w-44 animate-pulse" />
-              </div>
-            ) : (
-              <>
-                <div style={{ fontFamily: 'Sora, sans-serif', fontWeight: 700, fontSize: 16 }}>{displayName || 'Sem nome'}</div>
-                <div className="text-ink-2 text-sm truncate">{email}</div>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Editable fields */}
-        <div className="rounded-xl border border-line p-5 space-y-4" style={{ background: '#111111' }}>
-          <SectionLabel>Informações pessoais</SectionLabel>
-
-          {/* Name */}
-          <div>
-            <label className="block text-ink-2 mb-1.5" style={{ fontSize: 12, fontWeight: 600 }}>Nome</label>
-            {editingName ? (
-              <form onSubmit={saveName} className="flex gap-2">
-                <input value={name} onChange={e => setName(e.target.value)} autoFocus className={inputCls + ' flex-1'} style={{ minHeight: 40 }} />
-                <button type="submit" disabled={savingName} className="bg-brand text-white rounded-input px-4 text-sm font-semibold hover:brightness-110 disabled:opacity-40 transition-all" style={{ minHeight: 40 }}>{savingName ? '…' : 'Salvar'}</button>
-                <button type="button" onClick={() => setEditingName(false)} className="bg-bg-3 text-ink-2 rounded-input px-3 text-sm hover:text-ink transition-colors" style={{ minHeight: 40 }}>×</button>
-              </form>
-            ) : (
-              <div className="flex items-center gap-3">
-                <div className="flex-1 bg-bg-3 border border-line rounded-input px-3 flex items-center text-ink text-sm" style={{ minHeight: 40 }}>
-                  {displayName || <span className="text-ink-3">Não definido</span>}
-                </div>
-                <button onClick={startEditName} className="bg-bg-3 border border-line text-ink-2 rounded-input px-4 text-sm hover:text-ink hover:border-white/20 transition-colors flex-shrink-0" style={{ minHeight: 40 }}>Editar</button>
-              </div>
-            )}
-            {nameMsg && <p className="text-ok text-xs mt-1">{nameMsg}</p>}
-          </div>
-
-          {/* Email */}
-          <div>
-            <label className="block text-ink-2 mb-1.5" style={{ fontSize: 12, fontWeight: 600 }}>E-mail</label>
-            <div className="flex items-center gap-2 bg-bg-3 border border-line rounded-input px-3 text-ink-2 text-sm" style={{ minHeight: 40 }}>
-              <span className="flex-1 truncate">{email}</span>
-              <span style={{ fontSize: 9, fontWeight: 700, background: 'rgba(255,255,255,.06)', color: '#555', padding: '2px 6px', borderRadius: 5, letterSpacing: '.05em', flexShrink: 0 }}>SOMENTE LEITURA</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Security */}
-        <div className="rounded-xl border border-line p-5 space-y-3" style={{ background: '#111111' }}>
-          <SectionLabel>Segurança</SectionLabel>
+      {/* Tab bar */}
+      <div className="flex gap-1 border-b border-[#1f1f1f]">
+        {TABS.map(t => (
           <button
-            onClick={() => setShowChangePw(true)}
-            className="flex items-center gap-2.5 w-full px-4 rounded-input border border-line text-ink-2 hover:text-ink hover:border-white/20 hover:bg-bg-3 transition-colors text-sm text-left"
-            style={{ minHeight: 44 }}
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className="px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors"
+            style={{
+              color: tab === t.id ? '#0EA5E9' : '#555',
+              borderColor: tab === t.id ? '#0EA5E9' : 'transparent',
+            }}
           >
-            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" className="flex-shrink-0">
-              <rect x="2.5" y="7" width="11" height="7" rx="1.4" stroke="currentColor" strokeWidth="1.3" />
-              <path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" strokeWidth="1.3" />
-              <circle cx="8" cy="10.3" r="1" fill="currentColor" />
-            </svg>
-            Alterar senha
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="ml-auto">
-              <path d="M4.5 2.5L8 6L4.5 9.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-            </svg>
+            {t.label}
           </button>
-        </div>
-      </section>
+        ))}
+      </div>
 
-      {/* ── MODULES ── */}
-      <section className="space-y-3">
-        <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.12em', color: '#555' }}>Módulos</div>
-        <p className="text-ink-3 text-xs -mt-1">Ative ou desative módulos do MOS. Módulos essenciais não podem ser removidos.</p>
+      {/* ── PERFIL tab ── */}
+      {tab === 'perfil' && (
+        <section className="space-y-3">
+          {/* Avatar + name display */}
+          <div className="rounded-xl border border-line p-5 flex items-center gap-5" style={{ background: '#111111' }}>
+            <div className="flex-shrink-0 flex items-center justify-center rounded-full text-white" style={{ width: 64, height: 64, background: '#0EA5E9', fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 24 }}>
+              {initials(displayName, email)}
+            </div>
+            <div className="flex-1 min-w-0">
+              {profileLoading ? (
+                <div className="space-y-1.5">
+                  <div className="h-4 bg-bg-3 rounded w-32 animate-pulse" />
+                  <div className="h-3 bg-bg-3 rounded w-44 animate-pulse" />
+                </div>
+              ) : (
+                <>
+                  <div style={{ fontFamily: 'Sora, sans-serif', fontWeight: 700, fontSize: 16 }}>{displayName || 'Sem nome'}</div>
+                  <div className="text-ink-2 text-sm truncate">{email}</div>
+                </>
+              )}
+            </div>
+          </div>
 
-        {settingsLoading ? (
-          <div className="text-ink-3 text-sm py-4">Carregando...</div>
-        ) : (
-          groups.map(group => (
-            <div key={group}>
-              <div className="text-[10px] text-[#555] uppercase tracking-wider font-[Sora] mb-1.5 px-0.5">{group}</div>
-              <div className="bg-[#111111] border border-[#1f1f1f] rounded-xl overflow-hidden">
-                {visibleModules.filter(m => m.group === group).map(mod => {
-                  const isOn = enabled.includes(mod.id)
-                  return (
-                    <div key={mod.id} className="flex items-center justify-between px-4 py-3.5 border-b border-[#1f1f1f] last:border-0">
-                      <div className="flex-1 min-w-0 pr-4">
-                        <div className="text-sm font-medium text-white">{mod.label}</div>
-                        <div className="text-xs text-[#555] mt-0.5">{mod.description}</div>
-                      </div>
-                      <Toggle
-                        on={isOn}
-                        disabled={mod.core}
-                        onClick={() => !mod.core && toggleModule.mutate(mod.id)}
-                      />
-                    </div>
-                  )
-                })}
+          <div className="rounded-xl border border-line p-5 space-y-4" style={{ background: '#111111' }}>
+            <SectionLabel>Informações pessoais</SectionLabel>
+            <div>
+              <label className="block text-ink-2 mb-1.5" style={{ fontSize: 12, fontWeight: 600 }}>Nome</label>
+              {editingName ? (
+                <form onSubmit={saveName} className="flex gap-2">
+                  <input value={name} onChange={e => setName(e.target.value)} autoFocus className={inputCls + ' flex-1'} style={{ minHeight: 40 }} />
+                  <button type="submit" disabled={savingName} className="bg-brand text-white rounded-input px-4 text-sm font-semibold hover:brightness-110 disabled:opacity-40 transition-all" style={{ minHeight: 40 }}>{savingName ? '…' : 'Salvar'}</button>
+                  <button type="button" onClick={() => setEditingName(false)} className="bg-bg-3 text-ink-2 rounded-input px-3 text-sm hover:text-ink transition-colors" style={{ minHeight: 40 }}>×</button>
+                </form>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 bg-bg-3 border border-line rounded-input px-3 flex items-center text-ink text-sm" style={{ minHeight: 40 }}>
+                    {displayName || <span className="text-ink-3">Não definido</span>}
+                  </div>
+                  <button onClick={startEditName} className="bg-bg-3 border border-line text-ink-2 rounded-input px-4 text-sm hover:text-ink hover:border-white/20 transition-colors flex-shrink-0" style={{ minHeight: 40 }}>Editar</button>
+                </div>
+              )}
+              {nameMsg && <p className="text-ok text-xs mt-1">{nameMsg}</p>}
+            </div>
+            <div>
+              <label className="block text-ink-2 mb-1.5" style={{ fontSize: 12, fontWeight: 600 }}>E-mail</label>
+              <div className="flex items-center gap-2 bg-bg-3 border border-line rounded-input px-3 text-ink-2 text-sm" style={{ minHeight: 40 }}>
+                <span className="flex-1 truncate">{email}</span>
+                <span style={{ fontSize: 9, fontWeight: 700, background: 'rgba(255,255,255,.06)', color: '#555', padding: '2px 6px', borderRadius: 5, letterSpacing: '.05em', flexShrink: 0 }}>SOMENTE LEITURA</span>
               </div>
             </div>
-          ))
-        )}
-      </section>
+          </div>
+        </section>
+      )}
 
-      {/* ── ADMIN ── */}
+      {/* ── SEGURANÇA tab ── */}
+      {tab === 'seguranca' && (
+        <section className="space-y-3">
+          <div className="rounded-xl border border-line p-5 space-y-3" style={{ background: '#111111' }}>
+            <SectionLabel>Segurança da conta</SectionLabel>
+            <p className="text-ink-3 text-xs">Sua senha nunca é armazenada em texto puro. Para alterá-la, informe a senha atual e defina uma nova.</p>
+            <button
+              onClick={() => setShowChangePw(true)}
+              className="flex items-center gap-2.5 w-full px-4 rounded-input border border-line text-ink-2 hover:text-ink hover:border-white/20 hover:bg-bg-3 transition-colors text-sm text-left"
+              style={{ minHeight: 44 }}
+            >
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" className="flex-shrink-0">
+                <rect x="2.5" y="7" width="11" height="7" rx="1.4" stroke="currentColor" strokeWidth="1.3" />
+                <path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" strokeWidth="1.3" />
+                <circle cx="8" cy="10.3" r="1" fill="currentColor" />
+              </svg>
+              Alterar senha
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="ml-auto">
+                <path d="M4.5 2.5L8 6L4.5 9.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
+        </section>
+      )}
+
+      {/* ── MÓDULOS tab ── */}
+      {tab === 'modulos' && (
+        <section className="space-y-4">
+          <p className="text-ink-3 text-xs">Ative ou desative módulos do MOS. Módulos essenciais não podem ser removidos.</p>
+          {settingsLoading ? (
+            <div className="text-ink-3 text-sm py-4">Carregando...</div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {groups.map(group => (
+                <div key={group}>
+                  <div className="text-[10px] text-[#555] uppercase tracking-wider font-[Sora] mb-1.5 px-0.5">{group}</div>
+                  <div className="bg-[#111111] border border-[#1f1f1f] rounded-xl overflow-hidden">
+                    {visibleModules.filter(m => m.group === group).map(mod => {
+                      const isOn = enabled.includes(mod.id)
+                      return (
+                        <div key={mod.id} className="flex items-center justify-between px-4 py-3.5 border-b border-[#1f1f1f] last:border-0">
+                          <div className="flex-1 min-w-0 pr-4">
+                            <div className="text-sm font-medium text-white">{mod.label}</div>
+                            <div className="text-xs text-[#555] mt-0.5">{mod.description}</div>
+                          </div>
+                          <Toggle
+                            on={isOn}
+                            disabled={mod.core}
+                            onClick={() => !mod.core && toggleModule.mutate(mod.id)}
+                          />
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* ── ALWAYS VISIBLE ── */}
       {isAdmin && <AdminSection />}
 
-      {/* ── LOGOUT ── */}
       <button
         onClick={handleLogout}
         className="w-full flex items-center justify-center gap-2 rounded-input border border-red-400/30 text-red-400 hover:bg-red-400/08 transition-colors text-sm font-semibold"

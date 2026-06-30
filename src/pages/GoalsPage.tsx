@@ -1,4 +1,5 @@
 import { useState, useRef, type FormEvent } from 'react'
+import { Pencil } from 'lucide-react'
 import { useGoals } from '../hooks/useGoals'
 import { useGoalItems } from '../hooks/useGoalItems'
 import type { Database } from '../types/db'
@@ -128,10 +129,12 @@ function GoalRow({
   goal,
   onUpdate,
   onDelete,
+  onEdit,
 }: {
   goal: Goal
   onUpdate: (id: string, fields: Partial<Goal>) => void
   onDelete: (id: string) => void
+  onEdit: (goal: Goal) => void
 }) {
   const [editLabel, setEditLabel] = useState(false)
   const [labelDraft, setLabelDraft] = useState(goal.label ?? '')
@@ -202,6 +205,15 @@ function GoalRow({
             </button>
           )}
 
+          {/* Edit */}
+          <button
+            onClick={() => onEdit(goal)}
+            className="opacity-0 group-hover:opacity-100 transition-opacity text-ink-3 hover:text-brand w-7 h-7 flex items-center justify-center flex-shrink-0"
+            title="Editar meta"
+          >
+            <Pencil size={13} />
+          </button>
+
           {/* Delete */}
           <button
             onClick={() => { if (window.confirm(`Remover "${goal.name}"?`)) onDelete(goal.id) }}
@@ -235,20 +247,22 @@ function GoalRow({
   )
 }
 
-/* ── Add modal ─────────────────────────────────────────────────── */
+/* ── Add/Edit modal ────────────────────────────────────────────── */
 function AddModal({
   onAdd,
   onClose,
   isPending,
+  initial,
 }: {
   onAdd: (name: string, label: string, progress: number, area: string | null) => void
   onClose: () => void
   isPending: boolean
+  initial?: { name: string; label: string; progress: number; area: string | null }
 }) {
-  const [name, setName] = useState('')
-  const [label, setLabel] = useState('')
-  const [progress, setProgress] = useState(0)
-  const [area, setArea] = useState<string>('')
+  const [name, setName] = useState(initial?.name ?? '')
+  const [label, setLabel] = useState(initial?.label ?? '')
+  const [progress, setProgress] = useState(initial?.progress ?? 0)
+  const [area, setArea] = useState<string>(initial?.area ?? '')
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -264,7 +278,7 @@ function AddModal({
     >
       <div className="w-full max-w-md rounded-2xl border border-line p-6" style={{ background: '#111111' }}>
         <div className="flex items-center justify-between mb-5">
-          <h2 style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 18 }}>Nova meta</h2>
+          <h2 style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 18 }}>{initial ? 'Editar meta' : 'Nova meta'}</h2>
           <button onClick={onClose} className="w-8 h-8 rounded-input flex items-center justify-center text-ink-3 hover:text-ink hover:bg-bg-3 transition-colors text-lg">×</button>
         </div>
 
@@ -331,7 +345,7 @@ function AddModal({
               className="flex-1 bg-brand text-white rounded-input font-semibold text-sm hover:brightness-110 active:scale-[.97] transition-all disabled:opacity-40"
               style={{ minHeight: 44 }}
             >
-              Criar meta
+              {initial ? 'Salvar alterações' : 'Criar meta'}
             </button>
             <button type="button" onClick={onClose} className="flex-1 bg-bg-3 text-ink-2 rounded-input text-sm hover:text-ink transition-colors" style={{ minHeight: 44 }}>
               Cancelar
@@ -346,8 +360,9 @@ function AddModal({
 /* ── Page ──────────────────────────────────────────────────────── */
 export function GoalsPage() {
   const { data: goals, isLoading, isError, error, addGoal, updateGoal, deleteGoal } = useGoals()
-  const [showModal, setShowModal] = useState(false)
-  const [areaFilter, setAreaFilter] = useState<string>('todas')
+  const [showModal,    setShowModal]    = useState(false)
+  const [editingGoal,  setEditingGoal]  = useState<Goal | null>(null)
+  const [areaFilter,   setAreaFilter]   = useState<string>('todas')
 
   const allGoals = goals ?? []
   const total = allGoals.length
@@ -370,6 +385,12 @@ export function GoalsPage() {
 
   function handleAdd(name: string, label: string, progress: number, area: string | null) {
     addGoal.mutate({ name, label, progress, area }, { onSuccess: () => setShowModal(false) })
+  }
+
+  function handleEditSave(name: string, label: string, progress: number, area: string | null) {
+    if (!editingGoal) return
+    updateGoal.mutate({ id: editingGoal.id, name, label: label || null, progress, area })
+    setEditingGoal(null)
   }
 
   function handleUpdate(id: string, fields: Partial<Goal>) {
@@ -479,6 +500,7 @@ export function GoalsPage() {
                       goal={g}
                       onUpdate={handleUpdate}
                       onDelete={handleDelete}
+                      onEdit={setEditingGoal}
                     />
                   ))}
                 </div>
@@ -493,6 +515,20 @@ export function GoalsPage() {
           onAdd={handleAdd}
           onClose={() => setShowModal(false)}
           isPending={addGoal.isPending}
+        />
+      )}
+
+      {editingGoal && (
+        <AddModal
+          onAdd={handleEditSave}
+          onClose={() => setEditingGoal(null)}
+          isPending={false}
+          initial={{
+            name:     editingGoal.name,
+            label:    editingGoal.label ?? '',
+            progress: editingGoal.progress ?? 0,
+            area:     editingGoal.area ?? null,
+          }}
         />
       )}
     </div>

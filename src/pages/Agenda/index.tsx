@@ -61,6 +61,20 @@ function isSyntheticId(eventId: string): boolean {
   return /^.+_\d{4}-\d{2}-\d{2}$/.test(eventId)
 }
 
+function addExdate(currentRule: string | null, dateKey: string): string {
+  // dateKey no formato YYYYMMDD
+  const parts = (currentRule ?? '').split(';').filter(Boolean)
+  const exIdx = parts.findIndex(p => p.startsWith('EXDATE='))
+  if (exIdx >= 0) {
+    const existing = parts[exIdx].slice('EXDATE='.length).split(',').filter(Boolean)
+    if (!existing.includes(dateKey)) existing.push(dateKey)
+    parts[exIdx] = `EXDATE=${existing.join(',')}`
+  } else {
+    parts.push(`EXDATE=${dateKey}`)
+  }
+  return parts.join(';')
+}
+
 export default function AgendaPage() {
   const [tab,               setTab]               = useState<Tab>('agenda')
   const [view,              setView]              = useState<CalendarView>('semana')
@@ -127,12 +141,10 @@ export default function AgendaPage() {
         const { data: parent } = await (supabase as any)
           .from('calendar_events').select('recurrence_rule').eq('id', originalId).single()
         if (parent) {
-          const timeStr = modal?.start_at
-            ? new Date(modal.start_at).toISOString().slice(11, 19).replace(/:/g, '')
-            : '000000'
-          const exdate  = `;EXDATE:${instanceDate.replace(/-/g, '')}T${timeStr}Z`
+          const dateKey = instanceDate.replace(/-/g, '')
+          const newRule = addExdate(parent.recurrence_rule, dateKey)
           await (supabase as any).from('calendar_events').update({
-            recurrence_rule: (parent.recurrence_rule ?? '') + exdate,
+            recurrence_rule: newRule,
           }).eq('id', originalId)
         }
       } else {
@@ -193,12 +205,10 @@ export default function AgendaPage() {
         const { data: parent } = await (supabase as any)
           .from('calendar_events').select('recurrence_rule').eq('id', originalId).single()
         if (parent) {
-          const timeStr = ev.start_at
-            ? new Date(ev.start_at).toISOString().slice(11, 19).replace(/:/g, '')
-            : '000000'
-          const exdate  = `;EXDATE:${instanceDate.replace(/-/g, '')}T${timeStr}Z`
+          const dateKey = instanceDate.replace(/-/g, '')
+          const newRule = addExdate(parent.recurrence_rule, dateKey)
           await (supabase as any).from('calendar_events').update({
-            recurrence_rule: (parent.recurrence_rule ?? '') + exdate,
+            recurrence_rule: newRule,
           }).eq('id', originalId)
         }
       }
