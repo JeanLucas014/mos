@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNotes } from '../hooks/useNotes'
+import { HelpButton } from '@/components/help/HelpButton'
 
 export function NotesPage() {
   const { data: notes, isLoading, isError, error, addNote, updateNote, deleteNote } = useNotes()
@@ -77,12 +78,15 @@ export function NotesPage() {
 
   return (
     <div>
-      <h1
-        className="text-2xl lg:text-[30px]"
-        style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.05 }}
-      >
-        Notas
-      </h1>
+      <div className="flex items-center gap-2">
+        <h1
+          className="text-2xl lg:text-[30px]"
+          style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.05 }}
+        >
+          Notas
+        </h1>
+        <HelpButton pageId="notas" />
+      </div>
       <p className="text-ink-2 mt-1 text-sm">
         {isLoading ? 'Carregando...' : 'Bloco de notas com autosave.'}
       </p>

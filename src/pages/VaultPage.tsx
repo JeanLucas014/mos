@@ -3,6 +3,7 @@ import { Eye, EyeOff, Lock } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useVaultStore } from '../stores/useVaultStore'
 import { useVaultItems, type VaultItem } from '../hooks/useVaultItems'
+import { HelpButton } from '@/components/help/HelpButton'
 import { deriveKey, encrypt, decrypt, makeUserSalt } from '../lib/crypto'
 
 /* ══════════════════════════════════════════════════════════════
@@ -594,12 +595,15 @@ export function VaultPage() {
       <div className="mb-5">
         <div className="flex items-center justify-between gap-2">
           <div>
-            <h1
-              className="text-2xl lg:text-[30px]"
-              style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.05 }}
-            >
-              Senhas
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1
+                className="text-2xl lg:text-[30px]"
+                style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.05 }}
+              >
+                Senhas
+              </h1>
+              <HelpButton pageId="senhas" />
+            </div>
             <p className="text-ink-2 mt-1 text-sm">
               {filtered.length} credencial{filtered.length !== 1 ? 'ais' : ''}
             </p>

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, type FormEvent } from 'react'
 import { useProjects } from '../hooks/useProjects'
 import { useProjectChecklist } from '../hooks/useProjectChecklist'
 import type { Database } from '../types/db'
+import { HelpButton } from '@/components/help/HelpButton'
 
 type Project = Database['public']['Tables']['projects']['Row']
 
@@ -478,12 +479,15 @@ export function ProjectsPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1
-            className="text-2xl lg:text-[30px]"
-            style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.05 }}
-          >
-            Projetos
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1
+              className="text-2xl lg:text-[30px]"
+              style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.05 }}
+            >
+              Projetos
+            </h1>
+            <HelpButton pageId="projetos" />
+          </div>
           <p className="text-ink-2 mt-1 text-sm">
             {isLoading
               ? 'Carregando...'

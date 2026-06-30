@@ -1,5 +1,6 @@
 import { useState, useRef, type FormEvent, type KeyboardEvent } from 'react'
 import { useShopping } from '../hooks/useShopping'
+import { HelpButton } from '@/components/help/HelpButton'
 
 const CATEGORIES = ['Todos', 'Geral', 'Açougue', 'Limpeza', 'Sacolão', 'Higiene Pessoal', 'Casa']
 const ADD_CATEGORIES = CATEGORIES.filter(c => c !== 'Todos')
@@ -78,12 +79,15 @@ export function ShoppingPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1
-            className="text-2xl lg:text-[30px]"
-            style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.05 }}
-          >
-            Lista de compras
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1
+              className="text-2xl lg:text-[30px]"
+              style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.05 }}
+            >
+              Lista de compras
+            </h1>
+            <HelpButton pageId="compras" />
+          </div>
           <p className="text-ink-2 mt-1 text-sm">
             {isLoading ? 'Carregando...' : `${totalPending} item${totalPending !== 1 ? 'ns' : ''} pendente${totalPending !== 1 ? 's' : ''}`}
           </p>

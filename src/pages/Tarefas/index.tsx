@@ -5,6 +5,7 @@ import type { Task, TaskProject, ViewId } from './types'
 import { TaskItem } from './components/TaskItem'
 import { TaskModal } from './components/TaskModal'
 import { ProjectModal } from './components/ProjectModal'
+import { HelpButton } from '@/components/help/HelpButton'
 
 type ModalState = { task: Partial<Task> } | null
 
@@ -261,7 +262,10 @@ export default function TarefasPage() {
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Header */}
         <div className="flex items-center gap-3 px-5 py-4 border-b border-[#1a1a1a] shrink-0">
-          <h1 className="text-base font-semibold text-white font-[Sora]">{viewLabel}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-base font-semibold text-white font-[Sora]">{viewLabel}</h1>
+            <HelpButton pageId="tarefas" />
+          </div>
           {viewId !== 'historico' && (
             <button
               onClick={() => setModal({ task: {} })}

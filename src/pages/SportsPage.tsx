@@ -3,6 +3,7 @@ import {
   ChevronDown, Activity, Target, Trophy, ShoppingBag,
   Calendar, MapPin, Check, Circle, RefreshCw, Plus,
 } from 'lucide-react'
+import { HelpButton } from '@/components/help/HelpButton'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useWorkouts } from '../hooks/useWorkouts'
 import { useSportGoals } from '../hooks/useSportGoals'
@@ -666,7 +667,10 @@ export function SportsPage() {
   return (
     <div>
       <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
-      <h1 className="text-2xl lg:text-[30px]" style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.05 }}>Esportes</h1>
+      <div className="flex items-center gap-2">
+        <h1 className="text-2xl lg:text-[30px]" style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.05 }}>Esportes</h1>
+        <HelpButton pageId="esportes" />
+      </div>
       <p className="text-ink-2 mt-1 text-sm mb-5">Treinos, metas, provas e gear.</p>
 
       {/* Sport tabs */}

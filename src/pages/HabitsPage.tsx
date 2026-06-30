@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useHabits } from '../hooks/useHabits'
+import { HelpButton } from '@/components/help/HelpButton'
 
 /* ── Context menu ─────────────────────────────────────────────── */
 interface CtxMenuState { x: number; y: number; habitId: string; date: string }
@@ -167,12 +168,15 @@ export function HabitsPage() {
       {/* ── Header ── */}
       <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
         <div>
-          <h1
-            className="text-2xl lg:text-[30px]"
-            style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.05 }}
-          >
-            Hábitos
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1
+              className="text-2xl lg:text-[30px]"
+              style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.05 }}
+            >
+              Hábitos
+            </h1>
+            <HelpButton pageId="habitos" />
+          </div>
           <p className="text-ink-2 mt-1 text-sm">
             {isLoading ? 'Carregando…' : `${habits.length} hábito${habits.length !== 1 ? 's' : ''} cadastrado${habits.length !== 1 ? 's' : ''}.`}
           </p>

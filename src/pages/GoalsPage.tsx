@@ -3,6 +3,7 @@ import { Pencil } from 'lucide-react'
 import { useGoals } from '../hooks/useGoals'
 import { useGoalItems } from '../hooks/useGoalItems'
 import type { Database } from '../types/db'
+import { HelpButton } from '@/components/help/HelpButton'
 
 type Goal     = Database['public']['Tables']['goals']['Row']
 type GoalItem = Database['public']['Tables']['goal_items']['Row']
@@ -406,9 +407,12 @@ export function GoalsPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl lg:text-[30px]" style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.05 }}>
-            Metas
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl lg:text-[30px]" style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.05 }}>
+              Metas
+            </h1>
+            <HelpButton pageId="metas" />
+          </div>
           <p className="text-ink-2 mt-1 text-sm">
             {isLoading ? 'Carregando...' : `${total} meta${total !== 1 ? 's' : ''} ativa${total !== 1 ? 's' : ''}`}
           </p>

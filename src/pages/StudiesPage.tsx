@@ -3,6 +3,7 @@ import { FileText, Film, Link as LinkIcon, Paperclip, GraduationCap, FolderOpen 
 import { useStudies } from '../hooks/useStudies'
 import type { Database } from '../types/db'
 import { LibraryPage } from '@/pages/LibraryPage'
+import { HelpButton } from '@/components/help/HelpButton'
 
 type Study = Database['public']['Tables']['studies']['Row']
 type StudyFile = Database['public']['Tables']['study_files']['Row']
@@ -480,12 +481,15 @@ export function StudiesPage() {
   return (
     <div>
       {/* Header */}
-      <h1
-        className="text-2xl lg:text-[30px]"
-        style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.05 }}
-      >
-        {tab === 'biblioteca' ? 'Biblioteca' : 'Estudos'}
-      </h1>
+      <div className="flex items-center gap-2">
+        <h1
+          className="text-2xl lg:text-[30px]"
+          style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.05 }}
+        >
+          {tab === 'biblioteca' ? 'Biblioteca' : 'Estudos'}
+        </h1>
+        <HelpButton pageId="estudos" />
+      </div>
       {tab === 'estudos' && (
         <p className="text-ink-2 mt-1 text-sm">
           {isLoading

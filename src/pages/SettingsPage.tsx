@@ -9,6 +9,24 @@ import { supabase } from '@/lib/supabase'
 
 const ADMIN_EMAIL = 'jl.jean13@gmail.com'
 
+function detectPlatform(): 'ios' | 'android' | 'desktop' {
+  const ua = navigator.userAgent
+  if (/iPhone|iPad|iPod/.test(ua)) return 'ios'
+  if (/Android/.test(ua)) return 'android'
+  return 'desktop'
+}
+
+function Step({ n, text }: { n: number; text: string }) {
+  return (
+    <div className="flex gap-3">
+      <div className="w-6 h-6 rounded-full bg-[#0EA5E9]/15 text-[#0EA5E9] text-xs font-bold flex items-center justify-center shrink-0">
+        {n}
+      </div>
+      <p className="text-sm text-[#ccc] leading-relaxed pt-0.5">{text}</p>
+    </div>
+  )
+}
+
 /* ── helpers ──────────────────────────────────────────────────── */
 function initials(name: string | null | undefined, email: string | null | undefined): string {
   if (name?.trim()) {
@@ -214,7 +232,8 @@ export default function SettingsPage() {
   const { data: profile, isLoading: profileLoading, updateProfile } = useProfile()
   const { data: settings, isLoading: settingsLoading, toggleModule } = useUserSettings()
 
-  const [tab,          setTab]          = useState<'perfil' | 'seguranca' | 'modulos'>('perfil')
+  const [tab,          setTab]          = useState<'perfil' | 'seguranca' | 'modulos' | 'instalar'>('perfil')
+  const platform = detectPlatform()
   const [name,         setName]         = useState('')
   const [editingName,  setEditingName]  = useState(false)
   const [savingName,   setSavingName]   = useState(false)
@@ -254,6 +273,7 @@ export default function SettingsPage() {
     { id: 'perfil',    label: 'Perfil' },
     { id: 'seguranca', label: 'Segurança' },
     { id: 'modulos',   label: 'Módulos' },
+    { id: 'instalar',  label: 'Instalar app' },
   ] as const
 
   return (
@@ -395,6 +415,50 @@ export default function SettingsPage() {
             </div>
           )}
         </section>
+      )}
+
+      {/* ── INSTALAR APP tab ── */}
+      {tab === 'instalar' && (
+        <div className="max-w-xl">
+          <div className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-5 mb-4">
+            <h3 className="text-sm font-semibold text-white mb-1">
+              Instale o MOS no seu celular
+            </h3>
+            <p className="text-xs text-[#888]">
+              O MOS funciona como um app nativo — sem precisar de loja de aplicativos.
+            </p>
+          </div>
+
+          {platform === 'ios' && (
+            <div className="space-y-3">
+              <Step n={1} text='No Safari, toque no ícone de Compartilhar (quadrado com seta para cima) na barra inferior.' />
+              <Step n={2} text='Role para baixo e toque em "Adicionar à Tela de Início".' />
+              <Step n={3} text='Toque em "Adicionar" no canto superior direito.' />
+              <p className="text-[11px] text-[#555] mt-3">
+                Funciona apenas no Safari — outros navegadores no iPhone não suportam essa opção.
+              </p>
+            </div>
+          )}
+
+          {platform === 'android' && (
+            <div className="space-y-3">
+              <Step n={1} text='No Chrome, toque nos três pontinhos no canto superior direito.' />
+              <Step n={2} text='Toque em "Instalar app" ou "Adicionar à tela inicial".' />
+              <Step n={3} text='Confirme tocando em "Instalar".' />
+            </div>
+          )}
+
+          {platform === 'desktop' && (
+            <div className="space-y-3">
+              <Step n={1} text='No Chrome ou Edge, clique no ícone de instalação que aparece na barra de endereço (geralmente um ícone de tela com seta).' />
+              <Step n={2} text='Clique em "Instalar".' />
+              <p className="text-[11px] text-[#555] mt-3">
+                Você também pode acessar pelo celular para instalar lá — escaneie ou
+                acesse app.jlmos.com.br no navegador do seu telefone.
+              </p>
+            </div>
+          )}
+        </div>
       )}
 
       {/* ── ALWAYS VISIBLE ── */}

@@ -10,6 +10,7 @@ import { EventModal } from './components/EventModal'
 import { RotinaTab }  from './components/RotinaTab'
 import { RecurrenceDialog, type RecurrenceScope } from './components/RecurrenceDialog'
 import { expandRecurringEvents } from './utils/expandRecurrence'
+import { HelpButton } from '@/components/help/HelpButton'
 
 type Tab = 'agenda' | 'rotina'
 
@@ -287,6 +288,8 @@ export default function AgendaPage() {
               </button>
             ))}
           </div>
+
+          <HelpButton pageId="agenda" />
 
           {tab === 'agenda' && (
             <>
