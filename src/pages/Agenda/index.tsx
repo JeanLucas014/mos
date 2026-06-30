@@ -83,7 +83,7 @@ export default function AgendaPage() {
   const [rotinas,           setRotinas]           = useState<Rotina[]>([])
   const [modal,             setModal]             = useState<Partial<CalendarEvent> | null>(null)
   const [recurrenceDialog,  setRecurrenceDialog]  = useState<{ mode: 'edit' | 'delete'; event: Partial<CalendarEvent> } | null>(null)
-  const [pendingScope,      setPendingScope]      = useState<RecurrenceScope | undefined>()
+  const [pendingSaveEvent,  setPendingSaveEvent]  = useState<Partial<CalendarEvent> | null>(null)
 
   const loadEvents = useCallback(async () => {
     const from = new Date(); from.setDate(from.getDate() - 7)
@@ -234,18 +234,12 @@ export default function AgendaPage() {
 
     setModal(null)
     setRecurrenceDialog(null)
-    setPendingScope(undefined)
     loadEvents()
   }
 
   /* ── Handlers ───────────────────────────────────────────────── */
   function handleSelectEvent(ev: Partial<CalendarEvent>) {
-    if (ev.id && isSyntheticId(ev.id)) {
-      // Recurring instance — ask scope before editing
-      setRecurrenceDialog({ mode: 'edit', event: ev })
-    } else {
-      setModal(ev)
-    }
+    setModal(ev)
   }
 
   function handleDeleteFromModal() {
@@ -358,9 +352,18 @@ export default function AgendaPage() {
       {modal && (
         <EventModal
           event={modal}
-          onSave={ev => saveEvent(ev, pendingScope)}
+          onSave={(ev) => {
+            const isRecurringInstance = modal?.id && (isSyntheticId(modal.id) || !!modal.recurrence_rule)
+            if (isRecurringInstance) {
+              setPendingSaveEvent(ev)
+              setRecurrenceDialog({ mode: 'edit', event: ev })
+              setModal(null)
+            } else {
+              saveEvent(ev)
+            }
+          }}
           onDelete={modal.id ? handleDeleteFromModal : undefined}
-          onClose={() => { setModal(null); setPendingScope(undefined) }}
+          onClose={() => setModal(null)}
         />
       )}
 
@@ -372,13 +375,14 @@ export default function AgendaPage() {
             if (recurrenceDialog.mode === 'delete') {
               await deleteEvent(recurrenceDialog.event.id!, scope)
             } else {
-              // Edit: store scope then open EventModal
-              setPendingScope(scope)
-              setModal(recurrenceDialog.event)
+              if (pendingSaveEvent) {
+                await saveEvent(pendingSaveEvent, scope)
+              }
+              setPendingSaveEvent(null)
               setRecurrenceDialog(null)
             }
           }}
-          onClose={() => setRecurrenceDialog(null)}
+          onClose={() => { setRecurrenceDialog(null); setPendingSaveEvent(null) }}
         />
       )}
     </div>

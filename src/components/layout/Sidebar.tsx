@@ -318,10 +318,9 @@ export function Sidebar() {
         <button
           onClick={toggleSidebarCollapsed}
           title={c ? 'Expandir menu' : 'Colapsar menu'}
-          className={['hidden lg:flex items-center rounded-input text-[#555] hover:text-white hover:bg-bg-3 transition-colors w-full', c ? 'justify-center px-0 py-2' : 'gap-2.5 px-[10px] py-2'].join(' ')}
+          className="hidden lg:flex items-center justify-center rounded-input text-[#555] hover:text-white hover:bg-bg-3 transition-colors w-full py-2"
         >
           {c ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-          {!c && <span style={{ fontSize: 13, fontWeight: 500 }}>Colapsar</span>}
         </button>
       </div>
     </aside>

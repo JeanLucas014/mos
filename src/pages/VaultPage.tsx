@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Eye, EyeOff, Lock, Upload } from 'lucide-react'
+import { Eye, EyeOff, Lock } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useVaultStore } from '../stores/useVaultStore'
 import { useVaultItems, type VaultItem } from '../hooks/useVaultItems'
@@ -303,7 +303,7 @@ function VaultRow({
   const isApiKey = (item as any).kind === 'chave_api'
 
   return (
-    <div className="group flex items-center gap-2 px-4 py-3 rounded-xl border border-line bg-bg-2 hover:border-white/10 transition-colors overflow-hidden">
+    <div className="group flex items-center gap-2 px-4 py-3 rounded-xl border border-line bg-bg-2 hover:border-white/10 transition-colors">
       {/* Nome + usuário — clicável para revelar */}
       <button
         onClick={handleToggleReveal}
@@ -508,50 +508,6 @@ function UnlockScreen({
 }
 
 /* ══════════════════════════════════════════════════════════════
-   NOTION IMPORT
-══════════════════════════════════════════════════════════════ */
-interface NotionEntry { service: string; username: string | null; password: string }
-
-function parseNotionPasswords(text: string): NotionEntry[] {
-  const entries: NotionEntry[] = []
-  const lines = text.split('\n')
-  let i = 0
-
-  while (i < lines.length) {
-    const line = lines[i].trim()
-
-    if (line.startsWith('- ')) {
-      const service = line.slice(2).trim()
-      if (!service) { i++; continue }
-
-      const sublines: string[] = []
-      i++
-      while (i < lines.length && (lines[i].startsWith('    ') || lines[i].startsWith('\t') || lines[i].trim() === '')) {
-        const sub = lines[i].trim()
-        if (sub) sublines.push(sub)
-        i++
-      }
-
-      // First subline that is not a URL and not a 2FA code and has content
-      const password = sublines.find(s =>
-        s.length > 0 &&
-        !s.startsWith('http://') &&
-        !s.startsWith('https://') &&
-        !/^\d{4}[\s-]\d{4}$/.test(s),
-      ) ?? sublines[0] ?? ''
-
-      if (password) {
-        entries.push({ service, username: null, password })
-      }
-    } else {
-      i++
-    }
-  }
-
-  return entries
-}
-
-/* ══════════════════════════════════════════════════════════════
    PAGE
 ══════════════════════════════════════════════════════════════ */
 export function VaultPage() {
@@ -607,48 +563,6 @@ export function VaultPage() {
     }
   }
 
-  /* ── Notion import ── */
-  async function handleNotionImport(e: React.ChangeEvent<HTMLInputElement>) {
-    if (!cryptoKey) return
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    const text = await file.text()
-    const entries = parseNotionPasswords(text)
-
-    if (entries.length === 0) {
-      alert('Nenhuma senha encontrada no arquivo.')
-      e.target.value = ''
-      return
-    }
-
-    if (!window.confirm(`Importar ${entries.length} senha${entries.length !== 1 ? 's' : ''} do Notion?`)) {
-      e.target.value = ''
-      return
-    }
-
-    let imported = 0
-    let errors = 0
-
-    for (const entry of entries) {
-      try {
-        const { cipher, iv } = await encrypt(entry.password, cryptoKey)
-        await addItem.mutateAsync({
-          service: entry.service,
-          username: entry.username,
-          password_cipher: cipher,
-          password_iv: iv,
-        })
-        imported++
-      } catch {
-        errors++
-      }
-    }
-
-    alert(`Importação concluída: ${imported} senha${imported !== 1 ? 's' : ''} importada${imported !== 1 ? 's' : ''}${errors > 0 ? `, ${errors} erro${errors !== 1 ? 's' : ''}` : ''}.`)
-    e.target.value = ''
-  }
-
   /* ── Locked ── */
   if (!cryptoKey) {
     return (
@@ -672,8 +586,7 @@ export function VaultPage() {
     <div>
       {/* Header */}
       <div className="mb-5">
-        {/* Linha 1: título + travar */}
-        <div className="flex items-start justify-between gap-2 mb-3">
+        <div className="flex items-center justify-between gap-2">
           <div>
             <h1
               className="text-2xl lg:text-[30px]"
@@ -685,42 +598,27 @@ export function VaultPage() {
               {filtered.length} credencial{filtered.length !== 1 ? 'ais' : ''}
             </p>
           </div>
-          <button
-            onClick={lock}
-            title="Travar cofre"
-            className="flex items-center gap-1.5 px-3 rounded-input border border-line
-                       text-ink-2 hover:text-ink hover:bg-bg-3 transition-colors text-sm flex-shrink-0"
-            style={{ minHeight: 36 }}
-          >
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-              <rect x="2.5" y="7" width="11" height="7" rx="1.4" stroke="currentColor" strokeWidth="1.3" />
-              <path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" strokeWidth="1.3" />
-            </svg>
-            <span className="hidden sm:inline">Travar</span>
-          </button>
-        </div>
-
-        {/* Linha 2: importar + adicionar */}
-        <div className="flex gap-2">
-          <label
-            className="flex items-center gap-1.5 text-xs text-ink-2 hover:text-ink cursor-pointer
-                       transition-colors px-3 rounded-input border border-line hover:bg-bg-3 flex-shrink-0"
-            style={{ minHeight: 36 }}
-            title="Importar senhas de arquivo .md exportado do Notion"
-          >
-            <Upload size={13} />
-            <span className="hidden sm:inline">Importar Notion</span>
-            <span className="sm:hidden">Importar</span>
-            <input type="file" accept=".md,.txt" className="hidden" onChange={handleNotionImport} />
-          </label>
-          <button
-            onClick={() => setModal({ kind: 'add' })}
-            className="flex-1 flex items-center justify-center gap-1.5 bg-brand text-white
-                       rounded-input px-4 font-semibold text-sm hover:brightness-110 transition-all"
-            style={{ minHeight: 36 }}
-          >
-            + Adicionar
-          </button>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={lock}
+              title="Travar cofre"
+              className="flex items-center justify-center w-9 h-9 rounded-input border border-line
+                         text-ink-2 hover:text-ink hover:bg-bg-3 transition-colors flex-shrink-0"
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <rect x="2.5" y="7" width="11" height="7" rx="1.4" stroke="currentColor" strokeWidth="1.3" />
+                <path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" strokeWidth="1.3" />
+              </svg>
+            </button>
+            <button
+              onClick={() => setModal({ kind: 'add' })}
+              className="flex items-center gap-1.5 bg-brand text-white rounded-input px-3.5
+                         font-semibold text-sm hover:brightness-110 transition-all flex-shrink-0"
+              style={{ minHeight: 36 }}
+            >
+              + Adicionar
+            </button>
+          </div>
         </div>
       </div>
 
