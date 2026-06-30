@@ -107,10 +107,6 @@ export function Topbar() {
           >
             {dateStr}
           </span>
-          <span className="flex items-center gap-1.5 text-ink-2" style={{ fontSize: 12 }}>
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-ok pulse-dot" />
-            sincronizado
-          </span>
         </div>
       </div>
     </header>
