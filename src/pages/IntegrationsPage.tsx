@@ -21,18 +21,6 @@ const C = {
   p:      '#a78bfa',
 }
 
-/* ── Helpers ──────────────────────────────────────────────────── */
-function fmtRelative(iso: string): string {
-  const d     = new Date(iso)
-  const now   = new Date()
-  const diffH = Math.round((now.getTime() - d.getTime()) / 3_600_000)
-  if (diffH < 1)   return 'agora'
-  if (diffH < 24)  return `${diffH}h atrás`
-  const diffD = Math.round(diffH / 24)
-  if (diffD < 30)  return `${diffD}d atrás`
-  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
-}
-
 
 /* ── Hook: check integration status ─────────────────────────────── */
 function useIntegration(provider: string) {
