@@ -1,7 +1,8 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Settings } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useUIStore } from '../../stores/useUIStore'
+import { useUserSettings } from '../../hooks/useUserSettings'
 
 const GROUPS = [
   {
@@ -10,6 +11,7 @@ const GROUPS = [
       {
         path: '/dashboard',
         label: 'Dashboard',
+        moduleId: 'dashboard',
         end: false,
         icon: (
           <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
@@ -28,6 +30,7 @@ const GROUPS = [
       {
         path: '/agenda',
         label: 'Agenda',
+        moduleId: 'agenda',
         icon: (
           <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
             <rect x="1.8" y="3" width="12.4" height="11" rx="1.4" stroke="currentColor" strokeWidth="1.3" />
@@ -38,6 +41,7 @@ const GROUPS = [
       {
         path: '/tarefas',
         label: 'Tarefas',
+        moduleId: 'tarefas',
         icon: (
           <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
             <path d="M2 4l1.6 1.6L6 3M2 11l1.6 1.6L6 10M9 4.3h5M9 11.3h5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
@@ -47,6 +51,7 @@ const GROUPS = [
       {
         path: '/projetos',
         label: 'Projetos',
+        moduleId: 'projetos',
         icon: (
           <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
             <path d="M1.8 4.5C1.8 3.7 2.4 3 3.2 3H6l1.5 1.6h5.3c.8 0 1.4.7 1.4 1.5v5.4c0 .8-.6 1.5-1.4 1.5H3.2c-.8 0-1.4-.7-1.4-1.5V4.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
@@ -56,6 +61,7 @@ const GROUPS = [
       {
         path: '/metas',
         label: 'Metas',
+        moduleId: 'metas',
         icon: (
           <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
             <circle cx="8" cy="8" r="6.3" stroke="currentColor" strokeWidth="1.3" />
@@ -67,6 +73,7 @@ const GROUPS = [
       {
         path: '/habitos',
         label: 'Hábitos',
+        moduleId: 'habitos',
         icon: (
           <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
             <circle cx="8" cy="8" r="6.3" stroke="currentColor" strokeWidth="1.3" />
@@ -77,6 +84,7 @@ const GROUPS = [
       {
         path: '/compras',
         label: 'Lista de compras',
+        moduleId: 'compras',
         icon: (
           <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
             <path d="M2 2.5h1.6l1.4 8h6.5l1.3-5.5H4.4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
@@ -88,6 +96,7 @@ const GROUPS = [
       {
         path: '/notas',
         label: 'Notas',
+        moduleId: 'notas',
         icon: (
           <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
             <path d="M3 2.5h7l3 3V13a.5.5 0 0 1-.5.5h-9A.5.5 0 0 1 3 13V2.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
@@ -103,6 +112,7 @@ const GROUPS = [
       {
         path: '/financeiro',
         label: 'Financeiro',
+        moduleId: 'financeiro',
         icon: (
           <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
             <circle cx="8" cy="8" r="6.3" stroke="currentColor" strokeWidth="1.3" />
@@ -113,6 +123,7 @@ const GROUPS = [
       {
         path: '/faturamento',
         label: 'Faturamento',
+        moduleId: 'faturamento',
         icon: (
           <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
             <path d="M3.5 1.8h6L13 5v9.2H3.5V1.8z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
@@ -128,6 +139,7 @@ const GROUPS = [
       {
         path: '/estudos',
         label: 'Estudos',
+        moduleId: 'estudos',
         icon: (
           <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
             <path d="M8 2.2L14.5 5 8 7.8 1.5 5 8 2.2z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
@@ -138,6 +150,7 @@ const GROUPS = [
       {
         path: '/senhas',
         label: 'Senhas',
+        moduleId: 'senhas',
         icon: (
           <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
             <rect x="2.5" y="7" width="11" height="7" rx="1.4" stroke="currentColor" strokeWidth="1.3" />
@@ -149,6 +162,7 @@ const GROUPS = [
       {
         path: '/sistemas',
         label: 'Sistemas',
+        moduleId: 'sistemas',
         icon: (
           <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
             <rect x="1.5" y="2.5" width="13" height="9" rx="1.4" stroke="currentColor" strokeWidth="1.3" />
@@ -165,6 +179,7 @@ const GROUPS = [
       {
         path: '/esportes',
         label: 'Esportes',
+        moduleId: 'esportes',
         icon: (
           <svg className="w-[15px] h-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
@@ -184,6 +199,7 @@ const GROUPS = [
       {
         path: '/integracoes',
         label: 'Integrações',
+        moduleId: 'integracoes',
         icon: (
           <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
             <circle cx="4" cy="8" r="2.2" stroke="currentColor" strokeWidth="1.3" />
@@ -197,12 +213,21 @@ const GROUPS = [
   },
 ]
 
+const NAV_LINK_CLASS = (isActive: boolean, c: boolean) =>
+  [
+    'flex items-center rounded-input transition-colors duration-[180ms] cursor-pointer select-none',
+    c ? 'justify-center px-0 py-2 w-full' : 'gap-2.5 px-[10px] py-2',
+    isActive ? 'nav-active bg-bg-3 text-ink' : 'text-ink-2 hover:bg-bg-3 hover:text-ink',
+  ].join(' ')
+
 export function Sidebar() {
   const { signOut } = useAuth()
-  const setSidebarOpen        = useUIStore((s) => s.setSidebarOpen)
-  const sidebarCollapsed      = useUIStore((s) => s.sidebarCollapsed)
+  const setSidebarOpen         = useUIStore((s) => s.setSidebarOpen)
+  const sidebarCollapsed       = useUIStore((s) => s.sidebarCollapsed)
   const toggleSidebarCollapsed = useUIStore((s) => s.toggleSidebarCollapsed)
   const navigate = useNavigate()
+  const { data: settings } = useUserSettings()
+  const enabledModules = settings?.enabled_modules ?? GROUPS.flatMap(g => g.items.map(i => i.moduleId))
 
   async function handleSignOut() {
     await signOut()
@@ -228,58 +253,59 @@ export function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 py-3 px-2 overflow-y-auto">
-        {GROUPS.map((group) => (
-          <div key={group.label} className="mb-4">
-            {!c && (
-              <h5
-                className="px-2 mb-1 text-ink-3 uppercase tracking-[0.13em]"
-                style={{ fontSize: 10, fontWeight: 600 }}
-              >
-                {group.label}
-              </h5>
-            )}
-            {c && <div className="mb-1 border-t border-line mx-1" />}
-            {group.items.map((item) => (
-              <NavLink
-                key={item.label}
-                to={item.path}
-                end={'end' in item ? item.end : false}
-                onClick={handleNavClick}
-                title={c ? item.label : undefined}
-                className={({ isActive }) =>
-                  [
-                    'flex items-center rounded-input transition-colors duration-[180ms] cursor-pointer select-none',
-                    c ? 'justify-center px-0 py-2 w-full' : 'gap-2.5 px-[10px] py-2',
-                    isActive
-                      ? 'nav-active bg-bg-3 text-ink'
-                      : 'text-ink-2 hover:bg-bg-3 hover:text-ink',
-                  ].join(' ')
-                }
-                style={{ fontSize: 13, fontWeight: 500, textDecoration: 'none' }}
-              >
-                {item.icon}
-                {!c && <span>{item.label}</span>}
-              </NavLink>
-            ))}
-          </div>
-        ))}
+        {GROUPS.map((group) => {
+          const visibleItems = group.items.filter(
+            item => enabledModules.includes(item.moduleId),
+          )
+          if (visibleItems.length === 0) return null
+          return (
+            <div key={group.label} className="mb-4">
+              {!c && (
+                <h5
+                  className="px-2 mb-1 text-ink-3 uppercase tracking-[0.13em]"
+                  style={{ fontSize: 10, fontWeight: 600 }}
+                >
+                  {group.label}
+                </h5>
+              )}
+              {c && <div className="mb-1 border-t border-line mx-1" />}
+              {visibleItems.map((item) => (
+                <NavLink
+                  key={item.label}
+                  to={item.path}
+                  end={'end' in item ? (item as any).end : false}
+                  onClick={handleNavClick}
+                  title={c ? item.label : undefined}
+                  className={({ isActive }) => NAV_LINK_CLASS(isActive, c)}
+                  style={{ fontSize: 13, fontWeight: 500, textDecoration: 'none' }}
+                >
+                  {item.icon}
+                  {!c && <span>{item.label}</span>}
+                </NavLink>
+              ))}
+            </div>
+          )
+        })}
       </nav>
 
       {/* Footer */}
       <div className={['border-t border-line flex-shrink-0 space-y-0.5', c ? 'px-1 py-2' : 'px-2 py-3'].join(' ')}>
         <NavLink
+          to="/configuracoes"
+          onClick={handleNavClick}
+          title={c ? 'Configurações' : undefined}
+          className={({ isActive }) => NAV_LINK_CLASS(isActive, c)}
+          style={{ fontSize: 13, fontWeight: 500, textDecoration: 'none' }}
+        >
+          <Settings size={15} className="shrink-0" />
+          {!c && <span>Configurações</span>}
+        </NavLink>
+
+        <NavLink
           to="/perfil"
           onClick={handleNavClick}
           title={c ? 'Perfil' : undefined}
-          className={({ isActive }) =>
-            [
-              'flex items-center rounded-input transition-colors duration-[180ms] cursor-pointer select-none',
-              c ? 'justify-center px-0 py-2 w-full' : 'gap-2.5 px-[10px] py-2',
-              isActive
-                ? 'nav-active bg-bg-3 text-ink'
-                : 'text-ink-2 hover:bg-bg-3 hover:text-ink',
-            ].join(' ')
-          }
+          className={({ isActive }) => NAV_LINK_CLASS(isActive, c)}
           style={{ fontSize: 13, fontWeight: 500, textDecoration: 'none' }}
         >
           <svg className="w-[15px] h-[15px] shrink-0" viewBox="0 0 16 16" fill="none">

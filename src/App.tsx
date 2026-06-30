@@ -21,6 +21,7 @@ import { SportsPage } from './pages/SportsPage'
 import SistemasPage from './pages/SistemasPage'
 import { IntegrationsPage } from './pages/IntegrationsPage'
 import { ProfilePage } from './pages/ProfilePage'
+import SettingsPage from './pages/SettingsPage'
 
 export default function App() {
   return (
@@ -53,6 +54,7 @@ export default function App() {
         <Route path="sistemas" element={<SistemasPage />} />
         <Route path="integracoes" element={<IntegrationsPage />} />
         <Route path="perfil" element={<ProfilePage />} />
+        <Route path="configuracoes" element={<SettingsPage />} />
       </Route>
     </Routes>
   )
