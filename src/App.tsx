@@ -21,6 +21,7 @@ import { SportsPage } from './pages/SportsPage'
 import SistemasPage from './pages/SistemasPage'
 import { IntegrationsPage } from './pages/IntegrationsPage'
 import SettingsPage from './pages/SettingsPage'
+import OnboardingPage from './pages/OnboardingPage'
 
 export default function App() {
   return (
@@ -28,6 +29,14 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/recuperar-senha" element={<ForgotPasswordPage />} />
       <Route path="/nova-senha" element={<ResetPasswordPage />} />
+      <Route
+        path="/onboarding"
+        element={
+          <RequireAuth>
+            <OnboardingPage />
+          </RequireAuth>
+        }
+      />
       <Route
         element={
           <RequireAuth>

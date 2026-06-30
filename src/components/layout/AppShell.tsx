@@ -1,13 +1,19 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet, Navigate } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
 import { MobileScrim } from './MobileScrim'
 import { CommandPalette } from '../CommandPalette'
 import { useUIStore } from '../../stores/useUIStore'
+import { useUserSettings } from '../../hooks/useUserSettings'
 
 export function AppShell() {
   const sidebarOpen      = useUIStore((s) => s.sidebarOpen)
   const sidebarCollapsed = useUIStore((s) => s.sidebarCollapsed)
+  const { data: settings, isLoading } = useUserSettings()
+
+  if (!isLoading && settings && settings.onboarding_completed === false) {
+    return <Navigate to="/onboarding" replace />
+  }
 
   return (
     <>
