@@ -33,6 +33,9 @@ export function useTasks() {
       if (error) throw error
       return sortTasks(data as Task[])
     },
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   })
 
   const addTask = useMutation({

@@ -18,6 +18,9 @@ export function useNotes() {
       if (error) throw error
       return data as Note[]
     },
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   })
 
   const addNote = useMutation({
@@ -63,6 +66,7 @@ export function useNotes() {
     onError: (_err, _vars, ctx) => {
       if (ctx?.prev) qc.setQueryData(key, ctx.prev)
     },
+    onSettled: () => qc.invalidateQueries({ queryKey: key }),
   })
 
   const deleteNote = useMutation({

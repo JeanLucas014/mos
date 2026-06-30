@@ -18,6 +18,9 @@ export function useShopping() {
       if (error) throw error
       return data as ShoppingItem[]
     },
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   })
 
   const addItem = useMutation({
