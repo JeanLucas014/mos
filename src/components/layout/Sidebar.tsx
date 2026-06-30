@@ -301,20 +301,6 @@ export function Sidebar() {
           {!c && <span>Configurações</span>}
         </NavLink>
 
-        <NavLink
-          to="/perfil"
-          onClick={handleNavClick}
-          title={c ? 'Perfil' : undefined}
-          className={({ isActive }) => NAV_LINK_CLASS(isActive, c)}
-          style={{ fontSize: 13, fontWeight: 500, textDecoration: 'none' }}
-        >
-          <svg className="w-[15px] h-[15px] shrink-0" viewBox="0 0 16 16" fill="none">
-            <circle cx="8" cy="5.5" r="2.8" stroke="currentColor" strokeWidth="1.3" />
-            <path d="M2 13.5c0-2.5 2.7-4 6-4s6 1.5 6 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-          </svg>
-          {!c && <span>Perfil</span>}
-        </NavLink>
-
         <button
           onClick={handleSignOut}
           title={c ? 'Sair' : undefined}
