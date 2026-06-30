@@ -25,4 +25,7 @@ export const MODULES: ModuleDef[] = [
   { id: 'integracoes', label: 'Integrações',      group: 'Conexões',      description: 'Conectar serviços externos' },
 ]
 
-export const DEFAULT_NEW_USER_MODULES = ['dashboard', 'agenda', 'tarefas', 'financeiro', 'notas']
+export const DEFAULT_NEW_USER_MODULES = [
+  'dashboard', 'agenda', 'tarefas', 'financeiro', 'notas',
+  'projetos', 'metas', 'habitos', 'senhas',
+]

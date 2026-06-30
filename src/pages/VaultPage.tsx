@@ -393,6 +393,7 @@ function UnlockScreen({
   onUnlock: (key: CryptoKey) => void
 }) {
   const { user }       = useAuth()
+  const isDemo = user?.email === 'demo@jlmos.com.br'
   const [pw,     setPw]     = useState('')
   const [showPw, setShowPw] = useState(false)
   const [error,  setError]  = useState('')
@@ -478,6 +479,11 @@ function UnlockScreen({
                 {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
               </button>
             </div>
+            {isDemo && (
+              <p className="text-[11px] text-[#0EA5E9] mt-2 text-center">
+                Senha mestra de demonstração: <strong>demo1234</strong>
+              </p>
+            )}
           </div>
 
           {error && (
