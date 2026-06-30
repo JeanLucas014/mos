@@ -4,6 +4,7 @@ export interface ModuleDef {
   group: string
   description: string
   core?: boolean
+  hidden?: boolean
 }
 
 export const MODULES: ModuleDef[] = [
@@ -16,10 +17,10 @@ export const MODULES: ModuleDef[] = [
   { id: 'compras',     label: 'Lista de compras', group: 'Produtividade', description: 'Listas de compras por categoria' },
   { id: 'notas',       label: 'Notas',            group: 'Produtividade', description: 'Bloco de notas rápidas' },
   { id: 'financeiro',  label: 'Financeiro',       group: 'Finanças',      description: 'Controle financeiro pessoal' },
-  { id: 'faturamento', label: 'Faturamento',      group: 'Finanças',      description: 'Faturamento de negócio/freelance' },
+  { id: 'faturamento', label: 'Faturamento',      group: 'Finanças',      description: 'Faturamento de negócio/freelance', hidden: true },
   { id: 'estudos',     label: 'Estudos',          group: 'Conhecimento',  description: 'Estudos e biblioteca de livros' },
   { id: 'senhas',      label: 'Senhas',           group: 'Conhecimento',  description: 'Cofre de senhas criptografado' },
-  { id: 'sistemas',    label: 'Sistemas',         group: 'Conhecimento',  description: 'Documentação de sistemas/processos' },
+  { id: 'sistemas',    label: 'Sistemas',         group: 'Conhecimento',  description: 'Documentação de sistemas/processos', hidden: true },
   { id: 'esportes',    label: 'Esportes',         group: 'Vida',          description: 'Treinos, metas esportivas e nutrição' },
   { id: 'integracoes', label: 'Integrações',      group: 'Conexões',      description: 'Conectar serviços externos' },
 ]

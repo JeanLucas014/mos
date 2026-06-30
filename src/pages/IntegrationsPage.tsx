@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
-import { Activity, ExternalLink, RefreshCw, Unplug, Check, X } from 'lucide-react'
+import { Activity, RefreshCw, Unplug, Check, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { PluggyConnect } from '@/components/PluggyConnect'
 
@@ -33,17 +33,6 @@ function fmtRelative(iso: string): string {
   return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
 }
 
-function fmtRelativeMs(ms: number): string {
-  return fmtRelative(new Date(ms).toISOString())
-}
-
-const VERCEL_STATE_CFG: Record<string, { label: string; color: string }> = {
-  READY:    { label: 'Ready',    color: C.g },
-  ERROR:    { label: 'Error',    color: C.r },
-  BUILDING: { label: 'Building', color: C.a },
-  CANCELED: { label: 'Canceled', color: C.dm },
-  QUEUED:   { label: 'Queued',   color: C.dm },
-}
 
 /* ── Hook: check integration status ─────────────────────────────── */
 function useIntegration(provider: string) {
@@ -245,133 +234,12 @@ function StravaCard() {
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   VERCEL
-══════════════════════════════════════════════════════════════════ */
-type Deploy = { id: string; name: string; url: string; state: string; createdAt: number }
-
-function VercelCard() {
-  const qc = useQueryClient()
-  const { data: int, isLoading } = useIntegration('vercel')
-  const connected = int?.connected === true
-
-  const [deploys,    setDeploys]    = useState<Deploy[]>([])
-  const [fetching,   setFetching]   = useState(false)
-  const [connecting, setConnecting] = useState(false)
-
-  useEffect(() => {
-    if (connected) fetchDeploys()
-  }, [connected])
-
-  async function fetchDeploys() {
-    setFetching(true)
-    try {
-      const resp = await callFn('vercel-data')
-      if (resp.ok) { const d = await resp.json(); setDeploys(d.deployments ?? []) }
-    } catch {}
-    setFetching(false)
-  }
-
-  async function handleConnect() {
-    setConnecting(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setConnecting(false); return }
-    await (supabase.from('integrations') as any).upsert(
-      { user_id: user.id, provider: 'vercel', connected: true, meta: {}, updated_at: new Date().toISOString() },
-      { onConflict: 'user_id,provider' },
-    )
-    qc.invalidateQueries({ queryKey: ['integration', 'vercel'] })
-    setConnecting(false)
-  }
-
-  async function handleDisconnect() {
-    if (!window.confirm('Desconectar Vercel?')) return
-    await (supabase.from('integrations') as any)
-      .update({ connected: false })
-      .eq('provider', 'vercel')
-    qc.invalidateQueries({ queryKey: ['integration', 'vercel'] })
-    setDeploys([])
-  }
-
-  return (
-    <IntCard
-      logo={
-        <svg viewBox="0 0 76 65" fill="white" height={20} aria-label="Vercel">
-          <path d="M37.5274 0L75.0548 65H0L37.5274 0Z" />
-        </svg>
-      }
-      title="Vercel"
-      description="Acompanhe seus deploys mais recentes sem sair do MOS."
-      connected={connected}
-    >
-      {isLoading ? (
-        <div style={{ height: 36, background: C.card2, borderRadius: 8 }} />
-      ) : connected ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {/* Deploys list */}
-          {fetching ? (
-            <div style={{ fontSize: 12, color: C.dm, textAlign: 'center', padding: '8px 0' }}>Carregando...</div>
-          ) : (
-            deploys.slice(0, 5).map(d => {
-              const cfg = VERCEL_STATE_CFG[d.state] ?? { label: d.state, color: C.dm }
-              return (
-                <a
-                  key={d.id} href={d.url} target="_blank" rel="noreferrer"
-                  style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', background: C.card2, borderRadius: 8, border: `1px solid ${C.border}` }}
-                >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: C.tx, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {d.name}
-                    </div>
-                    <div style={{ fontSize: 10, color: C.dm, marginTop: 1 }}>{fmtRelativeMs(d.createdAt)}</div>
-                  </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 20, background: cfg.color + '18', color: cfg.color, flexShrink: 0 }}>
-                    {cfg.label}
-                  </span>
-                  <ExternalLink size={11} style={{ color: C.dm2, flexShrink: 0 }} />
-                </a>
-              )
-            })
-          )}
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button
-              onClick={fetchDeploys} disabled={fetching}
-              style={{ padding: '8px 14px', borderRadius: 9, background: 'rgba(255,255,255,.05)', border: `1px solid ${C.border}`, color: C.dm, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}
-            >
-              <RefreshCw size={12} style={{ animation: fetching ? 'spin 1s linear infinite' : 'none' }} /> Atualizar
-            </button>
-            <button
-              onClick={handleDisconnect}
-              style={{ padding: '8px 14px', borderRadius: 9, background: 'transparent', border: `1px solid ${C.border}`, color: C.dm, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}
-            >
-              <Unplug size={13} /> Desconectar
-            </button>
-          </div>
-        </div>
-      ) : (
-        <button
-          onClick={handleConnect} disabled={connecting}
-          style={{
-            width: '100%', padding: '11px 16px', borderRadius: 9,
-            background: 'rgba(255,255,255,.06)', border: `1px solid ${C.border}`,
-            color: C.tx, fontSize: 13, fontWeight: 600,
-            cursor: connecting ? 'not-allowed' : 'pointer',
-          }}
-        >
-          {connecting ? 'Conectando...' : 'Conectar Vercel'}
-        </button>
-      )}
-    </IntCard>
-  )
-}
-
-/* ══════════════════════════════════════════════════════════════════
    PAGE
 ══════════════════════════════════════════════════════════════════ */
 export function IntegrationsPage() {
   const [searchParams] = useSearchParams()
   const qc = useQueryClient()
 
-  /* Handle ?connected=<provider> redirects */
   useEffect(() => {
     const connected = searchParams.get('connected')
     if (connected) {
@@ -393,7 +261,6 @@ export function IntegrationsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <StravaCard />
-        <VercelCard />
       </div>
 
       <div className="mt-6 bg-[#111111] border border-[#1f1f1f] rounded-xl p-5">
