@@ -69,9 +69,25 @@ export interface FinMeta {
 export interface FinInvestimento {
   id: string
   user_id: string
-  data: string
-  valor: number
-  descricao: string | null
+  nome: string
+  tipo: string
+  subtipo?: string
+  ticker?: string
+  instituicao?: string
+  cor: string
+  quantidade?: number
+  preco_medio?: number
+  valor_atual?: number
+  valor_aplicado?: number
+  data_atualizacao?: string
+  indexador?: string
+  taxa_adicional?: number
+  data_compra?: string
+  data_vencimento?: string
+  liquidez?: string
+  ativo: boolean
+  notas?: string
+  criado_em: string
 }
 
 export interface FinRecorrente {
