@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, type FormEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { Plus, Edit2, Trash2, ExternalLink, Paperclip, X, Upload, ChevronDown, ChevronUp, Download } from 'lucide-react'
@@ -648,6 +649,7 @@ function SystemCard({
 
 /* ── Page ────────────────────────────────────────────────────────── */
 export default function SistemasPage() {
+  const navigate = useNavigate()
   const { query, add, remove } = useSystems()
   const [modal, setModal] = useState<System | null | false>(false)
   const [iframeTool, setIframeTool] = useState<{ title: string; url: string } | null>(null)
@@ -655,7 +657,7 @@ export default function SistemasPage() {
 
   const systems = query.data ?? []
 
-  /* Auto-insert Otimizador de Imagens on first load */
+  /* Auto-insert built-in tools on first load */
   useEffect(() => {
     if (!query.isSuccess || autoInserted.current) return
     autoInserted.current = true
@@ -670,7 +672,28 @@ export default function SistemasPage() {
         thumbnail_url: null,
       })
     }
+    if (!systems.some(s => s.name === 'WP Speed Audit')) {
+      add.mutate({
+        name: 'WP Speed Audit',
+        description: 'Analise a velocidade de sites WordPress e gere um plano de ação com o PageSpeed Insights do Google.',
+        category: 'Ferramenta',
+        status: 'Ativo',
+        url: '/sistemas/wp-speed-audit',
+        tech_stack: ['React', 'PageSpeed API'],
+        thumbnail_url: null,
+      })
+    }
   }, [query.isSuccess, systems]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* URLs ending in .html are static files → open in IframeModal.
+     Other internal paths (React routes) → navigate directly. */
+  function handleOpenTool(title: string, url: string) {
+    if (url.endsWith('.html')) {
+      setIframeTool({ title, url })
+    } else {
+      navigate(url)
+    }
+  }
 
   function handleDelete(sys: System) {
     if (!confirm(`Excluir "${sys.name}"?`)) return
@@ -728,7 +751,7 @@ export default function SistemasPage() {
               sys={sys}
               onEdit={() => setModal(sys)}
               onDelete={() => handleDelete(sys)}
-              onOpenTool={(title, url) => setIframeTool({ title, url })}
+              onOpenTool={handleOpenTool}
             />
           ))}
         </div>

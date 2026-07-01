@@ -19,6 +19,7 @@ import { StudiesPage } from './pages/StudiesPage'
 import { VaultPage } from './pages/VaultPage'
 import { SportsPage } from './pages/SportsPage'
 import SistemasPage from './pages/SistemasPage'
+import WPSpeedAudit from './pages/sistemas/WPSpeedAudit'
 import { IntegrationsPage } from './pages/IntegrationsPage'
 import SettingsPage from './pages/SettingsPage'
 import OnboardingPage from './pages/OnboardingPage'
@@ -60,6 +61,7 @@ export default function App() {
         <Route path="senhas" element={<VaultPage />} />
         <Route path="esportes" element={<SportsPage />} />
         <Route path="sistemas" element={<SistemasPage />} />
+        <Route path="sistemas/wp-speed-audit" element={<WPSpeedAudit />} />
         <Route path="integracoes" element={<IntegrationsPage />} />
         <Route path="configuracoes" element={<SettingsPage />} />
       </Route>
