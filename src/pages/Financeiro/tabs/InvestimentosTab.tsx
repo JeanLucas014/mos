@@ -27,16 +27,22 @@ type TipoInv =
   | 'previdencia'
   | 'outros'
 
-const TIPO_CFG: Record<TipoInv, { label: string; color: string; icon: string }> = {
-  renda_fixa:  { label: 'Renda Fixa',   color: '#22c55e', icon: '🏦' },
-  acoes:       { label: 'Ações',        color: '#0EA5E9', icon: '📈' },
-  fiis:        { label: 'FIIs',         color: '#f97316', icon: '🏢' },
-  etfs:        { label: 'ETFs',         color: '#a78bfa', icon: '📊' },
-  fundos:      { label: 'Fundos',       color: '#f59e0b', icon: '💼' },
-  cripto:      { label: 'Criptomoedas', color: '#ec4899', icon: '₿'  },
-  previdencia: { label: 'Previdência',  color: '#14b8a6', icon: '🔐' },
-  outros:      { label: 'Outros',       color: '#6b7280', icon: '💰' },
+const TIPO_CFG: Record<TipoInv, { label: string; color: string }> = {
+  renda_fixa:  { label: 'Renda Fixa',   color: '#22c55e' },
+  acoes:       { label: 'Ações',        color: '#0EA5E9' },
+  fiis:        { label: 'FIIs',         color: '#f97316' },
+  etfs:        { label: 'ETFs',         color: '#a78bfa' },
+  fundos:      { label: 'Fundos',       color: '#f59e0b' },
+  cripto:      { label: 'Criptomoedas', color: '#ec4899' },
+  previdencia: { label: 'Previdência',  color: '#14b8a6' },
+  outros:      { label: 'Outros',       color: '#6b7280' },
 }
+
+const CORES = [
+  '#22c55e', '#0EA5E9', '#f97316', '#a78bfa',
+  '#f59e0b', '#ec4899', '#14b8a6', '#6b7280',
+  '#ef4444', '#64748b',
+]
 
 const INDEXADORES = ['CDI', 'SELIC', 'IPCA', 'IGPM', 'PREFIXADO', 'OUTRO']
 
@@ -150,7 +156,6 @@ function InvestimentoModal({
     ...initial,
   })
   const [saving, setSaving] = useState(false)
-  const cfg = TIPO_CFG[form.tipo as TipoInv]
   const isRF = form.tipo === 'renda_fixa' || form.tipo === 'previdencia'
   const isVariavel = ['acoes', 'fiis', 'etfs'].includes(form.tipo ?? '')
 
@@ -168,18 +173,6 @@ function InvestimentoModal({
     await onSave(form)
     setSaving(false)
   }
-
-  const corOptions = [
-    cfg?.color,
-    '#22c55e',
-    '#0EA5E9',
-    '#f97316',
-    '#a78bfa',
-    '#f59e0b',
-    '#ec4899',
-    '#14b8a6',
-    '#6b7280',
-  ].filter((c): c is string => Boolean(c))
 
   return (
     <div
@@ -210,14 +203,13 @@ function InvestimentoModal({
                   key={tipo}
                   type="button"
                   onClick={() => upd('tipo', tipo as TipoInv)}
-                  className="flex flex-col items-center gap-1 py-2 px-1 rounded-xl border text-xs transition-colors"
+                  className="py-2 px-1 rounded-xl border text-xs transition-colors"
                   style={{
                     borderColor: form.tipo === tipo ? c.color : '#1f1f1f',
                     background: form.tipo === tipo ? c.color + '15' : 'transparent',
                     color: form.tipo === tipo ? c.color : '#555',
                   }}
                 >
-                  <span className="text-base">{c.icon}</span>
                   {c.label}
                 </button>
               ))}
@@ -276,7 +268,7 @@ function InvestimentoModal({
             <div>
               <label className={lbl}>Cor</label>
               <div className="flex gap-2 flex-wrap">
-                {corOptions.map((c, i) => (
+                {CORES.map((c, i) => (
                   <button
                     key={i}
                     type="button"
@@ -811,9 +803,9 @@ export function InvestimentosTab() {
       {/* Sub-abas */}
       <div className="flex gap-1 border-b border-[#1f1f1f] mb-4">
         {([
-          { id: 'carteira',  label: '📊 Carteira'  },
-          { id: 'simulador', label: '🧮 Simulador'  },
-          { id: 'taxas',     label: '📉 Taxas'     },
+          { id: 'carteira',  label: 'Carteira'  },
+          { id: 'simulador', label: 'Simulador'  },
+          { id: 'taxas',     label: 'Taxas'      },
         ] as { id: MainTab; label: string }[]).map(t => (
           <button
             key={t.id}
@@ -957,7 +949,6 @@ export function InvestimentosTab() {
                     onClick={() => toggleCollapse(tipo)}
                     className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#1a1a1a] transition-colors"
                   >
-                    <span className="text-base">{cfg.icon}</span>
                     <span className="text-sm font-semibold text-white flex-1 text-left">
                       {cfg.label}
                     </span>
@@ -1103,7 +1094,6 @@ export function InvestimentosTab() {
 
           {items.length === 0 && (
             <div className="flex flex-col items-center py-16 text-center text-[#555]">
-              <span className="text-4xl mb-3">💰</span>
               <p className="text-sm mb-1">Nenhum investimento cadastrado</p>
               <p className="text-xs mb-4">
                 Adicione ações, renda fixa, criptos e muito mais
