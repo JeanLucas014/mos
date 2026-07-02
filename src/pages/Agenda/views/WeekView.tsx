@@ -26,6 +26,59 @@ function isSameDay(a: Date, b: Date): boolean {
     a.getFullYear() === b.getFullYear()
 }
 
+interface EventLayout {
+  ev: CalendarEvent
+  left: number
+  width: number
+  zIndex: number
+}
+
+function layoutEvents(events: CalendarEvent[]): EventLayout[] {
+  if (events.length === 0) return []
+
+  const sorted = [...events].sort((a, b) => {
+    const startDiff = new Date(a.start_at).getTime() - new Date(b.start_at).getTime()
+    if (startDiff !== 0) return startDiff
+    const durA = new Date(a.end_at).getTime() - new Date(a.start_at).getTime()
+    const durB = new Date(b.end_at).getTime() - new Date(b.start_at).getTime()
+    return durB - durA
+  })
+
+  function overlaps(a: CalendarEvent, b: CalendarEvent): boolean {
+    return new Date(a.start_at).getTime() < new Date(b.end_at).getTime() &&
+           new Date(a.end_at).getTime()   > new Date(b.start_at).getTime()
+  }
+
+  const cols: number[] = new Array(sorted.length).fill(0)
+  for (let i = 0; i < sorted.length; i++) {
+    const usedCols = new Set<number>()
+    for (let j = 0; j < i; j++) {
+      if (overlaps(sorted[i], sorted[j])) usedCols.add(cols[j])
+    }
+    let c = 0
+    while (usedCols.has(c)) c++
+    cols[i] = c
+  }
+
+  const numCols: number[] = sorted.map((ev, i) => {
+    let max = cols[i] + 1
+    for (let j = 0; j < sorted.length; j++) {
+      if (i !== j && overlaps(ev, sorted[j])) max = Math.max(max, cols[j] + 1)
+    }
+    return max
+  })
+
+  return sorted.map((ev, i) => {
+    const n      = numCols[i]
+    const col    = cols[i]
+    const baseW  = 100 / n
+    const bonusW = n > 1 ? Math.min(12, baseW * 0.3) : 0
+    const width  = Math.min(baseW + bonusW, 100 - col * baseW)
+    const left   = col * baseW
+    return { ev, left, width, zIndex: 10 + col }
+  })
+}
+
 export function WeekView({ events, currentDate, onSelectEvent, onSelectSlot }: Props) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -164,29 +217,46 @@ export function WeekView({ events, currentDate, onSelectEvent, onSelectSlot }: P
               )}
 
               {/* Events */}
-              {getEventsByDay(day).map(ev => (
-                <div key={ev.id}
+              {layoutEvents(getEventsByDay(day)).map(({ ev, left, width, zIndex }) => (
+                <div
+                  key={ev.id}
                   onClick={e => { e.stopPropagation(); onSelectEvent(ev) }}
-                  className="absolute rounded-lg px-1.5 py-0.5 cursor-pointer hover:opacity-90 transition-opacity overflow-hidden"
+                  className="absolute cursor-pointer overflow-hidden transition-all hover:brightness-110"
                   style={{
-                    top:        eventTop(ev),
-                    height:     eventHeight(ev),
-                    left:       1,
-                    right:      1,
-                    zIndex:     10,
-                    background: ev.color + 'dd',
-                    borderLeft: `2px solid ${ev.color}`,
+                    top:          eventTop(ev),
+                    height:       eventHeight(ev),
+                    left:         `calc(${left}% + 1px)`,
+                    width:        `calc(${width}% - 2px)`,
+                    zIndex,
+                    borderRadius: 6,
+                    background:   ev.color + 'e8',
+                    borderLeft:   `3px solid ${ev.color}`,
+                    boxShadow:    zIndex > 10 ? '0 1px 4px rgba(0,0,0,0.4)' : 'none',
                   }}
                 >
-                  <div className="text-white text-[10px] font-semibold truncate flex items-center gap-1">
-                    <span className="truncate">{ev.title}</span>
-                    {ev.recurrence_rule && <span style={{ fontSize: 9, opacity: 0.7, flexShrink: 0 }}>↻</span>}
-                  </div>
-                  {!isMobile && (
-                    <div className="text-white/70 text-[9px]">
-                      {new Date(ev.start_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                  <div style={{ padding: '3px 5px' }}>
+                    <div
+                      className="text-white font-semibold truncate flex items-center gap-1"
+                      style={{ fontSize: isMobile ? 9 : 11 }}
+                    >
+                      <span className="truncate">{ev.title}</span>
+                      {ev.recurrence_rule && (
+                        <span style={{ fontSize: 8, opacity: 0.8, flexShrink: 0 }}>↻</span>
+                      )}
                     </div>
-                  )}
+                    {eventHeight(ev) > 35 && !isMobile && (
+                      <div className="text-white/75 truncate" style={{ fontSize: 10 }}>
+                        {new Date(ev.start_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        {' – '}
+                        {new Date(ev.end_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    )}
+                    {eventHeight(ev) <= 35 && (
+                      <div className="text-white/75 truncate" style={{ fontSize: 9 }}>
+                        {new Date(ev.start_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
