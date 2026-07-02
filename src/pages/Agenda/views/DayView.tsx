@@ -4,6 +4,59 @@ import type { CalendarEvent } from '../types'
 const HOUR_H  = 60
 const TIME_W  = 52
 
+interface EventLayout {
+  ev: CalendarEvent
+  left: number
+  width: number
+  zIndex: number
+}
+
+function layoutEvents(events: CalendarEvent[]): EventLayout[] {
+  if (events.length === 0) return []
+
+  const sorted = [...events].sort((a, b) => {
+    const startDiff = new Date(a.start_at).getTime() - new Date(b.start_at).getTime()
+    if (startDiff !== 0) return startDiff
+    const durA = new Date(a.end_at).getTime() - new Date(a.start_at).getTime()
+    const durB = new Date(b.end_at).getTime() - new Date(b.start_at).getTime()
+    return durB - durA
+  })
+
+  function overlaps(a: CalendarEvent, b: CalendarEvent): boolean {
+    return new Date(a.start_at).getTime() < new Date(b.end_at).getTime() &&
+           new Date(a.end_at).getTime()   > new Date(b.start_at).getTime()
+  }
+
+  const cols: number[] = new Array(sorted.length).fill(0)
+  for (let i = 0; i < sorted.length; i++) {
+    const usedCols = new Set<number>()
+    for (let j = 0; j < i; j++) {
+      if (overlaps(sorted[i], sorted[j])) usedCols.add(cols[j])
+    }
+    let c = 0
+    while (usedCols.has(c)) c++
+    cols[i] = c
+  }
+
+  const numCols: number[] = sorted.map((ev, i) => {
+    let max = cols[i] + 1
+    for (let j = 0; j < sorted.length; j++) {
+      if (i !== j && overlaps(ev, sorted[j])) max = Math.max(max, cols[j] + 1)
+    }
+    return max
+  })
+
+  return sorted.map((ev, i) => {
+    const n      = numCols[i]
+    const col    = cols[i]
+    const baseW  = 100 / n
+    const bonusW = n > 1 ? Math.min(12, baseW * 0.3) : 0
+    const width  = Math.min(baseW + bonusW, 100 - col * baseW)
+    const left   = col * baseW
+    return { ev, left, width, zIndex: 10 + col }
+  })
+}
+
 interface Props {
   events: CalendarEvent[]
   currentDate: Date
@@ -115,29 +168,36 @@ export function DayView({ events, currentDate, onSelectEvent, onSelectSlot }: Pr
             )}
 
             {/* Events */}
-            {dayEvents.map(ev => (
+            {layoutEvents(dayEvents).map(({ ev, left, width, zIndex }) => (
               <div key={ev.id}
                 onClick={e => { e.stopPropagation(); onSelectEvent(ev) }}
-                className="absolute rounded-lg px-3 py-1.5 cursor-pointer hover:opacity-90 transition-opacity overflow-hidden"
+                className="absolute cursor-pointer overflow-hidden transition-all hover:brightness-110"
                 style={{
-                  top:        eventTop(ev),
-                  height:     eventHeight(ev),
-                  left:       4,
-                  right:      4,
-                  zIndex:     10,
-                  background: ev.color + 'dd',
-                  borderLeft: `3px solid ${ev.color}`,
+                  top:          eventTop(ev),
+                  height:       eventHeight(ev),
+                  left:         `calc(${left}% + 2px)`,
+                  width:        `calc(${width}% - 4px)`,
+                  zIndex,
+                  borderRadius: 6,
+                  background:   ev.color + 'e8',
+                  borderLeft:   `3px solid ${ev.color}`,
+                  boxShadow:    zIndex > 10 ? '0 1px 4px rgba(0,0,0,0.4)' : 'none',
                 }}
               >
-                <div className="text-white text-sm font-semibold truncate">{ev.title}</div>
-                <div className="text-white/70 text-xs mt-0.5">
-                  {new Date(ev.start_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                  {' – '}
-                  {new Date(ev.end_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                <div style={{ padding: '4px 8px' }}>
+                  <div className="text-white font-semibold truncate" style={{ fontSize: 12 }}>
+                    {ev.title}
+                    {ev.recurrence_rule && <span style={{ fontSize: 9, opacity: 0.8, marginLeft: 4 }}>↻</span>}
+                  </div>
+                  <div className="text-white/70 truncate" style={{ fontSize: 11 }}>
+                    {new Date(ev.start_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    {' – '}
+                    {new Date(ev.end_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                  {ev.location && eventHeight(ev) > 50 && (
+                    <div className="text-white/50 truncate" style={{ fontSize: 10 }}>{ev.location}</div>
+                  )}
                 </div>
-                {ev.location && (
-                  <div className="text-white/50 text-xs mt-0.5 truncate">📍 {ev.location}</div>
-                )}
               </div>
             ))}
           </div>

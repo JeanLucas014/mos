@@ -120,9 +120,10 @@ function StravaCard() {
   const { data: int, isLoading } = useIntegration('strava')
   const connected = int?.connected === true
 
-  const [loading,  setLoading]  = useState(false)
-  const [syncing,  setSyncing]  = useState(false)
-  const [toast,    setToast]    = useState<{ msg: string; ok: boolean } | null>(null)
+  const [loading,    setLoading]    = useState(false)
+  const [syncing,    setSyncing]    = useState(false)
+  const [syncError,  setSyncError]  = useState(false)
+  const [toast,      setToast]      = useState<{ msg: string; ok: boolean } | null>(null)
 
   async function handleConnect() {
     setLoading(true)
@@ -139,6 +140,7 @@ function StravaCard() {
 
   async function handleSync() {
     setSyncing(true)
+    setSyncError(false)
     try {
       const resp = await callFn('strava-sync')
       const data = await resp.json()
@@ -146,6 +148,7 @@ function StravaCard() {
       setToast({ msg: `${data.imported} treino${data.imported !== 1 ? 's' : ''} importado${data.imported !== 1 ? 's' : ''}!`, ok: true })
       qc.invalidateQueries({ queryKey: ['workouts'] })
     } catch (e) {
+      setSyncError(true)
       setToast({ msg: 'Erro ao sincronizar com Strava.', ok: false })
     }
     setSyncing(false)
@@ -200,6 +203,17 @@ function StravaCard() {
                 <Unplug size={13} /> Desconectar
               </button>
             </div>
+            {syncError && (
+              <div style={{ fontSize: 12, color: C.r }}>
+                Conexão expirada. Reconecte para continuar sincronizando.{' '}
+                <button
+                  onClick={handleConnect}
+                  style={{ background: 'none', border: 'none', color: C.b, fontSize: 12, cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                >
+                  Reconectar Strava
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <button
