@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { supabase } from "@/lib/supabase";
 import {
   Gauge,
   Zap,
@@ -487,7 +488,6 @@ type TabId = "oportunidades" | "diagnosticos" | "passou";
 
 export default function WPSpeedAudit() {
   const [url, setUrl] = useState("");
-  const [apiKey, setApiKey] = useState("");
   const [strategy, setStrategy] = useState<"mobile" | "desktop">("mobile");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -504,17 +504,14 @@ export default function WPSpeedAudit() {
 
     setLoading(true);
     try {
-      const params = new URLSearchParams({ url: target, strategy });
-      params.append("category", "performance");
-      if (apiKey.trim()) params.append("key", apiKey.trim());
-      const endpoint = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?${params.toString()}`;
+      const { data, error: fnError } = await supabase.functions.invoke("pagespeed", {
+        body: { url: target, strategy },
+      });
 
-      const res = await fetch(endpoint);
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({})) as { error?: { message?: string } };
-        throw new Error(body?.error?.message || `Erro ${res.status} do PageSpeed`);
-      }
-      const data = await res.json() as {
+      if (fnError) throw new Error(fnError.message);
+      if (data?.error) throw new Error(data.error);
+
+      const typedData = data as {
         lighthouseResult: {
           audits: Record<string, {
             score: number | null;
@@ -528,7 +525,7 @@ export default function WPSpeedAudit() {
           finalDisplayedUrl?: string;
         };
       };
-      const lh = data.lighthouseResult;
+      const lh = typedData.lighthouseResult;
       const audits = lh.audits;
       const score = Math.round((lh.categories.performance.score ?? 0) * 100);
 
@@ -593,7 +590,7 @@ export default function WPSpeedAudit() {
       const msg = e instanceof Error ? e.message : "Falha ao auditar.";
       if (msg.toLowerCase().includes("failed to fetch") || msg.toLowerCase().includes("network")) {
         setError(
-          "Não foi possível conectar à API do Google. Em produção (deploy) isso funciona normalmente. Se estiver testando localmente, pode ser CORS. Adicione uma chave de API do Google caso o problema persista."
+          "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente."
         );
       } else {
         setError(msg || "Falha ao auditar. Verifique a URL ou tente novamente.");
@@ -721,30 +718,6 @@ export default function WPSpeedAudit() {
             </button>
           ))}
         </div>
-
-        <details style={{ marginBottom: 16 }}>
-          <summary style={{ fontSize: 12.5, color: "#6b7280", cursor: "pointer", userSelect: "none" }}>
-            Chave de API do Google (opcional — só se você bater no limite de requisições)
-          </summary>
-          <input
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            placeholder="AIza..."
-            style={{
-              width: "100%",
-              boxSizing: "border-box",
-              marginTop: 10,
-              background: "#0a0a0a",
-              border: "1px solid #262626",
-              borderRadius: 10,
-              padding: "10px 14px",
-              color: "#fff",
-              fontSize: 13,
-              outline: "none",
-              fontFamily: "monospace",
-            }}
-          />
-        </details>
 
         <button
           onClick={runAudit}
