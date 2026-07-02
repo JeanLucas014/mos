@@ -504,11 +504,27 @@ export default function WPSpeedAudit() {
 
     setLoading(true);
     try {
-      const { data, error: fnError } = await supabase.functions.invoke("pagespeed", {
-        body: { url: target, strategy },
-      });
+      const { data: { session } } = await supabase.auth.getSession();
 
-      if (fnError) throw new Error(fnError.message);
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pagespeed-proxy`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${session?.access_token ?? ""}`,
+            "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({ url: target, strategy }),
+        }
+      );
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({})) as { error?: string };
+        throw new Error(body?.error ?? `Erro ${res.status}`);
+      }
+
+      const data = await res.json();
       if (data?.error) throw new Error(data.error);
 
       const typedData = data as {
