@@ -39,7 +39,8 @@ const GRADIENTS = [
   'linear-gradient(145deg,#818cf8,#3730a3)',
 ]
 
-function hashGradient(title: string) {
+function hashGradient(title: string | null | undefined) {
+  if (!title) return GRADIENTS[0]
   let h = 0
   for (let i = 0; i < title.length; i++) h = (h * 31 + title.charCodeAt(i)) >>> 0
   return GRADIENTS[h % GRADIENTS.length]
@@ -781,7 +782,7 @@ export function LibraryPage() {
 
   /* Sort */
   filtered = [...filtered].sort((a, b) => {
-    if (sortBy === 'title')        return a.title.localeCompare(b.title)
+    if (sortBy === 'title')        return (a.title ?? '').localeCompare(b.title ?? '')
     if (sortBy === 'rating')       return (b.rating ?? 0) - (a.rating ?? 0)
     if (sortBy === 'finished_at')  return (b.finished_at ?? '').localeCompare(a.finished_at ?? '')
     return (b.created_at ?? '').localeCompare(a.created_at ?? '')
