@@ -23,6 +23,7 @@ import WPSpeedAudit from './pages/sistemas/WPSpeedAudit'
 import { IntegrationsPage } from './pages/IntegrationsPage'
 import SettingsPage from './pages/SettingsPage'
 import OnboardingPage from './pages/OnboardingPage'
+import { AdminPage } from './pages/AdminPage'
 
 export default function App() {
   return (
@@ -64,6 +65,7 @@ export default function App() {
         <Route path="sistemas/wp-speed-audit" element={<WPSpeedAudit />} />
         <Route path="integracoes" element={<IntegrationsPage />} />
         <Route path="configuracoes" element={<SettingsPage />} />
+        <Route path="admin" element={<AdminPage />} />
       </Route>
     </Routes>
   )
