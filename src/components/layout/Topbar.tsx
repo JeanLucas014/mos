@@ -93,14 +93,6 @@ export function Topbar() {
         </div>
 
         <div className="flex items-center gap-4">
-          <button
-            onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true }))}
-            className="flex items-center gap-2 text-xs text-[#555] hover:text-white border border-[#1f1f1f] rounded-lg px-3 py-1.5 transition-colors hover:border-[#0EA5E9]/40 bg-[#111111]"
-          >
-            <Search size={13} />
-            <span className="hidden sm:inline">Buscar</span>
-            <kbd className="hidden md:inline text-[10px] border border-[#2a2a2a] rounded px-1">⌘K</kbd>
-          </button>
           <span
             className="text-ink-2"
             style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11 }}
