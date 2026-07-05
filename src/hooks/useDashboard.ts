@@ -279,3 +279,80 @@ export function useDashBooks() {
     },
   })
 }
+
+/* ── Financas score ───────────────────────────────────────────── */
+export function useDashFinancas() {
+  return useQuery({
+    queryKey: ['dash_financas_score'],
+    queryFn: async () => {
+      const start = monthStart()
+      const { data, error } = await (supabase.from('fin_lancamentos') as any)
+        .select('valor, natureza, is_grupo')
+        .gte('data', start)
+        .lte('data', today())
+      if (error) throw error
+      // dados Notion têm is_grupo=null — filtrar em JS
+      const rows = (data ?? []).filter((r: any) => !r.is_grupo && r.valor != null)
+      const receitas = rows
+        .filter((r: any) => r.natureza === 'receita')
+        .reduce((s: number, r: any) => s + r.valor, 0)
+      const despesas = rows
+        .filter((r: any) => r.natureza !== 'receita')
+        .reduce((s: number, r: any) => s + r.valor, 0)
+      return { receitas, despesas, saldo: receitas - despesas }
+    },
+  })
+}
+
+/* ── Tasks score (overdue) ────────────────────────────────────── */
+export function useDashTasksScore() {
+  return useQuery({
+    queryKey: ['dash_tasks_score'],
+    queryFn: async () => {
+      const todayStr = today()
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('id, due_date, completed_at')
+        .is('completed_at', null)
+        .is('parent_id', null)
+      if (error) throw error
+      const all = data ?? []
+      const overdue = all.filter((t: any) => t.due_date && t.due_date < todayStr)
+      return { total: all.length, overdue: overdue.length }
+    },
+  })
+}
+
+/* ── Estudos score ────────────────────────────────────────────── */
+export function useDashEstudos() {
+  const studies = useQuery({
+    queryKey: ['studies'],
+    queryFn: async () => {
+      const { data, error } = await (supabase.from('studies') as any)
+        .select('id, progress, status')
+      if (error) throw error
+      return data ?? []
+    },
+  })
+  const books = useQuery({
+    queryKey: ['books'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('books').select('id, status, progress')
+      if (error) throw error
+      return data ?? []
+    },
+  })
+  const activeStudies = (studies.data ?? []).filter((s: any) => s.status !== 'concluido').length
+  const readingBooks = (books.data ?? []).filter((b: any) => b.status === 'lendo').length
+  const avgProgress = activeStudies > 0
+    ? Math.round((studies.data ?? []).filter((s: any) => s.status !== 'concluido')
+        .reduce((s: number, x: any) => s + (x.progress ?? 0), 0) / activeStudies)
+    : 0
+  return {
+    isLoading: studies.isLoading || books.isLoading,
+    activeStudies,
+    readingBooks,
+    avgProgress,
+  }
+}

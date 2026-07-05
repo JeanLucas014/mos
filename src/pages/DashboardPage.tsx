@@ -1,9 +1,11 @@
+import { useState } from 'react'
 import {
   CheckSquare, Flame, FolderOpen, Target,
   Activity, FileText, BookOpen, Zap,
-  ArrowRight, CalendarDays,
+  ArrowRight, CalendarDays, Info, ChevronDown, ChevronUp,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar } from 'recharts'
 import { useAuth } from '../contexts/AuthContext'
 import { useProfile } from '../hooks/useProfile'
 import {
@@ -15,6 +17,9 @@ import {
   useDashNotes,
   useDashBooks,
   useDashEvents,
+  useDashFinancas,
+  useDashTasksScore,
+  useDashEstudos,
 } from '../hooks/useDashboard'
 
 /* ══════════════════════════════════════════════════════════════════
@@ -39,6 +44,223 @@ function daysUntil(dateStr: string): number {
   const t = new Date(); t.setHours(0, 0, 0, 0)
   const d = new Date(dateStr + 'T12:00:00')
   return Math.ceil((d.getTime() - t.getTime()) / 86_400_000)
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   SCORE HELPERS
+══════════════════════════════════════════════════════════════════ */
+function calcFinancasScore(receitas: number, despesas: number): number {
+  if (receitas === 0) return 50
+  const saldo = receitas - despesas
+  if (saldo >= 0) return Math.min(95, 70 + Math.round((saldo / receitas) * 30))
+  return Math.max(15, 60 - Math.round((Math.abs(saldo) / receitas) * 60))
+}
+function calcSaudeScore(countMonth: number): number {
+  return Math.min(100, 20 + Math.round((countMonth / 10) * 80))
+}
+function calcTarefasScore(total: number, overdue: number): number {
+  if (total === 0) return 85
+  if (overdue === 0) return 90
+  return Math.max(30, 90 - Math.round((overdue / total) * 80))
+}
+function calcHabitosScore(doneToday: number, total: number): number {
+  if (total === 0) return 50
+  return Math.round((doneToday / total) * 100)
+}
+function calcEstudosScore(activeStudies: number, readingBooks: number, avgProgress: number): number {
+  if (activeStudies === 0 && readingBooks === 0) return 20
+  return Math.min(95, Math.min(70, (activeStudies + readingBooks) * 20) + Math.round(avgProgress * 0.25))
+}
+function calcMetasScore(goals: { progress: number }[]): number {
+  if (!goals.length) return 50
+  return Math.round(goals.reduce((s, g) => s + g.progress, 0) / goals.length)
+}
+function scoreColor(s: number): string {
+  if (s >= 80) return '#22c55e'
+  if (s >= 60) return '#f59e0b'
+  return '#ef4444'
+}
+function scoreLabel(s: number): string {
+  if (s >= 80) return 'Excelente'
+  if (s >= 60) return 'Bom'
+  if (s >= 40) return 'Atencao'
+  return 'Critico'
+}
+
+/* ── Score Gauge SVG ────────────────────────────────────────────── */
+function ScoreGauge({ score, size = 148 }: { score: number; size?: number }) {
+  const center = size / 2
+  const r      = size * 0.36
+  const sw     = size * 0.085
+  const color  = scoreColor(score)
+  const toRad  = (deg: number) => (deg * Math.PI) / 180
+  const pt     = (deg: number) => ({
+    x: center + r * Math.cos(toRad(deg)),
+    y: center + r * Math.sin(toRad(deg)),
+  })
+  const arc = (from: number, to: number) => {
+    const s  = pt(from); const e = pt(to)
+    const la = to - from > 180 ? 1 : 0
+    return `M ${s.x.toFixed(2)} ${s.y.toFixed(2)} A ${r} ${r} 0 ${la} 1 ${e.x.toFixed(2)} ${e.y.toFixed(2)}`
+  }
+  const end = 135 + Math.min((score / 100) * 270, 270)
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <path d={arc(135, 405)} fill="none" stroke="#262626" strokeWidth={sw} strokeLinecap="round" />
+      {score > 0 && (
+        <path d={arc(135, end)} fill="none" stroke={color} strokeWidth={sw} strokeLinecap="round" />
+      )}
+      <text x={center} y={center - 8} textAnchor="middle" fill={color}
+        fontSize={size * 0.23} fontWeight="800" fontFamily="Sora, sans-serif">{score}</text>
+      <text x={center} y={center + 16} textAnchor="middle" fill="#9ca3af"
+        fontSize={size * 0.09} fontWeight="600" fontFamily="Manrope, sans-serif">{scoreLabel(score)}</text>
+      <text x={center} y={center + 30} textAnchor="middle" fill="#4b5563"
+        fontSize={size * 0.075} fontFamily="Manrope, sans-serif">Score de Vida</text>
+    </svg>
+  )
+}
+
+/* ── Life Score Section ─────────────────────────────────────────── */
+function LifeScoreSection() {
+  const [showCalc, setShowCalc] = useState(false)
+
+  const financas   = useDashFinancas()
+  const tasksScore = useDashTasksScore()
+  const { total: habitTotal, doneToday } = useDashHabits()
+  const { countMonth } = useDashSports()
+  const estudos    = useDashEstudos()
+  const { data: goals = [] } = useDashGoals()
+
+  const scores = {
+    financas: calcFinancasScore(financas.data?.receitas ?? 0, financas.data?.despesas ?? 0),
+    saude:    calcSaudeScore(countMonth),
+    tarefas:  calcTarefasScore(tasksScore.data?.total ?? 0, tasksScore.data?.overdue ?? 0),
+    habitos:  calcHabitosScore(doneToday, habitTotal),
+    estudos:  calcEstudosScore(estudos.activeStudies, estudos.readingBooks, estudos.avgProgress),
+    metas:    calcMetasScore((goals as any[]) ?? []),
+  }
+
+  const AREAS = [
+    { id: 'financas', label: 'Financas', score: scores.financas, weight: 25 },
+    { id: 'saude',    label: 'Saude',    score: scores.saude,    weight: 25 },
+    { id: 'tarefas',  label: 'Tarefas',  score: scores.tarefas,  weight: 20 },
+    { id: 'habitos',  label: 'Habitos',  score: scores.habitos,  weight: 15 },
+    { id: 'estudos',  label: 'Estudos',  score: scores.estudos,  weight: 10 },
+    { id: 'metas',    label: 'Metas',    score: scores.metas,    weight:  5 },
+  ]
+
+  const overall = Math.round(
+    AREAS.reduce((s, a) => s + a.score * a.weight, 0) / 100,
+  )
+
+  const radarData = AREAS.map((a) => ({ subject: a.label, score: a.score }))
+  const focus = [...AREAS].sort((a, b) => a.score - b.score).slice(0, 3).filter((a) => a.score < 70)
+
+  return (
+    <div className="mb-8">
+      {/* Score + Radar */}
+      <div className="flex gap-4 mb-4 flex-wrap">
+        <div className="rounded-2xl border border-line bg-bg-2 p-5 flex flex-col items-center justify-center gap-3">
+          <ScoreGauge score={overall} size={148} />
+          <div className="flex gap-3">
+            {[{ l: '0-59', c: '#ef4444' }, { l: '60-79', c: '#f59e0b' }, { l: '80+', c: '#22c55e' }].map((x) => (
+              <div key={x.l} className="flex items-center gap-1">
+                <div className="rounded-full" style={{ width: 7, height: 7, background: x.c }} />
+                <span style={{ fontSize: 11, color: '#6b7280' }}>{x.l}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex-1 min-w-72 rounded-2xl border border-line bg-bg-2 p-5">
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+            Visao por area
+          </div>
+          <ResponsiveContainer width="100%" height={210}>
+            <RadarChart data={radarData} margin={{ top: 10, right: 28, bottom: 10, left: 28 }}>
+              <PolarGrid stroke="#1f1f1f" />
+              <PolarAngleAxis
+                dataKey="subject"
+                tick={{ fill: '#9ca3af', fontSize: 11, fontFamily: 'Manrope' }}
+              />
+              <Radar
+                name="Score"
+                dataKey="score"
+                stroke="#0ea5e9"
+                fill="#0ea5e9"
+                fillOpacity={0.12}
+                strokeWidth={2}
+                dot={{ fill: '#0ea5e9', r: 3 } as any}
+              />
+            </RadarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Mini score bars */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-4">
+        {AREAS.map((a) => (
+          <div key={a.id} className="rounded-xl border border-line bg-bg-2 px-3 py-2.5">
+            <div className="flex justify-between items-center mb-1.5">
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{a.label}</span>
+              <span style={{ fontSize: 13, fontWeight: 800, color: scoreColor(a.score), fontFamily: 'Sora, sans-serif' }}>{a.score}</span>
+            </div>
+            <div className="w-full rounded-full overflow-hidden" style={{ height: 3, background: '#1f1f1f' }}>
+              <div style={{ width: `${a.score}%`, height: '100%', background: scoreColor(a.score), borderRadius: 2 }} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Foco de hoje */}
+      {focus.length > 0 && (
+        <div className="rounded-2xl p-4 mb-4" style={{ background: '#091520', border: '1px solid #0c3450' }}>
+          <div className="flex items-center gap-2 mb-3">
+            <Zap size={13} color="#0ea5e9" />
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#0ea5e9', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Foco de hoje
+            </span>
+          </div>
+          <div className="space-y-2">
+            {focus.map((a, i) => (
+              <div key={a.id} className="flex items-center gap-2.5">
+                <span style={{ color: '#0ea5e9', fontWeight: 700, fontSize: 12, minWidth: 16 }}>{i + 1}.</span>
+                <span style={{ fontSize: 13, color: '#e5e5e5', fontWeight: 600 }}>{a.label}</span>
+                <span style={{ fontSize: 12, color: '#6b7280' }}>Score atual: {a.score}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Como e calculado */}
+      <div
+        className="rounded-2xl border border-line bg-bg-2 px-4 py-3 cursor-pointer flex items-center justify-between"
+        onClick={() => setShowCalc((p) => !p)}
+      >
+        <div className="flex items-center gap-2">
+          <Info size={13} color="#6b7280" />
+          <span style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            Como o score e calculado
+          </span>
+        </div>
+        {showCalc ? <ChevronUp size={14} color="#6b7280" /> : <ChevronDown size={14} color="#6b7280" />}
+      </div>
+      {showCalc && (
+        <div className="rounded-b-2xl border border-t-0 border-line bg-bg-2 px-4 pb-4">
+          <div className="flex flex-wrap gap-2 pt-3">
+            {AREAS.map((a) => (
+              <div key={a.id} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-line bg-bg" style={{ fontSize: 12 }}>
+                <div className="rounded-full" style={{ width: 6, height: 6, background: scoreColor(a.score) }} />
+                <span className="text-ink-2">{a.label}</span>
+                <span className="text-ink font-bold">{a.weight}%</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -561,7 +783,14 @@ export function DashboardPage() {
         </p>
       </div>
 
+      <LifeScoreSection />
+
       {/* Widget grid */}
+      <div
+        style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}
+      >
+        Modulos
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <TasksWidget />
         <NotesWidget />
