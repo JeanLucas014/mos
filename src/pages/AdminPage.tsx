@@ -93,31 +93,11 @@ export function AdminPage() {
     setError(null)
     try {
       const { supabase } = await import('../lib/supabase')
-      const { data: { session } } = await supabase.auth.getSession()
-
-      if (!session?.access_token) {
-        setError('Sessão expirada. Faça login novamente.')
-        return
-      }
-
-      const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-stats`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-        },
-      )
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}))
-        throw new Error((body as any).error ?? `Erro ${res.status}`)
-      }
-      const data: AdminStats = await res.json()
-      setStats(data)
+      const { data, error: fnError } = await supabase.functions.invoke('admin-stats', {
+        method: 'POST',
+      })
+      if (fnError) throw fnError
+      setStats(data as AdminStats)
       setLastUpdate(new Date())
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Erro desconhecido')
