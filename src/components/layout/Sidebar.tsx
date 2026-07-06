@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, Settings } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Settings, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useUIStore } from '../../stores/useUIStore'
 import { useUserSettings } from '../../hooks/useUserSettings'
@@ -221,7 +221,7 @@ const NAV_LINK_CLASS = (isActive: boolean, c: boolean) =>
   ].join(' ')
 
 export function Sidebar() {
-  const { signOut } = useAuth()
+  const { signOut, user } = useAuth()
   const setSidebarOpen         = useUIStore((s) => s.setSidebarOpen)
   const sidebarCollapsed       = useUIStore((s) => s.sidebarCollapsed)
   const toggleSidebarCollapsed = useUIStore((s) => s.toggleSidebarCollapsed)
@@ -286,6 +286,30 @@ export function Sidebar() {
             </div>
           )
         })}
+
+        {user?.id === '64ab5956-18b1-432d-82f0-1ad8bc4761db' && (
+          <div className="mb-4">
+            {!c && (
+              <h5
+                className="px-2 mb-1 text-ink-3 uppercase tracking-[0.13em]"
+                style={{ fontSize: 10, fontWeight: 600 }}
+              >
+                Admin
+              </h5>
+            )}
+            {c && <div className="mb-1 border-t border-line mx-1" />}
+            <NavLink
+              to="/admin"
+              onClick={handleNavClick}
+              title={c ? 'Admin' : undefined}
+              className={({ isActive }) => NAV_LINK_CLASS(isActive, c)}
+              style={{ fontSize: 13, fontWeight: 500, textDecoration: 'none' }}
+            >
+              <ShieldCheck size={15} className="shrink-0" />
+              {!c && <span>Admin</span>}
+            </NavLink>
+          </div>
+        )}
       </nav>
 
       {/* Footer */}
