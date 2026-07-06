@@ -92,7 +92,14 @@ export function AdminPage() {
     setLoading(true)
     setError(null)
     try {
-      const { data: { session } } = await (await import('../lib/supabase')).supabase.auth.getSession()
+      const { supabase } = await import('../lib/supabase')
+      const { data: { session } } = await supabase.auth.getSession()
+
+      if (!session?.access_token) {
+        setError('Sessão expirada. Faça login novamente.')
+        return
+      }
+
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-stats`,
         {
@@ -100,13 +107,14 @@ export function AdminPage() {
           headers: {
             'Content-Type': 'application/json',
             'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${session?.access_token ?? ''}`,
+            'Authorization': `Bearer ${session.access_token}`,
           },
         },
       )
+
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
-        throw new Error(body.error ?? `Erro ${res.status}`)
+        throw new Error((body as any).error ?? `Erro ${res.status}`)
       }
       const data: AdminStats = await res.json()
       setStats(data)
