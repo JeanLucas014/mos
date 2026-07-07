@@ -139,6 +139,33 @@ function ScoreGauge({ score, size = 176 }: { score: number; size?: number }) {
   )
 }
 
+/* ── Area Card ──────────────────────────────────────────────────── */
+interface AreaCardProps {
+  label: string
+  score: number
+  m1: string
+  m2?: string
+}
+
+function AreaCard({ label, score, m1, m2 }: AreaCardProps) {
+  const sc = scoreColor(score)
+  return (
+    <div className="bg-bg-2 border border-line rounded-xl p-4">
+      <div style={{ fontSize: 10.5, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase' as const, letterSpacing: '0.05em', marginBottom: 8 }}>
+        {label}
+      </div>
+      <div style={{ fontSize: 28, fontWeight: 800, color: sc, fontFamily: 'Sora, sans-serif', lineHeight: 1, marginBottom: 10 }}>
+        {score}
+      </div>
+      <div style={{ height: 3, background: '#1a1a1a', borderRadius: 2, overflow: 'hidden', marginBottom: 10 }}>
+        <div style={{ width: `${score}%`, height: '100%', background: sc, borderRadius: 2 }} />
+      </div>
+      <div style={{ fontSize: 12, color: '#6b7280' }}>{m1}</div>
+      {m2 && <div style={{ fontSize: 11, color: '#4b5563', marginTop: 2 }}>{m2}</div>}
+    </div>
+  )
+}
+
 /* ── Life Score Section ─────────────────────────────────────────── */
 function LifeScoreSection() {
   const [showCalc, setShowCalc] = useState(false)
@@ -159,25 +186,57 @@ function LifeScoreSection() {
     metas:    calcMetasScore((goals as any[]) ?? []),
   }
 
-  const AREAS = [
-    { id: 'financas', label: 'Financas', score: scores.financas, weight: 25 },
-    { id: 'saude',    label: 'Saude',    score: scores.saude,    weight: 25 },
-    { id: 'tarefas',  label: 'Tarefas',  score: scores.tarefas,  weight: 20 },
-    { id: 'habitos',  label: 'Habitos',  score: scores.habitos,  weight: 15 },
-    { id: 'estudos',  label: 'Estudos',  score: scores.estudos,  weight: 10 },
-    { id: 'metas',    label: 'Metas',    score: scores.metas,    weight:  5 },
+  const AREAS_WEIGHT = [
+    { id: 'financas', label: 'Financas', weight: 25 },
+    { id: 'saude',    label: 'Saude',    weight: 25 },
+    { id: 'tarefas',  label: 'Tarefas',  weight: 20 },
+    { id: 'habitos',  label: 'Habitos',  weight: 15 },
+    { id: 'estudos',  label: 'Estudos',  weight: 10 },
+    { id: 'metas',    label: 'Metas',    weight:  5 },
   ]
 
   const overall = Math.round(
-    AREAS.reduce((s, a) => s + a.score * a.weight, 0) / 100,
+    AREAS_WEIGHT.reduce((s, a) => s + scores[a.id as keyof typeof scores] * a.weight, 0) / 100,
   )
 
-  const radarData = AREAS.map((a) => ({ subject: a.label, score: a.score }))
-  const focus = [...AREAS].sort((a, b) => a.score - b.score).slice(0, 3).filter((a) => a.score < 70)
+  const radarData = AREAS_WEIGHT.map((a) => ({ subject: a.label, score: scores[a.id as keyof typeof scores] }))
+
+  const AREAS: AreaCardProps[] = [
+    {
+      label: 'Financas', score: scores.financas,
+      m1: `Saldo: R$ ${(financas.data?.saldo ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+      m2: financas.data?.saldo != null && financas.data.saldo >= 0 ? 'Saldo positivo' : 'Saldo negativo',
+    },
+    {
+      label: 'Saude', score: scores.saude,
+      m1: `${sportsData.countWeek ?? 0} treinos esta semana`,
+      m2: `Meta: ${sportsData.weekGoal ?? 5} por semana`,
+    },
+    {
+      label: 'Tarefas', score: scores.tarefas,
+      m1: `${tasksScore.data?.total ?? 0} pendentes`,
+      m2: (tasksScore.data?.overdue ?? 0) > 0 ? `${tasksScore.data?.overdue} atrasadas` : 'Nenhuma atrasada',
+    },
+    {
+      label: 'Habitos', score: scores.habitos,
+      m1: `${doneToday} / ${habitTotal} hoje`,
+      m2: habitTotal > 0 && doneToday === habitTotal ? 'Todos completos' : undefined,
+    },
+    {
+      label: 'Estudos', score: scores.estudos,
+      m1: `${estudos.activeStudies} curso(s) ativo(s)`,
+      m2: estudos.readingBooks > 0 ? `${estudos.readingBooks} livro(s) em leitura` : undefined,
+    },
+    {
+      label: 'Metas', score: scores.metas,
+      m1: `${(goals as any[]).length} metas ativas`,
+      m2: `Progresso medio: ${scores.metas}%`,
+    },
+  ]
 
   return (
     <div className="mb-8">
-      {/* Score + Radar */}
+      {/* Gauge + Radar */}
       <div className="flex flex-col lg:flex-row gap-4 mb-4">
         <div className="w-full lg:w-auto rounded-2xl border border-line bg-bg-2 p-5 flex flex-col items-center justify-center gap-3">
           <ScoreGauge score={overall} />
@@ -219,41 +278,12 @@ function LifeScoreSection() {
         </div>
       </div>
 
-      {/* Mini score bars */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-4">
+      {/* Area Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
         {AREAS.map((a) => (
-          <div key={a.id} className="rounded-xl border border-line bg-bg-2 px-3 py-2.5">
-            <div className="flex justify-between items-center mb-1.5">
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{a.label}</span>
-              <span style={{ fontSize: 13, fontWeight: 800, color: scoreColor(a.score), fontFamily: 'Sora, sans-serif' }}>{a.score}</span>
-            </div>
-            <div className="w-full rounded-full overflow-hidden" style={{ height: 3, background: '#1f1f1f' }}>
-              <div style={{ width: `${a.score}%`, height: '100%', background: scoreColor(a.score), borderRadius: 2 }} />
-            </div>
-          </div>
+          <AreaCard key={a.label} {...a} />
         ))}
       </div>
-
-      {/* Foco de hoje */}
-      {focus.length > 0 && (
-        <div className="rounded-2xl p-4 mb-4" style={{ background: '#111111', border: '1px solid #1f1f1f' }}>
-          <div className="flex items-center gap-2 mb-3">
-            <Zap size={13} color="#0ea5e9" />
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#0ea5e9', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Foco de hoje
-            </span>
-          </div>
-          <div className="space-y-2">
-            {focus.map((a, i) => (
-              <div key={a.id} className="flex items-center gap-2.5 overflow-hidden">
-                <span style={{ color: '#0ea5e9', fontWeight: 700, fontSize: 12, minWidth: 16 }}>{i + 1}.</span>
-                <span style={{ fontSize: 13, color: '#e5e5e5', fontWeight: 600 }}>{a.label}</span>
-                <span style={{ fontSize: 12, color: '#6b7280' }}>Score atual: {a.score}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Como e calculado */}
       <div
@@ -271,9 +301,9 @@ function LifeScoreSection() {
       {showCalc && (
         <div className="rounded-b-2xl border border-t-0 border-line bg-bg-2 px-4 pb-4">
           <div className="flex flex-wrap gap-2 pt-3">
-            {AREAS.map((a) => (
+            {AREAS_WEIGHT.map((a) => (
               <div key={a.id} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-line bg-bg" style={{ fontSize: 12 }}>
-                <div className="rounded-full" style={{ width: 6, height: 6, background: scoreColor(a.score) }} />
+                <div className="rounded-full" style={{ width: 6, height: 6, background: scoreColor(scores[a.id as keyof typeof scores]) }} />
                 <span className="text-ink-2">{a.label}</span>
                 <span className="text-ink font-bold">{a.weight}%</span>
               </div>
