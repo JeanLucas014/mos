@@ -188,20 +188,8 @@ function WorkoutsSection({ sport }: { sport: string }) {
     setSyncing(true)
     setSyncMsg(null)
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const resp = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/strava-sync`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${session?.access_token ?? ''}`,
-            'Content-Type': 'application/json',
-            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-          },
-        },
-      )
-      const data = await resp.json()
-      if (!resp.ok) throw new Error(data.error)
+      const { data, error } = await supabase.functions.invoke('strava-sync')
+      if (error) throw new Error(error.message)
       setSyncMsg(`${data.imported} treino${data.imported !== 1 ? 's' : ''} importado${data.imported !== 1 ? 's' : ''}`)
       qc.invalidateQueries({ queryKey: ['sports'] })
       qc.invalidateQueries({ queryKey: ['sports', sport] })
