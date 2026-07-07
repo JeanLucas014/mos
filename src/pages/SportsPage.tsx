@@ -43,12 +43,6 @@ const KIND_LABELS: Record<string, string> = {
   superior: 'Superior', inferior: 'Inferior', full_body: 'Full Body',
   cardio: 'Cardio', alongamento: 'Alongamento', geral: 'Geral',
 }
-const KIND_COLORS: Record<string, string> = {
-  easy: '#34d399', long: '#0EA5E9', tempo: '#fbbf24', interval: '#f87171',
-  natação: '#60a5fa', bike: '#f59e0b', corrida: '#34d399', tijolo: '#a78bfa',
-  superior: '#f87171', inferior: '#0EA5E9', full_body: '#a78bfa',
-  cardio: '#fbbf24', alongamento: '#34d399', geral: '#888',
-}
 
 /* ── Helpers ───────────────────────────────────────────────────── */
 function fmtDuration(s: number): string {
@@ -82,11 +76,6 @@ function daysUntil(dateStr: string): number {
   return Math.ceil((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
 }
 
-function isThisMonth(dateStr: string): boolean {
-  const d = new Date(dateStr + 'T12:00:00')
-  const now = new Date()
-  return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
-}
 
 function fmtDurationShort(s: number): string {
   const h = Math.floor(s / 3600)
@@ -160,15 +149,6 @@ function Section({
   )
 }
 
-/* ── Stat tile ─────────────────────────────────────────────────── */
-function StatTile({ label, value, color = '#0EA5E9' }: { label: string; value: string; color?: string }) {
-  return (
-    <div className="bg-bg-3 rounded-xl p-4 flex flex-col gap-1">
-      <div style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 800, fontSize: 20, color }}>{value}</div>
-      <div style={{ fontSize: 10, color: '#888', fontFamily: 'Manrope, sans-serif' }}>{label}</div>
-    </div>
-  )
-}
 
 /* ── Small modal ───────────────────────────────────────────────── */
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
