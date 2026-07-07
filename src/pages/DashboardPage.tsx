@@ -108,7 +108,7 @@ function scoreLabel(s: number): string {
 /* ── Score Gauge SVG ────────────────────────────────────────────── */
 function ScoreGauge({ score, size = 148 }: { score: number; size?: number }) {
   const center = size / 2
-  const r      = size * 0.36
+  const r      = size * 0.32
   const sw     = size * 0.085
   const color  = scoreColor(score)
   const toRad  = (deg: number) => (deg * Math.PI) / 180
@@ -128,11 +128,11 @@ function ScoreGauge({ score, size = 148 }: { score: number; size?: number }) {
       {score > 0 && (
         <path d={arc(135, end)} fill="none" stroke={color} strokeWidth={sw} strokeLinecap="round" />
       )}
-      <text x={center} y={center - 8} textAnchor="middle" fill={color}
+      <text x={center} y={center - 12} textAnchor="middle" fill={color}
         fontSize={size * 0.23} fontWeight="800" fontFamily="Sora, sans-serif">{score}</text>
-      <text x={center} y={center + 16} textAnchor="middle" fill="#9ca3af"
+      <text x={center} y={center + 12} textAnchor="middle" fill="#9ca3af"
         fontSize={size * 0.09} fontWeight="600" fontFamily="Manrope, sans-serif">{scoreLabel(score)}</text>
-      <text x={center} y={center + 30} textAnchor="middle" fill="#4b5563"
+      <text x={center} y={center + 28} textAnchor="middle" fill="#4b5563"
         fontSize={size * 0.075} fontFamily="Manrope, sans-serif">Score de Vida</text>
     </svg>
   )
@@ -232,7 +232,7 @@ function LifeScoreSection() {
 
       {/* Foco de hoje */}
       {focus.length > 0 && (
-        <div className="rounded-2xl p-4 mb-4" style={{ background: '#091520', border: '1px solid #0c3450' }}>
+        <div className="rounded-2xl p-4 mb-4" style={{ background: '#111111', border: '1px solid #1f1f1f' }}>
           <div className="flex items-center gap-2 mb-3">
             <Zap size={13} color="#0ea5e9" />
             <span style={{ fontSize: 11, fontWeight: 700, color: '#0ea5e9', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
@@ -881,9 +881,6 @@ export function DashboardPage() {
           {longDate()}
         </p>
       </div>
-
-      {/* Briefing */}
-      <BriefingCard />
 
       <LifeScoreSection />
 
