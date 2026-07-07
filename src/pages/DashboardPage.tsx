@@ -150,11 +150,11 @@ interface AreaCardProps {
 function AreaCard({ label, score, m1, m2 }: AreaCardProps) {
   const sc = scoreColor(score)
   return (
-    <div className="bg-bg-2 border border-line rounded-xl p-4">
+    <div className="bg-bg-2 border border-line rounded-xl p-3">
       <div style={{ fontSize: 10.5, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase' as const, letterSpacing: '0.05em', marginBottom: 8 }}>
         {label}
       </div>
-      <div style={{ fontSize: 28, fontWeight: 800, color: sc, fontFamily: 'Sora, sans-serif', lineHeight: 1, marginBottom: 10 }}>
+      <div style={{ fontSize: 22, fontWeight: 800, color: sc, fontFamily: 'Sora, sans-serif', lineHeight: 1, marginBottom: 10 }}>
         {score}
       </div>
       <div style={{ height: 3, background: '#1a1a1a', borderRadius: 2, overflow: 'hidden', marginBottom: 10 }}>
@@ -237,19 +237,19 @@ function LifeScoreSection() {
   return (
     <div className="mb-8">
       {/* Gauge + Radar */}
-      <div className="flex flex-col lg:flex-row gap-4 mb-4">
-        <div className="w-full lg:w-auto rounded-2xl border border-line bg-bg-2 p-5 flex flex-col items-center justify-center gap-3" style={{ minWidth: 260 }}>
+      <div className="flex flex-row gap-3 mb-4">
+        <div className="rounded-2xl border border-line bg-bg-2 p-3 sm:p-5 flex flex-col items-center justify-center gap-3" style={{ minWidth: 0, flex: '0 0 auto', width: '42%' }}>
           <ScoreGauge score={overall} size={220} />
           <div style={{ fontSize: 11, color: '#4b5563', marginTop: 4, textAlign: 'center' as const }}>
             Score de Vida
           </div>
         </div>
 
-        <div className="flex-1 min-w-0 rounded-2xl border border-line bg-bg-2 p-5">
+        <div className="flex-1 min-w-0 rounded-2xl border border-line bg-bg-2 p-3 sm:p-5">
           <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
             Visao por area
           </div>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={240}>
             <RadarChart data={radarData} margin={{ top: 16, right: 40, bottom: 16, left: 40 }}>
               <PolarGrid stroke="#1f1f1f" />
               <PolarAngleAxis
@@ -271,7 +271,7 @@ function LifeScoreSection() {
       </div>
 
       {/* Area Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
         {AREAS.map((a) => (
           <AreaCard key={a.label} {...a} />
         ))}
