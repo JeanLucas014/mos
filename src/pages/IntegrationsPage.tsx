@@ -37,23 +37,6 @@ function useIntegration(provider: string) {
   })
 }
 
-/* ── call edge function helper ───────────────────────────────────── */
-async function callFn(fnName: string, body?: unknown) {
-  const { data: { session } } = await supabase.auth.getSession()
-  const resp = await fetch(
-    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${fnName}`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${session?.access_token ?? ''}`,
-        'Content-Type': 'application/json',
-        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-      },
-      ...(body ? { body: JSON.stringify(body) } : {}),
-    },
-  )
-  return resp
-}
 
 /* ── Toast ────────────────────────────────────────────────────── */
 function Toast({ msg, ok, onClose }: { msg: string; ok: boolean; onClose: () => void }) {
@@ -120,18 +103,17 @@ function StravaCard() {
   const { data: int, isLoading } = useIntegration('strava')
   const connected = int?.connected === true
 
-  const [loading,    setLoading]    = useState(false)
-  const [syncing,    setSyncing]    = useState(false)
-  const [syncError,  setSyncError]  = useState(false)
-  const [toast,      setToast]      = useState<{ msg: string; ok: boolean } | null>(null)
+  const [loading,   setLoading]   = useState(false)
+  const [syncing,   setSyncing]   = useState(false)
+  const [syncError, setSyncError] = useState<string | null>(null)
+  const [toast,     setToast]     = useState<{ msg: string; ok: boolean } | null>(null)
 
   async function handleConnect() {
     setLoading(true)
     try {
-      const resp = await callFn('strava-auth-url')
-      if (!resp.ok) throw new Error(await resp.text())
-      const { url } = await resp.json()
-      window.location.href = url
+      const { data, error } = await supabase.functions.invoke('strava-auth-url')
+      if (error) throw error
+      window.location.href = data.url
     } catch (e) {
       setToast({ msg: 'Erro ao conectar Strava.', ok: false })
       setLoading(false)
@@ -140,15 +122,15 @@ function StravaCard() {
 
   async function handleSync() {
     setSyncing(true)
-    setSyncError(false)
+    setSyncError(null)
     try {
-      const resp = await callFn('strava-sync')
-      const data = await resp.json()
-      if (!resp.ok) throw new Error(data.error)
-      setToast({ msg: `${data.imported} treino${data.imported !== 1 ? 's' : ''} importado${data.imported !== 1 ? 's' : ''}!`, ok: true })
-      qc.invalidateQueries({ queryKey: ['workouts'] })
-    } catch (e) {
-      setSyncError(true)
+      const { data, error } = await supabase.functions.invoke('strava-sync')
+      if (error) throw error
+      const n = data?.imported ?? 0
+      setToast({ msg: `${n} treino${n !== 1 ? 's' : ''} importado${n !== 1 ? 's' : ''}!`, ok: true })
+      qc.invalidateQueries({ queryKey: ['workouts', 'corrida'] })
+    } catch (e: unknown) {
+      setSyncError(e instanceof Error ? e.message : 'Erro ao sincronizar')
       setToast({ msg: 'Erro ao sincronizar com Strava.', ok: false })
     }
     setSyncing(false)
