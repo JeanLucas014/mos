@@ -3,7 +3,6 @@ import {
   CheckSquare, Flame, FolderOpen, Target,
   Activity, FileText, BookOpen, Zap,
   ArrowRight, CalendarDays, Info, ChevronDown, ChevronUp,
-  Sparkles, RefreshCw,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar } from 'recharts'
@@ -22,7 +21,6 @@ import {
   useDashTasksScore,
   useDashEstudos,
 } from '../hooks/useDashboard'
-import { useDailyBriefing } from '../hooks/useDailyBriefing'
 
 /* ══════════════════════════════════════════════════════════════════
    UTILS
@@ -768,87 +766,6 @@ function StreakWidget() {
         </>
       )}
     </Widget>
-  )
-}
-
-/* ══════════════════════════════════════════════════════════════════
-   BRIEFING CARD
-══════════════════════════════════════════════════════════════════ */
-function BriefingCard() {
-  const { data, isLoading, isError, refetch, isFetching } = useDailyBriefing()
-
-  return (
-    <div className="rounded-2xl border border-line bg-bg-2 overflow-hidden mb-6">
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-line">
-        <div className="flex items-center gap-2.5">
-          <Sparkles size={15} color="#0EA5E9" />
-          <span
-            style={{
-              fontFamily: 'Sora, sans-serif',
-              fontSize: 13,
-              fontWeight: 700,
-              color: '#0EA5E9',
-              textTransform: 'uppercase',
-              letterSpacing: '0.06em',
-            }}
-          >
-            Briefing do dia
-          </span>
-        </div>
-        <button
-          onClick={() => refetch()}
-          disabled={isFetching}
-          className="flex items-center gap-1.5 text-ink-3 hover:text-ink transition-colors"
-          style={{ fontSize: 12, background: 'none', border: 'none', cursor: isFetching ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}
-        >
-          <RefreshCw size={12} className={isFetching ? 'animate-spin' : ''} />
-          Atualizar
-        </button>
-      </div>
-
-      {/* Content */}
-      <div className="px-5 py-4">
-        {isLoading || isFetching ? (
-          <div className="space-y-2">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="animate-pulse rounded bg-bg-3"
-                style={{ height: 14, width: i === 3 ? '60%' : '100%' }}
-              />
-            ))}
-          </div>
-        ) : isError ? (
-          <p style={{ fontSize: 13, color: '#f87171' }}>
-            Não foi possível gerar o briefing. Tente novamente.
-          </p>
-        ) : (
-          <div>
-            <p
-              style={{
-                fontSize: 14,
-                lineHeight: 1.75,
-                color: '#d4d4d4',
-                margin: 0,
-                whiteSpace: 'pre-wrap',
-              }}
-            >
-              {data?.briefing}
-            </p>
-            {data?.generatedAt && (
-              <p style={{ fontSize: 11, color: '#4b5563', marginTop: 12 }}>
-                Gerado às{' '}
-                {new Date(data.generatedAt).toLocaleTimeString('pt-BR', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </p>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
   )
 }
 
