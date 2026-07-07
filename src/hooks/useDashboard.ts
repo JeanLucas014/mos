@@ -186,15 +186,30 @@ export function useDashSports() {
 
   const start    = monthStart()
   const todayStr = today()
-  const monthWorkouts = (workouts.data ?? []).filter((w) => w.sport_date >= start)
+  const allWorkouts   = workouts.data ?? []
+  const monthWorkouts = allWorkouts.filter((w) => w.sport_date >= start)
   const kmMonth  = monthWorkouts.reduce((s, w) => s + (w.distance_m ?? 0), 0) / 1000
   const nextRace = (races.data ?? []).find((r) => r.race_date >= todayStr) ?? null
+
+  const sorted = [...allWorkouts].sort(
+    (a, b) => new Date(b.sport_date).getTime() - new Date(a.sport_date).getTime(),
+  )
+  const lastWorkoutDate = sorted[0]?.sport_date ?? null
+
+  const sevenDaysAgo = new Date()
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+  const countWeek = allWorkouts.filter(
+    (w) => new Date(w.sport_date) >= sevenDaysAgo,
+  ).length
 
   return {
     isLoading: workouts.isLoading || races.isLoading,
     kmMonth,
     countMonth: monthWorkouts.length,
     nextRace,
+    lastWorkoutDate,
+    countWeek,
+    weekGoal: 5,
   }
 }
 

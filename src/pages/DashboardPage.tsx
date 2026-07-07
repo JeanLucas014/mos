@@ -55,8 +55,24 @@ function calcFinancasScore(receitas: number, despesas: number): number {
   if (saldo >= 0) return Math.min(95, 70 + Math.round((saldo / receitas) * 30))
   return Math.max(15, 60 - Math.round((Math.abs(saldo) / receitas) * 60))
 }
-function calcSaudeScore(countMonth: number): number {
-  return Math.min(100, 20 + Math.round((countMonth / 10) * 80))
+function calcSaudeScore(
+  countWeek: number,
+  weekGoal: number,
+  lastWorkoutDate: string | null,
+): number {
+  const weekScore = Math.min(70, Math.round((countWeek / weekGoal) * 70))
+
+  let consistencyScore = 0
+  if (lastWorkoutDate) {
+    const daysSince = Math.floor(
+      (Date.now() - new Date(lastWorkoutDate).getTime()) / 86400000,
+    )
+    if (daysSince <= 2)      consistencyScore = 30
+    else if (daysSince <= 4) consistencyScore = 15
+    else if (daysSince <= 6) consistencyScore = 5
+  }
+
+  return Math.max(10, weekScore + consistencyScore)
 }
 function calcTarefasScore(total: number, overdue: number): number {
   if (total === 0) return 85
@@ -127,13 +143,13 @@ function LifeScoreSection() {
   const financas   = useDashFinancas()
   const tasksScore = useDashTasksScore()
   const { total: habitTotal, doneToday } = useDashHabits()
-  const { countMonth } = useDashSports()
+  const sportsData = useDashSports()
   const estudos    = useDashEstudos()
   const { data: goals = [] } = useDashGoals()
 
   const scores = {
     financas: calcFinancasScore(financas.data?.receitas ?? 0, financas.data?.despesas ?? 0),
-    saude:    calcSaudeScore(countMonth),
+    saude:    calcSaudeScore(sportsData.countWeek ?? 0, sportsData.weekGoal ?? 5, sportsData.lastWorkoutDate ?? null),
     tarefas:  calcTarefasScore(tasksScore.data?.total ?? 0, tasksScore.data?.overdue ?? 0),
     habitos:  calcHabitosScore(doneToday, habitTotal),
     estudos:  calcEstudosScore(estudos.activeStudies, estudos.readingBooks, estudos.avgProgress),
