@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Navigate, Link } from 'react-router-dom'
+import { Eye } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 
@@ -173,7 +174,7 @@ export function LoginPage() {
             onClick={handleDemo}
             className="w-full py-2.5 text-sm text-[#555] hover:text-white border border-[#1f1f1f] rounded-xl transition-colors hover:border-[#0EA5E9]/40 flex items-center justify-center gap-2"
           >
-            <span>👁</span>
+            <Eye size={14} color="#6b7280" />
             Explorar versão demo
           </button>
           <p className="text-[10px] text-[#444] text-center mt-2">

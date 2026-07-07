@@ -159,9 +159,9 @@ function LifeScoreSection() {
   return (
     <div className="mb-8">
       {/* Score + Radar */}
-      <div className="flex gap-4 mb-4 flex-wrap">
-        <div className="rounded-2xl border border-line bg-bg-2 p-5 flex flex-col items-center justify-center gap-3">
-          <ScoreGauge score={overall} size={148} />
+      <div className="flex flex-col lg:flex-row gap-4 mb-4">
+        <div className="w-full lg:w-auto rounded-2xl border border-line bg-bg-2 p-5 flex flex-col items-center justify-center gap-3">
+          <ScoreGauge score={overall} size={120} />
           <div className="flex gap-3">
             {[{ l: '0-59', c: '#ef4444' }, { l: '60-79', c: '#f59e0b' }, { l: '80+', c: '#22c55e' }].map((x) => (
               <div key={x.l} className="flex items-center gap-1">
@@ -172,7 +172,7 @@ function LifeScoreSection() {
           </div>
         </div>
 
-        <div className="flex-1 min-w-72 rounded-2xl border border-line bg-bg-2 p-5">
+        <div className="flex-1 min-w-0 rounded-2xl border border-line bg-bg-2 p-5">
           <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
             Visao por area
           </div>
@@ -223,7 +223,7 @@ function LifeScoreSection() {
           </div>
           <div className="space-y-2">
             {focus.map((a, i) => (
-              <div key={a.id} className="flex items-center gap-2.5">
+              <div key={a.id} className="flex items-center gap-2.5 overflow-hidden">
                 <span style={{ color: '#0ea5e9', fontWeight: 700, fontSize: 12, minWidth: 16 }}>{i + 1}.</span>
                 <span style={{ fontSize: 13, color: '#e5e5e5', fontWeight: 600 }}>{a.label}</span>
                 <span style={{ fontSize: 12, color: '#6b7280' }}>Score atual: {a.score}</span>

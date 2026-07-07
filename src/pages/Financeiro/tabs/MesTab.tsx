@@ -418,7 +418,7 @@ export function MesTab({ ano, initialMonth }: Props) {
       {viewMode === 'calendario' ? (<>
       {/* ── PC TABLE ── */}
       <div className="hidden sm:block overflow-x-auto">
-        <table className="w-full text-sm border-collapse">
+        <table className="w-full min-w-[560px] text-sm border-collapse">
           <thead>
             <tr className="text-[10px] text-[#555] uppercase tracking-wider select-none">
               <th className="text-left py-2 px-2 w-12">Dia</th>

@@ -273,7 +273,7 @@ export default function AgendaPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] -mx-4 lg:-mx-7 -mt-4 lg:-mt-7 overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-4rem)] -mx-4 lg:-mx-7 -mt-4 lg:-mt-7 overflow-y-hidden">
       {/* Top bar */}
       <div className="shrink-0 flex flex-wrap items-center gap-2 px-3 lg:px-6 py-2.5 border-b border-[#1f1f1f]">
         <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -335,13 +335,15 @@ export default function AgendaPage() {
       </div>
 
       {/* Body */}
-      <div className="flex-1 overflow-hidden">
+      <div className={`flex-1 overflow-hidden${view === 'semana' && tab === 'agenda' ? ' overflow-x-auto' : ''}`}>
         {tab === 'rotina' ? (
           <div className="h-full overflow-y-auto px-4 lg:px-6 py-5">
             <RotinaTab rotinas={rotinas} onReload={loadRotinas} />
           </div>
         ) : view === 'semana' ? (
-          <WeekView {...sharedViewProps} />
+          <div className="min-w-[640px] h-full">
+            <WeekView {...sharedViewProps} />
+          </div>
         ) : view === 'mes' ? (
           <MonthView {...sharedViewProps} />
         ) : view === 'dia' ? (
