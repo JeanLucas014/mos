@@ -104,34 +104,37 @@ function scoreLabel(s: number): string {
 }
 
 /* ── Score Gauge SVG ────────────────────────────────────────────── */
-function ScoreGauge({ score, size = 148 }: { score: number; size?: number }) {
-  const center = size / 2
-  const r      = size * 0.32
-  const sw     = size * 0.085
-  const color  = scoreColor(score)
-  const toRad  = (deg: number) => (deg * Math.PI) / 180
-  const pt     = (deg: number) => ({
-    x: center + r * Math.cos(toRad(deg)),
-    y: center + r * Math.sin(toRad(deg)),
+function ScoreGauge({ score, size = 176 }: { score: number; size?: number }) {
+  const cx = size / 2
+  const cy = size / 2
+  const r = size * 0.398
+  const sw = 4
+  const color = scoreColor(score)
+  const toRad = (deg: number) => (deg * Math.PI) / 180
+  const pt = (deg: number) => ({
+    x: cx + r * Math.cos(toRad(deg)),
+    y: cy + r * Math.sin(toRad(deg)),
   })
   const arc = (from: number, to: number) => {
-    const s  = pt(from); const e = pt(to)
+    const s = pt(from); const e = pt(to)
     const la = to - from > 180 ? 1 : 0
-    return `M ${s.x.toFixed(2)} ${s.y.toFixed(2)} A ${r} ${r} 0 ${la} 1 ${e.x.toFixed(2)} ${e.y.toFixed(2)}`
+    return `M${s.x.toFixed(1)},${s.y.toFixed(1)} A${r},${r} 0 ${la} 1 ${e.x.toFixed(1)},${e.y.toFixed(1)}`
   }
   const end = 135 + Math.min((score / 100) * 270, 270)
+
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <path d={arc(135, 405)} fill="none" stroke="#262626" strokeWidth={sw} strokeLinecap="round" />
+      <path d={arc(135, 405)} fill="none" stroke="#1a1a1a" strokeWidth={sw} strokeLinecap="round" />
       {score > 0 && (
         <path d={arc(135, end)} fill="none" stroke={color} strokeWidth={sw} strokeLinecap="round" />
       )}
-      <text x={center} y={center - 12} textAnchor="middle" fill={color}
-        fontSize={size * 0.23} fontWeight="800" fontFamily="Sora, sans-serif">{score}</text>
-      <text x={center} y={center + 12} textAnchor="middle" fill="#9ca3af"
-        fontSize={size * 0.09} fontWeight="600" fontFamily="Manrope, sans-serif">{scoreLabel(score)}</text>
-      <text x={center} y={center + 28} textAnchor="middle" fill="#4b5563"
-        fontSize={size * 0.075} fontFamily="Manrope, sans-serif">Score de Vida</text>
+      <text x={cx} y={cy - 8} textAnchor="middle" dominantBaseline="middle"
+        fill={color} fontSize={size * 0.273} fontWeight="800"
+        fontFamily="Sora, sans-serif">{score}</text>
+      <text x={cx} y={cy + size * 0.136} textAnchor="middle"
+        fill="#6b7280" fontSize={13} fontFamily="Manrope, sans-serif">
+        {scoreLabel(score)}
+      </text>
     </svg>
   )
 }
@@ -177,7 +180,10 @@ function LifeScoreSection() {
       {/* Score + Radar */}
       <div className="flex flex-col lg:flex-row gap-4 mb-4">
         <div className="w-full lg:w-auto rounded-2xl border border-line bg-bg-2 p-5 flex flex-col items-center justify-center gap-3">
-          <ScoreGauge score={overall} size={120} />
+          <ScoreGauge score={overall} />
+          <div style={{ fontSize: 11, color: '#4b5563', marginTop: 4, textAlign: 'center' as const }}>
+            Score de Vida
+          </div>
           <div className="flex gap-3">
             {[{ l: '0-59', c: '#ef4444' }, { l: '60-79', c: '#f59e0b' }, { l: '80+', c: '#22c55e' }].map((x) => (
               <div key={x.l} className="flex items-center gap-1">
