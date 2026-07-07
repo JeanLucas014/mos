@@ -238,18 +238,10 @@ function LifeScoreSection() {
     <div className="mb-8">
       {/* Gauge + Radar */}
       <div className="flex flex-col lg:flex-row gap-4 mb-4">
-        <div className="w-full lg:w-auto rounded-2xl border border-line bg-bg-2 p-5 flex flex-col items-center justify-center gap-3">
-          <ScoreGauge score={overall} />
+        <div className="w-full lg:w-auto rounded-2xl border border-line bg-bg-2 p-5 flex flex-col items-center justify-center gap-3" style={{ minWidth: 260 }}>
+          <ScoreGauge score={overall} size={220} />
           <div style={{ fontSize: 11, color: '#4b5563', marginTop: 4, textAlign: 'center' as const }}>
             Score de Vida
-          </div>
-          <div className="flex gap-3">
-            {[{ l: '0-59', c: '#ef4444' }, { l: '60-79', c: '#f59e0b' }, { l: '80+', c: '#22c55e' }].map((x) => (
-              <div key={x.l} className="flex items-center gap-1">
-                <div className="rounded-full" style={{ width: 7, height: 7, background: x.c }} />
-                <span style={{ fontSize: 11, color: '#6b7280' }}>{x.l}</span>
-              </div>
-            ))}
           </div>
         </div>
 
@@ -257,8 +249,8 @@ function LifeScoreSection() {
           <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
             Visao por area
           </div>
-          <ResponsiveContainer width="100%" height={210}>
-            <RadarChart data={radarData} margin={{ top: 10, right: 28, bottom: 10, left: 28 }}>
+          <ResponsiveContainer width="100%" height={300}>
+            <RadarChart data={radarData} margin={{ top: 16, right: 40, bottom: 16, left: 40 }}>
               <PolarGrid stroke="#1f1f1f" />
               <PolarAngleAxis
                 dataKey="subject"
