@@ -1,10 +1,10 @@
 import { useState, useEffect, type FormEvent } from 'react'
 import {
-  ChevronDown, Activity, Target, Trophy, ShoppingBag,
-  Calendar, MapPin, Check, Circle, RefreshCw, Plus,
+  ChevronDown, ChevronUp, Activity, Dumbbell, Bike,
+  Target, Trophy, ShoppingBag, Calendar, MapPin, Check, Circle, RefreshCw, Plus,
 } from 'lucide-react'
 import { HelpButton } from '@/components/help/HelpButton'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { useWorkouts } from '../hooks/useWorkouts'
 import { useSportGoals } from '../hooks/useSportGoals'
 import { useSportRaces } from '../hooks/useSportRaces'
@@ -13,6 +13,7 @@ import { supabase } from '../lib/supabase'
 import type { Database } from '../types/db'
 
 type SportRace = Database['public']['Tables']['sport_races']['Row']
+type Sport = Database['public']['Tables']['sports']['Row']
 
 /* ── Sport catalog ─────────────────────────────────────────────── */
 const SPORT_CATALOG: { key: string; label: string }[] = [
@@ -85,6 +86,47 @@ function isThisMonth(dateStr: string): boolean {
   const d = new Date(dateStr + 'T12:00:00')
   const now = new Date()
   return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+}
+
+function fmtDurationShort(s: number): string {
+  const h = Math.floor(s / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  return h > 0 ? `${h}h${String(m).padStart(2, '0')}` : `${m}min`
+}
+
+function fmtKm(m: number | null): string | null {
+  if (!m) return null
+  return m >= 1000 ? `${(m / 1000).toFixed(1)} km` : `${m} m`
+}
+
+function fmtMonthLabel(dateStr: string): string {
+  const d = new Date(dateStr + 'T12:00:00')
+  return d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+}
+
+function fmtDayLabel(dateStr: string): string {
+  const d = new Date(dateStr + 'T12:00:00')
+  const wd = d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '')
+  return `${wd}, ${d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}`
+}
+
+function calcAvgPace(workouts: Sport[]): string | null {
+  const runs = workouts.filter(w => w.sport !== 'musculacao' && w.distance_m && w.duration_s)
+  if (!runs.length) return null
+  const totalDist = runs.reduce((s, w) => s + (w.distance_m ?? 0), 0)
+  const totalTime = runs.reduce((s, w) => s + (w.duration_s ?? 0), 0)
+  const secPerKm = totalTime / (totalDist / 1000)
+  return `${Math.floor(secPerKm / 60)}:${String(Math.round(secPerKm % 60)).padStart(2, '0')}/km`
+}
+
+function groupByMonth(workouts: Sport[]): [string, Sport[]][] {
+  const groups: Record<string, Sport[]> = {}
+  workouts.forEach(w => {
+    const key = w.sport_date.slice(0, 7)
+    if (!groups[key]) groups[key] = []
+    groups[key].push(w)
+  })
+  return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]))
 }
 
 /* ── Section card ──────────────────────────────────────────────── */
@@ -171,18 +213,180 @@ function useStravaConnected() {
   })
 }
 
+/* ── YearStats ─────────────────────────────────────────────────── */
+function YearStats({ workouts, year }: { workouts: Sport[]; year: string }) {
+  const totalKm   = workouts.reduce((s, w) => s + (w.distance_m ?? 0), 0)
+  const totalTime = workouts.reduce((s, w) => s + (w.duration_s ?? 0), 0)
+  const totalCount = workouts.length
+  const avgPerWeek = (totalCount / 26).toFixed(1)
+  const bestPace   = calcAvgPace(workouts)
+  const withDist   = workouts.filter(w => w.distance_m)
+  const longestRun = withDist.length ? Math.max(...withDist.map(w => w.distance_m!)) : 0
+
+  const modalityCounts = [
+    { key: 'corrida',    label: 'Corrida',    count: workouts.filter(w => w.sport === 'corrida').length },
+    { key: 'musculacao', label: 'Musculação', count: workouts.filter(w => w.sport === 'musculacao').length },
+    { key: 'triathlon',  label: 'Triathlon',  count: workouts.filter(w => w.sport === 'triathlon').length },
+  ].filter(m => m.count > 0)
+
+  const stats = [
+    { label: 'Distância total', value: `${(totalKm / 1000).toFixed(0)} km` },
+    { label: 'Tempo total',     value: `${Math.floor(totalTime / 3600)}h ${Math.floor((totalTime % 3600) / 60)}min` },
+    { label: 'Atividades',      value: String(totalCount) },
+    { label: 'Média/semana',    value: `${avgPerWeek} treinos` },
+    { label: 'Pace médio',      value: bestPace ?? '—' },
+    { label: 'Maior corrida',   value: longestRun ? `${(longestRun / 1000).toFixed(1)} km` : '—' },
+  ]
+
+  return (
+    <div className="border border-[#1f1f1f] rounded-2xl p-5 mb-5" style={{ background: '#0a0a0a' }}>
+      <div className="flex items-start justify-between mb-5">
+        <div>
+          <div className="text-[10px] uppercase tracking-widest font-bold text-[#444] mb-1">Resumo anual</div>
+          <div className="font-bold text-xl text-white" style={{ fontFamily: 'Sora, sans-serif' }}>{year}</div>
+        </div>
+        {modalityCounts.length > 0 && (
+          <div className="flex gap-5">
+            {modalityCounts.map(m => (
+              <div key={m.key} className="text-center">
+                <div className="text-lg font-bold text-white" style={{ fontFamily: 'Sora, sans-serif' }}>{m.count}</div>
+                <div className="text-xs text-[#555]">{m.label}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        {stats.map(s => (
+          <div key={s.label} className="border border-[#1f1f1f] rounded-xl p-3" style={{ background: '#111111' }}>
+            <div className="text-[9px] uppercase tracking-widest font-bold text-[#444] mb-1.5">{s.label}</div>
+            <div className="text-sm font-bold" style={{ fontFamily: 'Sora, sans-serif', color: '#0EA5E9' }}>{s.value}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/* ── WorkoutRow ─────────────────────────────────────────────────── */
+function WorkoutRow({ w, onDelete }: { w: Sport; onDelete: (id: string) => void }) {
+  const icon = w.sport === 'musculacao'
+    ? <Dumbbell size={14} color="#4b5563" />
+    : w.sport === 'triathlon'
+    ? <Bike size={14} color="#4b5563" />
+    : <Activity size={14} color="#4b5563" />
+
+  const label = w.sport === 'corrida' ? 'Corrida'
+    : w.sport === 'musculacao' ? 'Musculação'
+    : w.sport === 'triathlon'  ? 'Triathlon'
+    : w.sport
+
+  const km = fmtKm(w.distance_m)
+
+  return (
+    <div className="group flex items-center gap-3 py-2.5 px-4 border-b border-[#171717] last:border-b-0 hover:bg-[#111111] transition-colors">
+      <div className="flex-shrink-0">{icon}</div>
+      <div className="flex-1 flex items-center gap-2 min-w-0 overflow-hidden">
+        <span className="text-sm font-semibold text-white flex-shrink-0">{label}</span>
+        {km && <span className="text-sm text-[#555] flex-shrink-0">{km}</span>}
+        {km && <span className="text-[#333] flex-shrink-0">·</span>}
+        <span className="text-sm text-[#555] flex-shrink-0">{fmtDurationShort(w.duration_s)}</span>
+      </div>
+      <div className="flex items-center gap-3 flex-shrink-0">
+        {w.pace_label && (
+          <span className="text-sm font-bold" style={{ fontFamily: 'Sora, sans-serif', color: '#0EA5E9' }}>{w.pace_label}</span>
+        )}
+        <span className="text-xs text-[#555]">{fmtDayLabel(w.sport_date)}</span>
+        <button
+          onClick={() => onDelete(w.id)}
+          className="opacity-0 group-hover:opacity-100 text-[#444] hover:text-red-400 transition-opacity w-6 h-6 flex items-center justify-center text-sm"
+        >×</button>
+      </div>
+    </div>
+  )
+}
+
+/* ── MonthGroup ─────────────────────────────────────────────────── */
+function MonthGroup({ monthKey, workouts, onDelete }: { monthKey: string; workouts: Sport[]; onDelete: (id: string) => void }) {
+  const [open, setOpen] = useState(true)
+  const totalKm   = workouts.reduce((s, w) => s + (w.distance_m ?? 0), 0)
+  const totalTime = workouts.reduce((s, w) => s + (w.duration_s ?? 0), 0)
+  const pace  = calcAvgPace(workouts)
+  const label = fmtMonthLabel(monthKey + '-01')
+
+  return (
+    <div className="border border-[#1f1f1f] rounded-2xl overflow-hidden mb-2" style={{ background: '#0a0a0a' }}>
+      <button onClick={() => setOpen(!open)} className="w-full p-4 text-left hover:bg-[#0d0d0d] transition-colors">
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <div className="text-sm font-bold text-white capitalize mb-1" style={{ fontFamily: 'Sora, sans-serif' }}>{label}</div>
+            <div className="flex gap-3 flex-wrap">
+              <span className="text-xs text-[#555]">{workouts.length} atividade{workouts.length !== 1 ? 's' : ''}</span>
+              {totalKm > 0 && <span className="text-xs text-[#555]">{(totalKm / 1000).toFixed(1)} km</span>}
+              <span className="text-xs text-[#555]">{fmtDurationShort(totalTime)}</span>
+              {pace && <span className="text-xs text-[#555]">Pace med. {pace}</span>}
+            </div>
+          </div>
+          {open ? <ChevronUp size={14} color="#4b5563" /> : <ChevronDown size={14} color="#4b5563" />}
+        </div>
+      </button>
+      {open && (
+        <div className="border-t border-[#1a1a1a]">
+          {workouts.map(w => <WorkoutRow key={w.id} w={w} onDelete={onDelete} />)}
+        </div>
+      )}
+    </div>
+  )
+}
+
 /* ══════════════════════════════════════════════════════════════════
    SECTION 1 — TREINOS
 ══════════════════════════════════════════════════════════════════ */
+const MODALITY_TABS = [
+  { key: 'todos',      label: 'Todos' },
+  { key: 'corrida',    label: 'Corrida' },
+  { key: 'musculacao', label: 'Musculação' },
+  { key: 'triathlon',  label: 'Triathlon' },
+] as const
+type ModalityTab = typeof MODALITY_TABS[number]['key']
+
 function WorkoutsSection({ sport }: { sport: string }) {
-  const { data: workouts = [], isLoading, addWorkout, deleteWorkout } = useWorkouts(sport as any)
+  const { addWorkout } = useWorkouts(sport as any)
   const qc = useQueryClient()
   const { data: stravaConnected } = useStravaConnected()
-  const [syncing, setSyncing] = useState(false)
-  const [syncMsg, setSyncMsg] = useState<string | null>(null)
-  const [showModal, setShowModal] = useState(false)
+
+  const { data: allWorkouts = [], isLoading } = useQuery({
+    queryKey: ['sports_all'],
+    queryFn: async () => {
+      const { data, error } = await (supabase.from('sports') as any)
+        .select('*').order('sport_date', { ascending: false })
+      if (error) throw error
+      return data as Sport[]
+    },
+  })
+
+  const deleteW = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase.from('sports') as any).delete().eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['sports'] })
+      qc.invalidateQueries({ queryKey: ['sports_all'] })
+    },
+  })
+
+  const [syncing,      setSyncing]      = useState(false)
+  const [syncMsg,      setSyncMsg]      = useState<string | null>(null)
+  const [showModal,    setShowModal]    = useState(false)
+  const [modalityTab,  setModalityTab]  = useState<ModalityTab>('todos')
 
   const kinds = SPORT_KINDS[sport] ?? ['geral']
+  const [wDate,  setWDate]  = useState(new Date().toISOString().slice(0, 10))
+  const [wKind,  setWKind]  = useState(kinds[0])
+  const [wDist,  setWDist]  = useState('')
+  const [wDur,   setWDur]   = useState('')
+  const [wNotes, setWNotes] = useState('')
 
   async function handleStravaSync() {
     setSyncing(true)
@@ -192,26 +396,13 @@ function WorkoutsSection({ sport }: { sport: string }) {
       if (error) throw new Error(error.message)
       setSyncMsg(`${data.imported} treino${data.imported !== 1 ? 's' : ''} importado${data.imported !== 1 ? 's' : ''}`)
       qc.invalidateQueries({ queryKey: ['sports'] })
-      qc.invalidateQueries({ queryKey: ['sports', sport] })
-    } catch (err) {
+      qc.invalidateQueries({ queryKey: ['sports_all'] })
+    } catch {
       setSyncMsg('Erro ao sincronizar com Strava')
     }
     setSyncing(false)
     setTimeout(() => setSyncMsg(null), 4000)
   }
-
-  const [wDate, setWDate] = useState(new Date().toISOString().slice(0, 10))
-  const [wKind, setWKind] = useState(kinds[0])
-  const [wDist, setWDist] = useState('')
-  const [wDur,  setWDur]  = useState('')
-  const [wNotes, setWNotes] = useState('')
-
-  const monthly = workouts.filter((w) => isThisMonth(w.sport_date))
-  const totalKm = monthly.reduce((a, w) => a + (w.distance_m ?? 0), 0) / 1000
-  const totalS  = monthly.reduce((a, w) => a + w.duration_s, 0)
-  const avgPace = totalKm > 0 ? calcPace(totalKm * 1000, totalS) : '—'
-  const kindFreq = monthly.reduce<Record<string, number>>((acc, w) => { acc[w.kind] = (acc[w.kind] ?? 0) + 1; return acc }, {})
-  const topKind  = Object.entries(kindFreq).sort((a, b) => b[1] - a[1])[0]?.[0] ?? '—'
 
   function handleAdd(e: FormEvent) {
     e.preventDefault()
@@ -219,20 +410,28 @@ function WorkoutsSection({ sport }: { sport: string }) {
     if (!dur || !wDate) return
     const needsDist = sport !== 'musculacao' && !['yoga', 'crossfit', 'futebol', 'tenis', 'volei', 'escalada'].includes(sport)
     if (needsDist && !wDist.trim()) return
-    const dist = parseFloat(wDist.replace(',', '.')) || 0
+    const dist   = parseFloat(wDist.replace(',', '.')) || 0
     const dist_m = Math.round(dist * 1000)
-    const pace = dist_m > 0 ? calcPace(dist_m, dur) : null
+    const pace   = dist_m > 0 ? calcPace(dist_m, dur) : null
     addWorkout.mutate(
       { sport, kind: wKind, distance_m: dist_m || null, duration_s: dur, pace_label: pace, sport_date: wDate, notes: wNotes || null } as any,
-      { onSuccess: () => { setShowModal(false); setWDist(''); setWDur(''); setWNotes('') } },
+      { onSuccess: () => {
+        setShowModal(false); setWDist(''); setWDur(''); setWNotes('')
+        qc.invalidateQueries({ queryKey: ['sports_all'] })
+      }},
     )
   }
+
+  const currentYear   = new Date().getFullYear().toString()
+  const yearWorkouts  = allWorkouts.filter(w => w.sport_date.startsWith(currentYear))
+  const filtered      = modalityTab === 'todos' ? allWorkouts : allWorkouts.filter(w => w.sport === modalityTab)
+  const grouped       = groupByMonth(filtered)
 
   return (
     <Section
       title="Treinos"
       icon={<Activity size={16} />}
-      count={workouts.length}
+      count={allWorkouts.length}
       extra={sport === 'corrida' && stravaConnected ? (
         <button
           onClick={handleStravaSync} disabled={syncing}
@@ -248,52 +447,46 @@ function WorkoutsSection({ sport }: { sport: string }) {
           {syncMsg}
         </div>
       )}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-        {sport === 'musculacao' ? (
-          <>
-            <StatTile label="tempo total" value={fmtDuration(totalS)} color="#34d399" />
-            <StatTile label="treinos" value={String(monthly.length)} color="#a78bfa" />
-            <StatTile label="mais frequente" value={KIND_LABELS[topKind] ?? topKind} color="#fbbf24" />
-            <StatTile label="este mês" value={monthly.length > 0 ? `${Math.round(totalS / monthly.length / 60)}min avg` : '—'} color="#0EA5E9" />
-          </>
-        ) : (
-          <>
-            <StatTile label="km no mês" value={totalKm.toFixed(1)} color="#0EA5E9" />
-            <StatTile label="tempo total" value={fmtDuration(totalS)} color="#34d399" />
-            <StatTile label="treinos" value={String(monthly.length)} color="#a78bfa" />
-            <StatTile label="pace médio" value={avgPace} color="#fbbf24" />
-          </>
-        )}
-      </div>
 
       {isLoading ? (
-        <div className="space-y-2">{[1, 2].map((i) => <div key={i} className="h-12 bg-bg-3 rounded-input animate-pulse" />)}</div>
-      ) : workouts.length === 0 ? (
-        <p className="text-ink-3 text-sm text-center py-4">Nenhum treino registrado.</p>
-      ) : (
-        <div className="space-y-1.5 mb-4">
-          {workouts.map((w) => (
-            <div key={w.id} className="group flex items-center gap-3 px-3 py-2.5 rounded-input hover:bg-bg-3 transition-colors">
-              <span className="rounded-full flex-shrink-0" style={{ width: 8, height: 8, background: KIND_COLORS[w.kind] ?? '#888', flexShrink: 0 }} />
-              <span style={{ fontSize: 11, color: KIND_COLORS[w.kind] ?? '#888', fontWeight: 700, width: 64, flexShrink: 0, fontFamily: 'Manrope, sans-serif' }}>
-                {KIND_LABELS[w.kind] ?? w.kind}
-              </span>
-              <span className="text-ink text-sm flex-1 truncate" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}>
-                {(w.distance_m ?? 0) > 0 ? `${((w.distance_m ?? 0) / 1000).toFixed(1)} km · ` : ''}{fmtDuration(w.duration_s)}
-              </span>
-              {(w.distance_m ?? 0) > 0 && (
-                <span className="text-ink-2 flex-shrink-0" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11 }}>
-                  {w.pace_label ?? calcPace(w.distance_m ?? 0, w.duration_s)}
-                </span>
-              )}
-              <span className="text-ink-3 flex-shrink-0" style={{ fontSize: 10 }}>{fmtDate(w.sport_date)}</span>
-              <button onClick={() => deleteWorkout.mutate(w.id)} className="opacity-0 group-hover:opacity-100 text-ink-3 hover:text-red-400 transition-opacity w-7 h-7 flex items-center justify-center text-sm flex-shrink-0">×</button>
-            </div>
-          ))}
+        <div className="space-y-3">
+          <div className="h-48 bg-bg-3 rounded-2xl animate-pulse" />
+          <div className="h-20 bg-bg-3 rounded-2xl animate-pulse" />
         </div>
+      ) : (
+        <>
+          <YearStats workouts={yearWorkouts} year={currentYear} />
+
+          {/* Modality tabs */}
+          <div className="flex border-b border-[#1f1f1f] mb-4 -mx-5 px-5">
+            {MODALITY_TABS.map(t => (
+              <button
+                key={t.key}
+                onClick={() => setModalityTab(t.key)}
+                className="px-3 py-2 text-xs font-semibold transition-colors"
+                style={{
+                  color: modalityTab === t.key ? '#0EA5E9' : '#4b5563',
+                  borderBottom: modalityTab === t.key ? '2px solid #0EA5E9' : '2px solid transparent',
+                  marginBottom: -1,
+                }}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Month groups */}
+          {grouped.length === 0 ? (
+            <p className="text-ink-3 text-sm text-center py-8">Nenhum treino registrado.</p>
+          ) : (
+            grouped.map(([key, wks]) => (
+              <MonthGroup key={key} monthKey={key} workouts={wks} onDelete={id => deleteW.mutate(id)} />
+            ))
+          )}
+        </>
       )}
 
-      <button onClick={() => setShowModal(true)} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-input border border-dashed border-line text-ink-2 hover:text-ink hover:bg-bg-3 transition-colors text-sm" style={{ minHeight: 44 }}>
+      <button onClick={() => setShowModal(true)} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-input border border-dashed border-line text-ink-2 hover:text-ink hover:bg-bg-3 transition-colors text-sm mt-4" style={{ minHeight: 44 }}>
         + Registrar treino
       </button>
 
