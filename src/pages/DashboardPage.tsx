@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   CheckSquare, Flame, FolderOpen, Target,
   Activity, FileText, BookOpen, Zap,
@@ -140,6 +141,8 @@ function ScoreGauge({ score, size = 176 }: { score: number; size?: number }) {
 
 /* ── Life Score Section ─────────────────────────────────────────── */
 function LifeScoreSection() {
+  const [open, setOpen] = useState(false)
+
   const financas   = useDashFinancas()
   const tasksScore = useDashTasksScore()
   const { total: habitTotal, doneToday } = useDashHabits()
@@ -171,114 +174,119 @@ function LifeScoreSection() {
   ]
 
   const AREAS = [
-    {
-      label: 'Financas',
-      score: scores.financas,
-      meta: financas.data?.saldo != null
-        ? `R$ ${Math.abs(financas.data.saldo).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} ${financas.data.saldo >= 0 ? 'positivo' : 'negativo'}`
-        : '—',
-    },
-    {
-      label: 'Saude',
-      score: scores.saude,
-      meta: `${sportsData.countWeek ?? 0}/${sportsData.weekGoal ?? 5} treinos`,
-    },
-    {
-      label: 'Tarefas',
-      score: scores.tarefas,
-      meta: (tasksScore.data?.overdue ?? 0) > 0
-        ? `${tasksScore.data?.overdue} atrasadas`
-        : `${tasksScore.data?.total ?? 0} pendentes`,
-    },
-    {
-      label: 'Habitos',
-      score: scores.habitos,
-      meta: `${doneToday}/${habitTotal} hoje`,
-    },
-    {
-      label: 'Estudos',
-      score: scores.estudos,
-      meta: estudos.activeStudies > 0
-        ? `${estudos.activeStudies} ativo(s)`
-        : 'Sem atividade',
-    },
-    {
-      label: 'Metas',
-      score: scores.metas,
-      meta: `${(goals as any[]).length} ativas`,
-    },
+    { label: 'Financas', score: scores.financas, meta: financas.data?.saldo != null ? `R$ ${Math.abs(Math.round(financas.data.saldo)).toLocaleString('pt-BR')} ${financas.data.saldo >= 0 ? 'positivo' : 'negativo'}` : '—' },
+    { label: 'Saude',    score: scores.saude,    meta: `${sportsData.countWeek ?? 0}/${sportsData.weekGoal ?? 5} treinos` },
+    { label: 'Tarefas',  score: scores.tarefas,  meta: (tasksScore.data?.overdue ?? 0) > 0 ? `${tasksScore.data?.overdue} atrasadas` : `${tasksScore.data?.total ?? 0} pendentes` },
+    { label: 'Habitos',  score: scores.habitos,  meta: `${doneToday}/${habitTotal} hoje` },
+    { label: 'Estudos',  score: scores.estudos,  meta: estudos.activeStudies > 0 ? `${estudos.activeStudies} ativo(s)` : 'Sem atividade' },
+    { label: 'Metas',    score: scores.metas,    meta: `${(goals as any[]).length} ativas` },
   ]
 
   return (
-    <div className="mb-8">
+    <div className="mb-6">
       <div className="rounded-2xl border border-line overflow-hidden" style={{ background: '#111111' }}>
 
-        {/* Linha 1: Gauge + Radar */}
-        <div className="flex" style={{ borderBottom: '1px solid #161616' }}>
+        {/* Header — sempre visível, clicável */}
+        <div
+          onClick={() => setOpen(p => !p)}
+          className="flex items-center gap-3 cursor-pointer px-4 py-3"
+          style={{ borderBottom: open ? '1px solid #161616' : undefined }}
+        >
+          {/* Gauge mini */}
+          <div style={{ flexShrink: 0 }}>
+            <ScoreGauge score={overall} size={64} />
+          </div>
 
-          {/* Gauge */}
-          <div
-            className="flex flex-col items-center justify-center gap-1 flex-shrink-0"
-            style={{ padding: '20px 24px', borderRight: '1px solid #161616' }}
-          >
-            <ScoreGauge score={overall} size={100} />
-            <div style={{ fontSize: 9.5, color: '#374151', fontWeight: 500 }}>
+          {/* Label + mini scores */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: '#9ca3af', marginBottom: 5 }}>
               Score de Vida
+            </div>
+            <div className="flex flex-wrap gap-2.5">
+              {AREAS.map(a => (
+                <div key={a.label} className="flex items-center gap-1">
+                  <div style={{ width: 5, height: 5, borderRadius: '50%', background: scoreColor(a.score), flexShrink: 0 }} />
+                  <span style={{ fontSize: 11, color: '#4b5563' }}>{a.label}</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: scoreColor(a.score) }}>{a.score}</span>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Radar */}
-          <div className="flex-1 flex items-center justify-center" style={{ padding: '8px 0' }}>
-            <ResponsiveContainer width="100%" height={180}>
-              <RadarChart data={radarData} margin={{ top: 14, right: 36, bottom: 14, left: 36 }}>
-                <PolarGrid stroke="#1f1f1f" />
-                <PolarAngleAxis
-                  dataKey="subject"
-                  tick={{ fill: '#4b5563', fontSize: 10, fontFamily: 'Manrope', fontWeight: 400 }}
-                />
-                <Radar
-                  name="Score"
-                  dataKey="score"
-                  stroke="#0ea5e9"
-                  fill="#0ea5e9"
-                  fillOpacity={0.1}
-                  strokeWidth={1.5}
-                  dot={{ fill: '#0ea5e9', r: 2.5 } as any}
-                />
-              </RadarChart>
-            </ResponsiveContainer>
-          </div>
-
+          {/* Chevron */}
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+            <path d="M4 6l4 4 4-4" stroke="#4b5563" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
         </div>
 
-        {/* Linha 2: 6 áreas */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)' }}>
-          {AREAS.map((a, i) => {
-            const sc = scoreColor(a.score)
-            return (
-              <div
-                key={a.label}
-                style={{
-                  padding: '12px 14px',
-                  borderRight: i < 5 ? '1px solid #161616' : undefined,
-                }}
-              >
-                <div style={{ fontSize: 9, fontWeight: 600, color: '#4b5563', textTransform: 'uppercase' as const, letterSpacing: '0.06em', marginBottom: 4 }}>
-                  {a.label}
-                </div>
-                <div style={{ fontSize: 19, fontWeight: 700, color: sc, fontFamily: 'Sora, sans-serif', lineHeight: 1, marginBottom: 5 }}>
-                  {a.score}
-                </div>
-                <div style={{ height: 2, background: '#1a1a1a', borderRadius: 2, overflow: 'hidden', marginBottom: 5 }}>
-                  <div style={{ width: `${a.score}%`, height: '100%', background: sc, borderRadius: 2 }} />
-                </div>
-                <div style={{ fontSize: 9.5, color: '#374151', fontWeight: 400 }}>
-                  {a.meta}
-                </div>
+        {/* Conteúdo expandido */}
+        {open && (
+          <div>
+            <div className="flex" style={{ borderBottom: '1px solid #161616' }}>
+
+              {/* Radar */}
+              <div className="flex items-center justify-center flex-shrink-0" style={{ padding: '8px 0', borderRight: '1px solid #161616' }}>
+                <ResponsiveContainer width={190} height={180}>
+                  <RadarChart data={radarData} margin={{ top: 14, right: 36, bottom: 14, left: 36 }}>
+                    <PolarGrid stroke="#1f1f1f" />
+                    <PolarAngleAxis
+                      dataKey="subject"
+                      tick={{ fill: '#4b5563', fontSize: 10, fontFamily: 'Manrope', fontWeight: 400 }}
+                    />
+                    <Radar
+                      name="Score"
+                      dataKey="score"
+                      stroke="#0ea5e9"
+                      fill="#0ea5e9"
+                      fillOpacity={0.1}
+                      strokeWidth={1.5}
+                      dot={{ fill: '#0ea5e9', r: 2.5 } as any}
+                    />
+                  </RadarChart>
+                </ResponsiveContainer>
               </div>
-            )
-          })}
-        </div>
+
+              {/* 6 áreas em grid 2×3 */}
+              <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
+                {AREAS.map((a, i) => {
+                  const sc = scoreColor(a.score)
+                  return (
+                    <div
+                      key={a.label}
+                      style={{
+                        padding: '12px 14px',
+                        borderBottom: i < 3 ? '1px solid #161616' : undefined,
+                        borderRight: i % 3 < 2 ? '1px solid #161616' : undefined,
+                      }}
+                    >
+                      <div style={{ fontSize: 9, fontWeight: 600, color: '#4b5563', textTransform: 'uppercase' as const, letterSpacing: '0.06em', marginBottom: 3 }}>
+                        {a.label}
+                      </div>
+                      <div style={{ fontSize: 19, fontWeight: 700, color: sc, fontFamily: 'Sora, sans-serif', lineHeight: 1, marginBottom: 5 }}>
+                        {a.score}
+                      </div>
+                      <div style={{ height: 2, background: '#1a1a1a', borderRadius: 2, overflow: 'hidden', marginBottom: 4 }}>
+                        <div style={{ width: `${a.score}%`, height: '100%', background: sc, borderRadius: 2 }} />
+                      </div>
+                      <div style={{ fontSize: 9.5, color: '#374151' }}>{a.meta}</div>
+                    </div>
+                  )
+                })}
+              </div>
+
+            </div>
+
+            {/* Footer */}
+            <div style={{ padding: '7px 18px', textAlign: 'right' as const }}>
+              <span
+                style={{ fontSize: 10, color: '#262626', cursor: 'pointer' }}
+                onClick={e => e.stopPropagation()}
+              >
+                como é calculado ↓
+              </span>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>
