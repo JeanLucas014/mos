@@ -503,19 +503,37 @@ function MotoTab() {
   const gastos    = records.filter(r => r.kind === 'gasto').reduce((s, r) => s + r.amount_cents, 0)
   const resultado = entradas - gastos
 
-  /* build weeks: groups of 7 days starting day 1 */
+  /* build weeks: segunda a domingo seguindo o calendário real */
   const daysInMonth = new Date(year, month + 1, 0).getDate()
   const pad = (n: number) => String(n).padStart(2, '0')
   const weeks: { weekNum: number; days: string[] }[] = []
-  let dayNum = 1
   let weekNum = 1
-  while (dayNum <= daysInMonth) {
-    const days: string[] = []
-    for (let i = 0; i < 7 && dayNum <= daysInMonth; i++, dayNum++) {
-      days.push(`${year}-${pad(month + 1)}-${pad(dayNum)}`)
+  let currentWeek: string[] = []
+
+  for (let dayNum = 1; dayNum <= daysInMonth; dayNum++) {
+    const dateStr = `${year}-${pad(month + 1)}-${pad(dayNum)}`
+    const dow = new Date(dateStr + 'T12:00:00').getDay() // 0=dom, 1=seg, ..., 6=sab
+
+    // Segunda-feira: fecha a semana anterior (se houver) e começa nova
+    if (dow === 1 && currentWeek.length > 0) {
+      weeks.push({ weekNum, days: currentWeek })
+      weekNum++
+      currentWeek = []
     }
-    weeks.push({ weekNum, days })
-    weekNum++
+
+    currentWeek.push(dateStr)
+
+    // Domingo: fecha a semana atual
+    if (dow === 0) {
+      weeks.push({ weekNum, days: currentWeek })
+      weekNum++
+      currentWeek = []
+    }
+  }
+
+  // Última semana parcial (termina antes do domingo)
+  if (currentWeek.length > 0) {
+    weeks.push({ weekNum, days: currentWeek })
   }
 
   /* by-day map */
