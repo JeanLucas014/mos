@@ -1,8 +1,7 @@
-import { useState } from 'react'
 import {
   CheckSquare, Flame, FolderOpen, Target,
   Activity, FileText, BookOpen, Zap,
-  ArrowRight, CalendarDays, Info, ChevronDown, ChevronUp,
+  ArrowRight, CalendarDays,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar } from 'recharts'
@@ -139,37 +138,8 @@ function ScoreGauge({ score, size = 176 }: { score: number; size?: number }) {
   )
 }
 
-/* ── Area Card ──────────────────────────────────────────────────── */
-interface AreaCardProps {
-  label: string
-  score: number
-  m1: string
-  m2?: string
-}
-
-function AreaCard({ label, score, m1, m2 }: AreaCardProps) {
-  const sc = scoreColor(score)
-  return (
-    <div className="bg-bg-2 border border-line rounded-xl p-3">
-      <div style={{ fontSize: 10.5, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase' as const, letterSpacing: '0.05em', marginBottom: 8 }}>
-        {label}
-      </div>
-      <div style={{ fontSize: 22, fontWeight: 800, color: sc, fontFamily: 'Sora, sans-serif', lineHeight: 1, marginBottom: 10 }}>
-        {score}
-      </div>
-      <div style={{ height: 3, background: '#1a1a1a', borderRadius: 2, overflow: 'hidden', marginBottom: 10 }}>
-        <div style={{ width: `${score}%`, height: '100%', background: sc, borderRadius: 2 }} />
-      </div>
-      <div style={{ fontSize: 12, color: '#6b7280' }}>{m1}</div>
-      {m2 && <div style={{ fontSize: 11, color: '#4b5563', marginTop: 2 }}>{m2}</div>}
-    </div>
-  )
-}
-
 /* ── Life Score Section ─────────────────────────────────────────── */
 function LifeScoreSection() {
-  const [showCalc, setShowCalc] = useState(false)
-
   const financas   = useDashFinancas()
   const tasksScore = useDashTasksScore()
   const { total: habitTotal, doneToday } = useDashHabits()
@@ -182,127 +152,135 @@ function LifeScoreSection() {
     saude:    calcSaudeScore(sportsData.countWeek ?? 0, sportsData.weekGoal ?? 5, sportsData.lastWorkoutDate ?? null),
     tarefas:  calcTarefasScore(tasksScore.data?.total ?? 0, tasksScore.data?.overdue ?? 0),
     habitos:  calcHabitosScore(doneToday, habitTotal),
-    estudos:  calcEstudosScore(estudos.activeStudies, estudos.readingBooks, estudos.avgProgress),
+    estudos:  calcEstudosScore(estudos.activeStudies, estudos.readingBooks, estudos.avgProgress ?? 0),
     metas:    calcMetasScore((goals as any[]) ?? []),
   }
 
-  const AREAS_WEIGHT = [
-    { id: 'financas', label: 'Financas', weight: 25 },
-    { id: 'saude',    label: 'Saude',    weight: 25 },
-    { id: 'tarefas',  label: 'Tarefas',  weight: 20 },
-    { id: 'habitos',  label: 'Habitos',  weight: 15 },
-    { id: 'estudos',  label: 'Estudos',  weight: 10 },
-    { id: 'metas',    label: 'Metas',    weight:  5 },
-  ]
-
   const overall = Math.round(
-    AREAS_WEIGHT.reduce((s, a) => s + scores[a.id as keyof typeof scores] * a.weight, 0) / 100,
+    (scores.financas * 25 + scores.saude * 25 + scores.tarefas * 20 +
+     scores.habitos * 15 + scores.estudos * 10 + scores.metas * 5) / 100,
   )
 
-  const radarData = AREAS_WEIGHT.map((a) => ({ subject: a.label, score: scores[a.id as keyof typeof scores] }))
+  const radarData = [
+    { subject: 'Financas', score: scores.financas },
+    { subject: 'Saude',    score: scores.saude    },
+    { subject: 'Tarefas',  score: scores.tarefas  },
+    { subject: 'Habitos',  score: scores.habitos  },
+    { subject: 'Estudos',  score: scores.estudos  },
+    { subject: 'Metas',    score: scores.metas    },
+  ]
 
-  const AREAS: AreaCardProps[] = [
+  const AREAS = [
     {
-      label: 'Financas', score: scores.financas,
-      m1: `Saldo: R$ ${(financas.data?.saldo ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
-      m2: financas.data?.saldo != null && financas.data.saldo >= 0 ? 'Saldo positivo' : 'Saldo negativo',
+      label: 'Financas',
+      score: scores.financas,
+      meta: financas.data?.saldo != null
+        ? `R$ ${Math.abs(financas.data.saldo).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} ${financas.data.saldo >= 0 ? 'positivo' : 'negativo'}`
+        : '—',
     },
     {
-      label: 'Saude', score: scores.saude,
-      m1: `${sportsData.countWeek ?? 0} treinos esta semana`,
-      m2: `Meta: ${sportsData.weekGoal ?? 5} por semana`,
+      label: 'Saude',
+      score: scores.saude,
+      meta: `${sportsData.countWeek ?? 0}/${sportsData.weekGoal ?? 5} treinos`,
     },
     {
-      label: 'Tarefas', score: scores.tarefas,
-      m1: `${tasksScore.data?.total ?? 0} pendentes`,
-      m2: (tasksScore.data?.overdue ?? 0) > 0 ? `${tasksScore.data?.overdue} atrasadas` : 'Nenhuma atrasada',
+      label: 'Tarefas',
+      score: scores.tarefas,
+      meta: (tasksScore.data?.overdue ?? 0) > 0
+        ? `${tasksScore.data?.overdue} atrasadas`
+        : `${tasksScore.data?.total ?? 0} pendentes`,
     },
     {
-      label: 'Habitos', score: scores.habitos,
-      m1: `${doneToday} / ${habitTotal} hoje`,
-      m2: habitTotal > 0 && doneToday === habitTotal ? 'Todos completos' : undefined,
+      label: 'Habitos',
+      score: scores.habitos,
+      meta: `${doneToday}/${habitTotal} hoje`,
     },
     {
-      label: 'Estudos', score: scores.estudos,
-      m1: `${estudos.activeStudies} curso(s) ativo(s)`,
-      m2: estudos.readingBooks > 0 ? `${estudos.readingBooks} livro(s) em leitura` : undefined,
+      label: 'Estudos',
+      score: scores.estudos,
+      meta: estudos.activeStudies > 0
+        ? `${estudos.activeStudies} ativo(s)`
+        : 'Sem atividade',
     },
     {
-      label: 'Metas', score: scores.metas,
-      m1: `${(goals as any[]).length} metas ativas`,
-      m2: `Progresso medio: ${scores.metas}%`,
+      label: 'Metas',
+      score: scores.metas,
+      meta: `${(goals as any[]).length} ativas`,
     },
   ]
 
   return (
     <div className="mb-8">
-      {/* Gauge + Radar */}
-      <div className="flex flex-row gap-3 mb-4">
-        <div className="rounded-2xl border border-line bg-bg-2 p-3 sm:p-5 flex flex-col items-center justify-center gap-3" style={{ minWidth: 0, flex: '0 0 auto', width: '42%' }}>
-          <ScoreGauge score={overall} size={220} />
-          <div style={{ fontSize: 11, color: '#4b5563', marginTop: 4, textAlign: 'center' as const }}>
-            Score de Vida
+      <div className="rounded-2xl border border-line overflow-hidden" style={{ background: '#111111' }}>
+
+        {/* Linha 1: Gauge + Radar */}
+        <div className="flex" style={{ borderBottom: '1px solid #161616' }}>
+
+          {/* Gauge */}
+          <div
+            className="flex flex-col items-center justify-center gap-1 flex-shrink-0"
+            style={{ padding: '20px 24px', borderRight: '1px solid #161616' }}
+          >
+            <ScoreGauge score={overall} size={100} />
+            <div style={{ fontSize: 9.5, color: '#374151', fontWeight: 500 }}>
+              Score de Vida
+            </div>
           </div>
-        </div>
 
-        <div className="flex-1 min-w-0 rounded-2xl border border-line bg-bg-2 p-3 sm:p-5">
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
-            Visao por area
+          {/* Radar */}
+          <div className="flex-1 flex items-center justify-center" style={{ padding: '8px 0' }}>
+            <ResponsiveContainer width="100%" height={180}>
+              <RadarChart data={radarData} margin={{ top: 14, right: 36, bottom: 14, left: 36 }}>
+                <PolarGrid stroke="#1f1f1f" />
+                <PolarAngleAxis
+                  dataKey="subject"
+                  tick={{ fill: '#4b5563', fontSize: 10, fontFamily: 'Manrope', fontWeight: 400 }}
+                />
+                <Radar
+                  name="Score"
+                  dataKey="score"
+                  stroke="#0ea5e9"
+                  fill="#0ea5e9"
+                  fillOpacity={0.1}
+                  strokeWidth={1.5}
+                  dot={{ fill: '#0ea5e9', r: 2.5 } as any}
+                />
+              </RadarChart>
+            </ResponsiveContainer>
           </div>
-          <ResponsiveContainer width="100%" height={240}>
-            <RadarChart data={radarData} margin={{ top: 16, right: 40, bottom: 16, left: 40 }}>
-              <PolarGrid stroke="#1f1f1f" />
-              <PolarAngleAxis
-                dataKey="subject"
-                tick={{ fill: '#9ca3af', fontSize: 11, fontFamily: 'Manrope' }}
-              />
-              <Radar
-                name="Score"
-                dataKey="score"
-                stroke="#0ea5e9"
-                fill="#0ea5e9"
-                fillOpacity={0.12}
-                strokeWidth={2}
-                dot={{ fill: '#0ea5e9', r: 3 } as any}
-              />
-            </RadarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
 
-      {/* Area Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
-        {AREAS.map((a) => (
-          <AreaCard key={a.label} {...a} />
-        ))}
-      </div>
-
-      {/* Como e calculado */}
-      <div
-        className="rounded-2xl border border-line bg-bg-2 px-4 py-3 cursor-pointer flex items-center justify-between"
-        onClick={() => setShowCalc((p) => !p)}
-      >
-        <div className="flex items-center gap-2">
-          <Info size={13} color="#6b7280" />
-          <span style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-            Como o score e calculado
-          </span>
         </div>
-        {showCalc ? <ChevronUp size={14} color="#6b7280" /> : <ChevronDown size={14} color="#6b7280" />}
-      </div>
-      {showCalc && (
-        <div className="rounded-b-2xl border border-t-0 border-line bg-bg-2 px-4 pb-4">
-          <div className="flex flex-wrap gap-2 pt-3">
-            {AREAS_WEIGHT.map((a) => (
-              <div key={a.id} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-line bg-bg" style={{ fontSize: 12 }}>
-                <div className="rounded-full" style={{ width: 6, height: 6, background: scoreColor(scores[a.id as keyof typeof scores]) }} />
-                <span className="text-ink-2">{a.label}</span>
-                <span className="text-ink font-bold">{a.weight}%</span>
+
+        {/* Linha 2: 6 áreas */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)' }}>
+          {AREAS.map((a, i) => {
+            const sc = scoreColor(a.score)
+            return (
+              <div
+                key={a.label}
+                style={{
+                  padding: '12px 14px',
+                  borderRight: i < 5 ? '1px solid #161616' : undefined,
+                }}
+              >
+                <div style={{ fontSize: 9, fontWeight: 600, color: '#4b5563', textTransform: 'uppercase' as const, letterSpacing: '0.06em', marginBottom: 4 }}>
+                  {a.label}
+                </div>
+                <div style={{ fontSize: 19, fontWeight: 700, color: sc, fontFamily: 'Sora, sans-serif', lineHeight: 1, marginBottom: 5 }}>
+                  {a.score}
+                </div>
+                <div style={{ height: 2, background: '#1a1a1a', borderRadius: 2, overflow: 'hidden', marginBottom: 5 }}>
+                  <div style={{ width: `${a.score}%`, height: '100%', background: sc, borderRadius: 2 }} />
+                </div>
+                <div style={{ fontSize: 9.5, color: '#374151', fontWeight: 400 }}>
+                  {a.meta}
+                </div>
               </div>
-            ))}
-          </div>
+            )
+          })}
         </div>
-      )}
+
+      </div>
     </div>
   )
 }
