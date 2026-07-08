@@ -107,7 +107,7 @@ function scoreLabel(s: number): string {
 function ScoreGauge({ score, size = 176 }: { score: number; size?: number }) {
   const cx = size / 2
   const cy = size / 2
-  const r = size * 0.398
+  const r = size * 0.36
   const sw = 4
   const color = scoreColor(score)
   const toRad = (deg: number) => (deg * Math.PI) / 180
@@ -128,10 +128,10 @@ function ScoreGauge({ score, size = 176 }: { score: number; size?: number }) {
       {score > 0 && (
         <path d={arc(135, end)} fill="none" stroke={color} strokeWidth={sw} strokeLinecap="round" />
       )}
-      <text x={cx} y={cy - 8} textAnchor="middle" dominantBaseline="middle"
+      <text x={cx} y={cy - size * 0.06} textAnchor="middle" dominantBaseline="middle"
         fill={color} fontSize={size * 0.273} fontWeight="800"
         fontFamily="Sora, sans-serif">{score}</text>
-      <text x={cx} y={cy + size * 0.136} textAnchor="middle"
+      <text x={cx} y={cy + size * 0.17} textAnchor="middle"
         fill="#6b7280" fontSize={13} fontFamily="Manrope, sans-serif">
         {scoreLabel(score)}
       </text>
@@ -141,7 +141,7 @@ function ScoreGauge({ score, size = 176 }: { score: number; size?: number }) {
 
 /* ── Life Score Section ─────────────────────────────────────────── */
 function LifeScoreSection() {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(true)
 
   const financas   = useDashFinancas()
   const tasksScore = useDashTasksScore()
@@ -194,7 +194,7 @@ function LifeScoreSection() {
         >
           {/* Gauge mini */}
           <div style={{ flexShrink: 0 }}>
-            <ScoreGauge score={overall} size={64} />
+            <ScoreGauge score={overall} size={80} />
           </div>
 
           {/* Label + mini scores */}
