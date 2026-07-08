@@ -184,14 +184,14 @@ function LifeScoreSection() {
 
   return (
     <div className="mb-6">
-      <div className="rounded-2xl border border-line overflow-hidden" style={{ background: '#111111' }}>
+      <div
+        className="rounded-2xl border border-line overflow-hidden"
+        style={{ background: '#111111' }}
+      >
+        {/* LINHA SUPERIOR: Gauge | Mini scores */}
+        <div className="flex" style={{ borderBottom: '1px solid #161616' }}>
 
-        {/* Header — gauge + mini scores + chevron */}
-        <div
-          className="flex items-center gap-0"
-          style={{ borderBottom: open ? '1px solid #161616' : undefined }}
-        >
-          {/* Gauge fixo 180px */}
+          {/* Gauge */}
           <div
             className="flex flex-col items-center justify-center flex-shrink-0"
             style={{ padding: '20px 24px', borderRight: '1px solid #161616', gap: 4 }}
@@ -210,9 +210,9 @@ function LifeScoreSection() {
           >
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: '#9ca3af', marginBottom: 10 }}>
-                Score de Vida
+                Visao geral
               </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '8px 14px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '6px 14px' }}>
                 {AREAS.map(a => (
                   <div key={a.label} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     <div style={{ width: 5, height: 5, borderRadius: '50%', background: scoreColor(a.score), flexShrink: 0 }} />
@@ -229,15 +229,17 @@ function LifeScoreSection() {
           </div>
         </div>
 
-        {/* Detalhes expandidos — full width below header */}
+        {/* LINHA INFERIOR: Radar | Grid de áreas — só quando aberto */}
         {open && (
-          <div className="flex" style={{ borderBottom: '1px solid #161616' }}>
+          <div className="flex">
+
+            {/* Radar — mesma largura da coluna do gauge */}
             <div
               className="flex items-center justify-center flex-shrink-0"
-              style={{ borderRight: '1px solid #161616' }}
+              style={{ borderRight: '1px solid #161616', padding: '8px 0', width: 228 }}
             >
-              <ResponsiveContainer width={200} height={220}>
-                <RadarChart data={radarData} margin={{ top: 16, right: 38, bottom: 16, left: 38 }}>
+              <ResponsiveContainer width={228} height={200}>
+                <RadarChart data={radarData} margin={{ top: 14, right: 38, bottom: 14, left: 38 }}>
                   <PolarGrid stroke="#1f1f1f" />
                   <PolarAngleAxis
                     dataKey="subject"
@@ -255,19 +257,24 @@ function LifeScoreSection() {
                 </RadarChart>
               </ResponsiveContainer>
             </div>
+
+            {/* Grid 2x3 das áreas */}
             <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
               {AREAS.map((a, i) => {
                 const sc = scoreColor(a.score)
                 return (
-                  <div key={a.label} style={{
-                    padding: '12px 14px',
-                    borderBottom: i < 3 ? '1px solid #161616' : undefined,
-                    borderRight: i % 3 < 2 ? '1px solid #161616' : undefined,
-                  }}>
+                  <div
+                    key={a.label}
+                    style={{
+                      padding: '12px 14px',
+                      borderBottom: i < 3 ? '1px solid #161616' : undefined,
+                      borderRight: i % 3 < 2 ? '1px solid #161616' : undefined,
+                    }}
+                  >
                     <div style={{ fontSize: 9, fontWeight: 600, color: '#4b5563', textTransform: 'uppercase' as const, letterSpacing: '0.06em', marginBottom: 3 }}>
                       {a.label}
                     </div>
-                    <div style={{ fontSize: 19, fontWeight: 700, color: sc, fontFamily: 'Sora, sans-serif', lineHeight: 1, marginBottom: 5 }}>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: sc, fontFamily: 'Sora, sans-serif', lineHeight: 1, marginBottom: 5 }}>
                       {a.score}
                     </div>
                     <div style={{ height: 2, background: '#1a1a1a', borderRadius: 2, overflow: 'hidden', marginBottom: 4 }}>
@@ -278,6 +285,7 @@ function LifeScoreSection() {
                 )
               })}
             </div>
+
           </div>
         )}
 
