@@ -129,7 +129,7 @@ function ScoreGauge({ score, size = 176 }: { score: number; size?: number }) {
         <path d={arc(135, end)} fill="none" stroke={color} strokeWidth={sw} strokeLinecap="round" />
       )}
       <text x={cx} y={cy - 10} textAnchor="middle" dominantBaseline="middle"
-        fill={color} fontSize={size * 0.273} fontWeight="800"
+        fill={color} fontSize={size * 0.273} fontWeight="700"
         fontFamily="Sora, sans-serif">{score}</text>
       <text x={cx} y={cy + 18} textAnchor="middle"
         fill="#6b7280" fontSize={13} fontFamily="Manrope, sans-serif">
@@ -185,99 +185,102 @@ function LifeScoreSection() {
   return (
     <div className="mb-6">
       <div className="rounded-2xl border border-line overflow-hidden" style={{ background: '#111111' }}>
-        <div className="flex">
 
-          {/* COLUNA ESQUERDA — gauge sempre visível */}
-          <div className="flex flex-col items-center justify-start flex-shrink-0"
-               style={{ padding: '20px 24px', borderRight: '1px solid #161616', gap: 4 }}>
+        {/* Header — gauge + mini scores + chevron */}
+        <div
+          className="flex items-center gap-0"
+          style={{ borderBottom: open ? '1px solid #161616' : undefined }}
+        >
+          {/* Gauge fixo 180px */}
+          <div
+            className="flex flex-col items-center justify-center flex-shrink-0"
+            style={{ padding: '20px 24px', borderRight: '1px solid #161616', gap: 4 }}
+          >
             <ScoreGauge score={overall} size={180} />
             <div style={{ fontSize: 10, color: '#4b5563', textAlign: 'center' as const }}>
               Score de Vida
             </div>
           </div>
 
-          {/* COLUNA DIREITA — mini scores + expandido */}
-          <div className="flex-1 min-w-0">
-
-            {/* Mini scores + chevron */}
-            <div className="flex items-center gap-3 cursor-pointer"
-                 style={{ padding: '16px 18px', borderBottom: '1px solid #161616' }}
-                 onClick={() => setOpen(p => !p)}>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: '#9ca3af', marginBottom: 8 }}>
-                  Score de Vida
-                </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '6px 12px' }}>
-                  {AREAS.map(a => (
-                    <div key={a.label} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <div style={{ width: 5, height: 5, borderRadius: '50%', background: scoreColor(a.score), flexShrink: 0 }} />
-                      <span style={{ fontSize: 11, color: '#4b5563' }}>{a.label}</span>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: scoreColor(a.score) }}>{a.score}</span>
-                    </div>
-                  ))}
-                </div>
+          {/* Mini scores + chevron */}
+          <div
+            className="flex-1 flex items-center gap-3 cursor-pointer"
+            style={{ padding: '16px 18px' }}
+            onClick={() => setOpen(p => !p)}
+          >
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: '#9ca3af', marginBottom: 10 }}>
+                Score de Vida
               </div>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
-                style={{ flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
-                <path d="M4 6l4 4 4-4" stroke="#4b5563" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+              <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '8px 14px' }}>
+                {AREAS.map(a => (
+                  <div key={a.label} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <div style={{ width: 5, height: 5, borderRadius: '50%', background: scoreColor(a.score), flexShrink: 0 }} />
+                    <span style={{ fontSize: 11, color: '#4b5563' }}>{a.label}</span>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: scoreColor(a.score) }}>{a.score}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-
-            {/* Detalhes expandidos — na mesma coluna direita */}
-            {open && (
-              <div>
-                {/* Radar */}
-                <div className="flex items-center justify-center"
-                     style={{ borderBottom: '1px solid #161616' }}>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <RadarChart data={radarData} margin={{ top: 14, right: 40, bottom: 14, left: 40 }}>
-                      <PolarGrid stroke="#1f1f1f" />
-                      <PolarAngleAxis
-                        dataKey="subject"
-                        tick={{ fill: '#4b5563', fontSize: 10, fontFamily: 'Manrope', fontWeight: 400 }}
-                      />
-                      <Radar
-                        name="Score"
-                        dataKey="score"
-                        stroke="#0ea5e9"
-                        fill="#0ea5e9"
-                        fillOpacity={0.1}
-                        strokeWidth={1.5}
-                        dot={{ fill: '#0ea5e9', r: 2.5 } as any}
-                      />
-                    </RadarChart>
-                  </ResponsiveContainer>
-                </div>
-
-                {/* Grid 2×3 das áreas */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
-                  {AREAS.map((a, i) => {
-                    const sc = scoreColor(a.score)
-                    return (
-                      <div key={a.label} style={{
-                        padding: '12px 14px',
-                        borderBottom: i < 3 ? '1px solid #161616' : undefined,
-                        borderRight: i % 3 < 2 ? '1px solid #161616' : undefined,
-                      }}>
-                        <div style={{ fontSize: 9, fontWeight: 600, color: '#4b5563', textTransform: 'uppercase' as const, letterSpacing: '0.06em', marginBottom: 3 }}>
-                          {a.label}
-                        </div>
-                        <div style={{ fontSize: 19, fontWeight: 700, color: sc, fontFamily: 'Sora, sans-serif', lineHeight: 1, marginBottom: 5 }}>
-                          {a.score}
-                        </div>
-                        <div style={{ height: 2, background: '#1a1a1a', borderRadius: 2, overflow: 'hidden', marginBottom: 4 }}>
-                          <div style={{ width: `${a.score}%`, height: '100%', background: sc, borderRadius: 2 }} />
-                        </div>
-                        <div style={{ fontSize: 9.5, color: '#374151' }}>{a.meta}</div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+              style={{ flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+              <path d="M4 6l4 4 4-4" stroke="#4b5563" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </div>
         </div>
+
+        {/* Detalhes expandidos — full width below header */}
+        {open && (
+          <div className="flex" style={{ borderBottom: '1px solid #161616' }}>
+            <div
+              className="flex items-center justify-center flex-shrink-0"
+              style={{ borderRight: '1px solid #161616' }}
+            >
+              <ResponsiveContainer width={200} height={220}>
+                <RadarChart data={radarData} margin={{ top: 16, right: 38, bottom: 16, left: 38 }}>
+                  <PolarGrid stroke="#1f1f1f" />
+                  <PolarAngleAxis
+                    dataKey="subject"
+                    tick={{ fill: '#4b5563', fontSize: 10, fontFamily: 'Manrope', fontWeight: 400 }}
+                  />
+                  <Radar
+                    name="Score"
+                    dataKey="score"
+                    stroke="#0ea5e9"
+                    fill="#0ea5e9"
+                    fillOpacity={0.1}
+                    strokeWidth={1.5}
+                    dot={{ fill: '#0ea5e9', r: 2.5 } as any}
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+            <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
+              {AREAS.map((a, i) => {
+                const sc = scoreColor(a.score)
+                return (
+                  <div key={a.label} style={{
+                    padding: '12px 14px',
+                    borderBottom: i < 3 ? '1px solid #161616' : undefined,
+                    borderRight: i % 3 < 2 ? '1px solid #161616' : undefined,
+                  }}>
+                    <div style={{ fontSize: 9, fontWeight: 600, color: '#4b5563', textTransform: 'uppercase' as const, letterSpacing: '0.06em', marginBottom: 3 }}>
+                      {a.label}
+                    </div>
+                    <div style={{ fontSize: 19, fontWeight: 700, color: sc, fontFamily: 'Sora, sans-serif', lineHeight: 1, marginBottom: 5 }}>
+                      {a.score}
+                    </div>
+                    <div style={{ height: 2, background: '#1a1a1a', borderRadius: 2, overflow: 'hidden', marginBottom: 4 }}>
+                      <div style={{ width: `${a.score}%`, height: '100%', background: sc, borderRadius: 2 }} />
+                    </div>
+                    <div style={{ fontSize: 9.5, color: '#374151' }}>{a.meta}</div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   )
