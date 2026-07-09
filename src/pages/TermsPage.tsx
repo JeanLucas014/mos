@@ -35,7 +35,7 @@ export function TermsPage() {
 
           <Section title="3. Cadastro e conta">
             <P>Para utilizar o MOS você deve:</P>
-            <ul style={{ color: '#d4d4d4', lineHeight: 1.8, paddingLeft: 20, margin: 0 }}>
+            <ul style={{ color: 'var(--text)', lineHeight: 1.8, paddingLeft: 20, margin: 0 }}>
               <li>Ter pelo menos 18 anos ou a maioridade legal aplicável em seu país;</li>
               <li>Fornecer um endereço de e-mail válido e confirmar sua conta;</li>
               <li>Manter a confidencialidade de suas credenciais de acesso;</li>
@@ -46,7 +46,7 @@ export function TermsPage() {
 
           <Section title="4. Uso adequado">
             <P>Você concorda em usar o MOS apenas para fins pessoais e lícitos. É vedado:</P>
-            <ul style={{ color: '#d4d4d4', lineHeight: 1.8, paddingLeft: 20, margin: 0 }}>
+            <ul style={{ color: 'var(--text)', lineHeight: 1.8, paddingLeft: 20, margin: 0 }}>
               <li>Utilizar o serviço para atividades ilegais ou fraudulentas;</li>
               <li>Tentar acessar dados de outros usuários;</li>
               <li>Realizar engenharia reversa, descompilar ou copiar o código-fonte do MOS;</li>
@@ -63,7 +63,7 @@ export function TermsPage() {
 
           <Section title="6. Conexão bancária via Open Finance">
             <P>O MOS oferece integração com instituições financeiras por meio da plataforma Pluggy. Ao conectar uma conta bancária:</P>
-            <ul style={{ color: '#d4d4d4', lineHeight: 1.8, paddingLeft: 20, margin: 0 }}>
+            <ul style={{ color: 'var(--text)', lineHeight: 1.8, paddingLeft: 20, margin: 0 }}>
               <li>Você autoriza expressamente o acesso às informações da conta selecionada;</li>
               <li>O acesso é de somente leitura — o MOS não realiza transações financeiras em seu nome;</li>
               <li>Você pode revogar essa autorização a qualquer momento nas configurações do app;</li>
@@ -124,5 +124,5 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 function P({ children }: { children: React.ReactNode }) {
-  return <p style={{ fontSize: 15, lineHeight: 1.75, color: '#d4d4d4', margin: 0 }}>{children}</p>
+  return <p style={{ fontSize: 15, lineHeight: 1.75, color: 'var(--text)', margin: 0 }}>{children}</p>
 }

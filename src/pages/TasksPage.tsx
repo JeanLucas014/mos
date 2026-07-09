@@ -98,7 +98,7 @@ function TaskModal({
                       flex: 1, padding: '8px', borderRadius: 8, fontSize: 12, fontWeight: 600,
                       background: priority === p ? cfg.bg : 'transparent',
                       border: priority === p ? `1px solid ${cfg.color}50` : '1px solid rgba(255,255,255,.08)',
-                      color: priority === p ? cfg.color : '#888',
+                      color: priority === p ? cfg.color : 'var(--text2)',
                       cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
                     }}
                   >

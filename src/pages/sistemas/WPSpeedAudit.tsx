@@ -247,14 +247,14 @@ const CWV_IDS = [
 ];
 
 function cwvStatus(score: number | null): { label: string; color: string; bg: string; border: string } {
-  if (score === null) return { label: "–", color: "#6b7280", bg: "#111111", border: "var(--border)" };
+  if (score === null) return { label: "–", color: "var(--text3)", bg: "var(--bg2)", border: "var(--border)" };
   if (score >= 0.9) return { label: "Bom", color: "#22c55e", bg: "#0d2818", border: "#1a5c38" };
   if (score >= 0.5) return { label: "Melhorar", color: "#f59e0b", bg: "#2a2410", border: "#5c4d1a" };
   return { label: "Crítico", color: "#ef4444", bg: "#2a1210", border: "#5c241a" };
 }
 
 function scoreColor(s: number | null): string {
-  if (s === null || s === undefined) return "#6b7280";
+  if (s === null || s === undefined) return "var(--text3)";
   if (s >= 90) return "#22c55e";
   if (s >= 50) return "#f59e0b";
   return "#ef4444";
@@ -342,7 +342,7 @@ function ScoreGauge({ score, strategy }: { score: number; strategy: string }) {
       <div style={{ fontSize: 13, fontWeight: 700, color, marginTop: -8, fontFamily: "'Sora', sans-serif" }}>
         {scoreLabel(score)}
       </div>
-      <div style={{ fontSize: 11, color: "#6b7280", marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
+      <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
         {strategy === "mobile" ? <Smartphone size={11} /> : <Monitor size={11} />}
         {strategy === "mobile" ? "Mobile" : "Desktop"}
       </div>
@@ -354,10 +354,10 @@ function CWVCard({ metric }: { metric: CWVMetric }) {
   const st = cwvStatus(metric.score);
   return (
     <div style={{ background: st.bg, border: `1px solid ${st.border}`, borderRadius: 12, padding: "14px 14px" }}>
-      <div style={{ fontSize: 11, color: "#6b7280", fontWeight: 700, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+      <div style={{ fontSize: 11, color: "var(--text3)", fontWeight: 700, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.04em" }}>
         {metric.label}
       </div>
-      <div style={{ fontSize: 19, fontWeight: 700, fontFamily: "'Sora', sans-serif", color: "#e5e5e5", marginBottom: 4 }}>
+      <div style={{ fontSize: 19, fontWeight: 700, fontFamily: "'Sora', sans-serif", color: "var(--text)", marginBottom: 4 }}>
         {metric.value ?? "–"}
       </div>
       <div style={{ fontSize: 11, fontWeight: 700, color: st.color }}>{metric.score !== null ? st.label : "–"}</div>
@@ -383,7 +383,7 @@ function QuickWins({ items }: { items: ResultItem[] }) {
               {i + 1}.
             </span>
             <div>
-              <span style={{ fontSize: 14, color: "#e5e5e5", fontWeight: 600 }}>{p.titulo}</span>
+              <span style={{ fontSize: 14, color: "var(--text)", fontWeight: 600 }}>{p.titulo}</span>
               {p.economiaMs > 0 && (
                 <span style={{ fontSize: 12, color: "#0ea5e9", marginLeft: 8 }}>~{fmtMs(p.economiaMs)} mais rápido</span>
               )}
@@ -408,7 +408,7 @@ function ProblemItem({
 }) {
   const cor = ESFORCO_COR[item.esforco];
   return (
-    <div style={{ background: "#111111", border: "1px solid var(--border)", borderRadius: 12, overflow: "hidden" }}>
+    <div style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 12, overflow: "hidden" }}>
       <button
         onClick={onToggle}
         style={{
@@ -424,7 +424,7 @@ function ProblemItem({
           fontFamily: "inherit",
         }}
       >
-        <span style={{ fontSize: 13, fontWeight: 700, color: "#6b7280", fontFamily: "'Sora', sans-serif", minWidth: 20 }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text3)", fontFamily: "'Sora', sans-serif", minWidth: 20 }}>
           {String(index + 1).padStart(2, "0")}
         </span>
         <div style={{ flex: 1 }}>
@@ -447,19 +447,19 @@ function ProblemItem({
               <span style={{ fontSize: 12, color: "#0ea5e9", fontWeight: 600 }}>~{fmtMs(item.economiaMs)} mais rápido</span>
             )}
             {fmtBytes(item.economiaBytes) && (
-              <span style={{ fontSize: 12, color: "#9ca3af" }}>economiza {fmtBytes(item.economiaBytes)}</span>
+              <span style={{ fontSize: 12, color: "var(--text2)" }}>economiza {fmtBytes(item.economiaBytes)}</span>
             )}
           </div>
         </div>
-        {expanded ? <ChevronDown size={18} color="#6b7280" /> : <ChevronRight size={18} color="#6b7280" />}
+        {expanded ? <ChevronDown size={18} color="var(--text3)" /> : <ChevronRight size={18} color="var(--text3)" />}
       </button>
       {expanded && (
         <div style={{ padding: "0 18px 18px 52px" }}>
-          <div style={{ background: "#0a0a0a", border: "1px solid var(--border)", borderRadius: 10, padding: 16 }}>
+          <div style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 10, padding: 16 }}>
             <div
               style={{
                 fontSize: 12,
-                color: "#6b7280",
+                color: "var(--text3)",
                 fontWeight: 700,
                 textTransform: "uppercase",
                 letterSpacing: "0.05em",
@@ -468,9 +468,9 @@ function ProblemItem({
             >
               Como resolver no WordPress
             </div>
-            <p style={{ fontSize: 14, lineHeight: 1.6, color: "#d4d4d4", margin: 0 }}>{item.wp}</p>
+            <p style={{ fontSize: 14, lineHeight: 1.6, color: "var(--text)", margin: 0 }}>{item.wp}</p>
             {item.displayValue && (
-              <p style={{ fontSize: 12.5, color: "#6b7280", marginTop: 12, marginBottom: 0 }}>
+              <p style={{ fontSize: 12.5, color: "var(--text3)", marginTop: 12, marginBottom: 0 }}>
                 Diagnóstico do Google: {item.displayValue}
               </p>
             )}
@@ -650,7 +650,7 @@ export default function WPSpeedAudit() {
               flexShrink: 0,
             }}
           >
-            <Zap size={22} color="#0a0a0a" fill="#0a0a0a" />
+            <Zap size={22} color="var(--bg)" fill="var(--bg)" />
           </div>
           <h1
             style={{
@@ -664,7 +664,7 @@ export default function WPSpeedAudit() {
             WP Speed Audit
           </h1>
         </div>
-        <p style={{ color: "#9ca3af", fontSize: 14, margin: 0, lineHeight: 1.5 }}>
+        <p style={{ color: "var(--text2)", fontSize: 14, margin: 0, lineHeight: 1.5 }}>
           Analisa qualquer site WordPress com o PageSpeed Insights do Google e devolve um plano de ação — o que
           corrigir, em qual plugin, ordenado por impacto.
         </p>
@@ -673,18 +673,18 @@ export default function WPSpeedAudit() {
       {/* Form */}
       <div
         style={{
-          background: "#111111",
+          background: "var(--bg2)",
           border: "1px solid var(--border)",
           borderRadius: 14,
           padding: 24,
           marginBottom: 24,
         }}
       >
-        <label style={{ fontSize: 13, color: "#9ca3af", display: "block", marginBottom: 8, fontWeight: 600 }}>
+        <label style={{ fontSize: 13, color: "var(--text2)", display: "block", marginBottom: 8, fontWeight: 600 }}>
           URL do site
         </label>
         <div style={{ position: "relative", marginBottom: 16 }}>
-          <Search size={16} color="#6b7280" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)" }} />
+          <Search size={16} color="var(--text3)" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)" }} />
           <input
             value={url}
             onChange={(e) => setUrl(e.target.value)}
@@ -693,7 +693,7 @@ export default function WPSpeedAudit() {
             style={{
               width: "100%",
               boxSizing: "border-box",
-              background: "#0a0a0a",
+              background: "var(--bg)",
               border: "1px solid #262626",
               borderRadius: 10,
               padding: "12px 14px 12px 40px",
@@ -720,8 +720,8 @@ export default function WPSpeedAudit() {
                 fontSize: 14,
                 fontWeight: 600,
                 fontFamily: "inherit",
-                background: strategy === val ? "#0ea5e9" : "#0a0a0a",
-                color: strategy === val ? "#0a0a0a" : "#9ca3af",
+                background: strategy === val ? "#0ea5e9" : "var(--bg)",
+                color: strategy === val ? "var(--bg)" : "var(--text2)",
                 border: `1px solid ${strategy === val ? "#0ea5e9" : "var(--border)"}`,
               }}
             >
@@ -744,7 +744,7 @@ export default function WPSpeedAudit() {
             fontWeight: 700,
             fontFamily: "'Sora', sans-serif",
             background: loading ? "var(--border)" : "#0ea5e9",
-            color: loading ? "#6b7280" : "#0a0a0a",
+            color: loading ? "var(--text3)" : "var(--bg)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -762,7 +762,7 @@ export default function WPSpeedAudit() {
           )}
         </button>
         {loading && (
-          <p style={{ textAlign: "center", fontSize: 12.5, color: "#6b7280", marginTop: 12, marginBottom: 0 }}>
+          <p style={{ textAlign: "center", fontSize: 12.5, color: "var(--text3)", marginTop: 12, marginBottom: 0 }}>
             O Google leva 10–30s para rodar o teste real na página.
           </p>
         )}
@@ -794,7 +794,7 @@ export default function WPSpeedAudit() {
           <div style={{ display: "flex", gap: 20, marginBottom: 28, flexWrap: "wrap", alignItems: "flex-start" }}>
             <div
               style={{
-                background: "#111111",
+                background: "var(--bg2)",
                 border: "1px solid var(--border)",
                 borderRadius: 14,
                 padding: "24px 28px",
@@ -840,7 +840,7 @@ export default function WPSpeedAudit() {
                     padding: "10px 18px",
                     fontSize: 14,
                     fontWeight: 600,
-                    color: active ? "#0ea5e9" : "#6b7280",
+                    color: active ? "#0ea5e9" : "var(--text3)",
                     fontFamily: "inherit",
                     marginBottom: -1,
                     whiteSpace: "nowrap",
@@ -852,7 +852,7 @@ export default function WPSpeedAudit() {
                       marginLeft: 6,
                       fontSize: 12,
                       background: active ? "#0c3450" : "var(--border)",
-                      color: active ? "#0ea5e9" : "#6b7280",
+                      color: active ? "#0ea5e9" : "var(--text3)",
                       borderRadius: 10,
                       padding: "1px 7px",
                     }}
@@ -869,11 +869,11 @@ export default function WPSpeedAudit() {
             activeItems.length === 0 ? (
               <div
                 style={{
-                  background: "#111111",
+                  background: "var(--bg2)",
                   border: "1px solid var(--border)",
                   borderRadius: 12,
                   padding: 24,
-                  color: "#6b7280",
+                  color: "var(--text3)",
                   fontSize: 14,
                   textAlign: "center",
                 }}

@@ -251,10 +251,10 @@ function YearStats({ workouts, year }: { workouts: Sport[]; year: string }) {
 /* ── WorkoutRow ─────────────────────────────────────────────────── */
 function WorkoutRow({ w, onDelete }: { w: Sport; onDelete: (id: string) => void }) {
   const icon = w.sport === 'musculacao'
-    ? <Dumbbell size={14} color="#4b5563" />
+    ? <Dumbbell size={14} color="var(--text2)" />
     : w.sport === 'triathlon'
-    ? <Bike size={14} color="#4b5563" />
-    : <Activity size={14} color="#4b5563" />
+    ? <Bike size={14} color="var(--text2)" />
+    : <Activity size={14} color="var(--text2)" />
 
   const label = w.sport === 'corrida' ? 'Corrida'
     : w.sport === 'musculacao' ? 'Musculação'
@@ -307,7 +307,7 @@ function MonthGroup({ monthKey, workouts, onDelete }: { monthKey: string; workou
               {pace && <span className="text-xs text-[#555]">Pace med. {pace}</span>}
             </div>
           </div>
-          {open ? <ChevronUp size={14} color="#4b5563" /> : <ChevronDown size={14} color="#4b5563" />}
+          {open ? <ChevronUp size={14} color="var(--text2)" /> : <ChevronDown size={14} color="var(--text2)" />}
         </div>
       </button>
       {open && (
@@ -445,7 +445,7 @@ function WorkoutsSection({ sport }: { sport: string }) {
                 onClick={() => setModalityTab(t.key)}
                 className="px-3 py-2 text-xs font-semibold transition-colors"
                 style={{
-                  color: modalityTab === t.key ? '#0EA5E9' : '#4b5563',
+                  color: modalityTab === t.key ? '#0EA5E9' : 'var(--text2)',
                   borderBottom: modalityTab === t.key ? '2px solid #0EA5E9' : '2px solid transparent',
                   marginBottom: -1,
                 }}
@@ -677,11 +677,11 @@ function RacesSection({ sport }: { sport: string }) {
 
   function daysBadge(race: SportRace) {
     const d = daysUntil(race.race_date)
-    if (d < 0)  return { text: 'Passou', color: '#888' }
+    if (d < 0)  return { text: 'Passou', color: 'var(--text2)' }
     if (d === 0) return { text: 'Hoje!',  color: '#34d399' }
     if (d <= 7)  return { text: `${d}d`,  color: '#f87171' }
     if (d <= 30) return { text: `${d}d`,  color: '#fbbf24' }
-    return { text: `${d}d`, color: '#888' }
+    return { text: `${d}d`, color: 'var(--text2)' }
   }
 
   return (
@@ -704,7 +704,7 @@ function RacesSection({ sport }: { sport: string }) {
                     <span className="text-ink font-semibold text-sm truncate" style={{ fontFamily: 'Sora, sans-serif' }}>{r.name}</span>
                     {r.registered && <span style={{ fontSize: 9, background: 'rgba(52,211,153,.12)', color: '#34d399', padding: '1px 6px', borderRadius: 10, fontWeight: 700 }}>inscrito</span>}
                   </div>
-                  <div className="flex items-center gap-3 mt-0.5 flex-wrap" style={{ fontSize: 10, color: '#888', fontFamily: 'JetBrains Mono, monospace' }}>
+                  <div className="flex items-center gap-3 mt-0.5 flex-wrap" style={{ fontSize: 10, color: 'var(--text2)', fontFamily: 'JetBrains Mono, monospace' }}>
                     <span className="flex items-center gap-0.5"><Calendar size={9} />{fmtDate(r.race_date)}</span>
                     {r.location && <span className="flex items-center gap-0.5"><MapPin size={9} />{r.location}</span>}
                     {r.distance && <span>{r.distance}</span>}
@@ -844,7 +844,7 @@ export function SportsPage() {
             style={{
               minHeight: 40, fontSize: 13,
               background: sport === s.key ? 'var(--border)' : 'transparent',
-              color: sport === s.key ? '#fff' : '#888',
+              color: sport === s.key ? '#fff' : 'var(--text2)',
               border: sport === s.key ? '1px solid rgba(255,255,255,.08)' : '1px solid transparent',
               whiteSpace: 'nowrap',
             }}

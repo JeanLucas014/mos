@@ -12,7 +12,7 @@ const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> =
   'início':  { label: 'Início',  color: '#fbbf24', bg: 'rgba(251,191,36,.12)' },
   'ativo':   { label: 'Ativo',   color: '#34d399', bg: 'rgba(52,211,153,.12)' },
   'live':    { label: 'Live',    color: '#059669', bg: 'rgba(5,150,105,.12)'  },
-  'pausado': { label: 'Pausado', color: '#888',    bg: 'rgba(255,255,255,.06)' },
+  'pausado': { label: 'Pausado', color: 'var(--text2)',    bg: 'rgba(255,255,255,.06)' },
 }
 const STATUS_KEYS = Object.keys(STATUS_CFG)
 
@@ -94,7 +94,7 @@ function ChecklistSection({
 
   return (
     <div style={{ marginTop: 10 }}>
-      <div style={{ fontSize: 10, fontWeight: 700, color: '#888', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.06em' }}>
+      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text2)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.06em' }}>
         Checklist {totalCount > 0 && <span style={{ fontWeight: 400 }}>· {progress}%</span>}
       </div>
       {addErr && <div style={{ fontSize: 10, color: '#f87171', marginBottom: 6 }}>{addErr}</div>}
@@ -116,7 +116,7 @@ function ChecklistSection({
             )}
           </button>
           <span style={{
-            flex: 1, fontSize: 12, color: item.done ? '#555' : '#aaa',
+            flex: 1, fontSize: 12, color: item.done ? 'var(--text3)' : '#aaa',
             textDecoration: item.done ? 'line-through' : 'none',
             fontFamily: 'Manrope, sans-serif',
           }}>
@@ -124,7 +124,7 @@ function ChecklistSection({
           </span>
           <button
             onClick={() => deleteItem.mutate(item.id)}
-            style={{ color: '#444', fontSize: 14, cursor: 'pointer', background: 'none', border: 'none', lineHeight: 1, padding: '0 2px' }}
+            style={{ color: 'var(--text3)', fontSize: 14, cursor: 'pointer', background: 'none', border: 'none', lineHeight: 1, padding: '0 2px' }}
           >
             ×
           </button>
@@ -286,7 +286,7 @@ function ProjectCard({
         <div style={{ borderTop: '1px solid #1a1a1a', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
           {/* Notes */}
           <div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#888', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '.06em' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text2)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '.06em' }}>
               Notas
             </div>
             <textarea

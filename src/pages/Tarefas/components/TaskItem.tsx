@@ -56,7 +56,7 @@ export function TaskItem({ task, subtasks, project, showProject, onComplete, onD
             'w-4 h-4 rounded-full border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all',
             isDone ? 'border-[#555] bg-[#555]' : 'hover:border-[#0EA5E9]',
           ].join(' ')}
-          style={{ borderColor: isDone ? '#555' : cfg.color, minWidth: 28, minHeight: 28, margin: '-6px 0' }}
+          style={{ borderColor: isDone ? 'var(--text3)' : cfg.color, minWidth: 28, minHeight: 28, margin: '-6px 0' }}
         >
           {isDone && (
             <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
@@ -76,7 +76,7 @@ export function TaskItem({ task, subtasks, project, showProject, onComplete, onD
             {task.due_date && (
               <span
                 className="text-[11px] font-medium"
-                style={{ color: isOverdue ? '#ef4444' : task.due_date === new Date().toISOString().slice(0, 10) ? '#22c55e' : '#888' }}
+                style={{ color: isOverdue ? '#ef4444' : task.due_date === new Date().toISOString().slice(0, 10) ? '#22c55e' : 'var(--text2)' }}
               >
                 {isOverdue ? '⚠ ' : ''}{fmtDue(task.due_date)}
               </span>

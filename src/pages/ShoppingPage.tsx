@@ -6,7 +6,7 @@ const CATEGORIES = ['Todos', 'Geral', 'Açougue', 'Limpeza', 'Sacolão', 'Higien
 const ADD_CATEGORIES = CATEGORIES.filter(c => c !== 'Todos')
 
 const CAT_COLORS: Record<string, string> = {
-  'Geral':           '#6b7280',
+  'Geral':           'var(--text3)',
   'Açougue':         '#ef4444',
   'Limpeza':         '#3b82f6',
   'Sacolão':         '#22c55e',
@@ -127,7 +127,7 @@ export function ShoppingPage() {
                   style={{
                     background: isActive ? (cat === 'Todos' ? '#0EA5E9' : CAT_COLORS[cat]) + '22' : 'transparent',
                     border: `1px solid ${isActive ? (cat === 'Todos' ? '#0EA5E9' : CAT_COLORS[cat]) + '80' : 'var(--border)'}`,
-                    color: isActive ? (cat === 'Todos' ? '#0EA5E9' : CAT_COLORS[cat]) : '#555',
+                    color: isActive ? (cat === 'Todos' ? '#0EA5E9' : CAT_COLORS[cat]) : 'var(--text3)',
                   }}
                 >
                   {cat !== 'Todos' && (
@@ -142,7 +142,7 @@ export function ShoppingPage() {
                       className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
                       style={{
                         background: isActive ? (cat === 'Todos' ? '#0EA5E9' : CAT_COLORS[cat]) + '33' : 'var(--border)',
-                        color: isActive ? (cat === 'Todos' ? '#0EA5E9' : CAT_COLORS[cat]) : '#555',
+                        color: isActive ? (cat === 'Todos' ? '#0EA5E9' : CAT_COLORS[cat]) : 'var(--text3)',
                       }}
                     >
                       {pending}

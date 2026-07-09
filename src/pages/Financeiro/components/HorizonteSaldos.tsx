@@ -126,7 +126,7 @@ export function HorizonteSaldos({ ano }: Props) {
                 height: ROW_H,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 10,
-                color: isToday ? '#0EA5E9' : '#555',
+                color: isToday ? '#0EA5E9' : 'var(--text3)',
                 fontWeight: isToday ? 700 : 400,
                 fontVariantNumeric: 'tabular-nums',
                 borderBottom: '1px solid #111',
@@ -153,8 +153,8 @@ export function HorizonteSaldos({ ano }: Props) {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: narrow ? 12 : 13, fontWeight: 700,
                 fontFamily: 'Sora, sans-serif',
-                background: isCur ? '#ffffff' : 'transparent',
-                color: isCur ? '#000000' : '#777',
+                background: isCur ? 'var(--blue)' : 'transparent',
+                color: isCur ? '#ffffff' : 'var(--text3)',
               }}>
                 {MONTHS[m.mi]}/{String(ano.ano).slice(2)}
               </div>

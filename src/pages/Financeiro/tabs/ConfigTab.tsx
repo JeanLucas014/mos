@@ -177,7 +177,7 @@ export function ConfigTab({ anos, onReload }: Props) {
                 <option value="saida">Saída</option>
                 <option value="diario">Diário</option>
               </select>
-              <input type="color" value={catForm.cor || '#555555'} onChange={e => setCatForm({ ...catForm, cor: e.target.value })}
+              <input type="color" value={catForm.cor || 'var(--text3)'} onChange={e => setCatForm({ ...catForm, cor: e.target.value })}
                 className="w-10 h-9 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg cursor-pointer" />
               <label className="flex items-center gap-1.5 text-xs text-[#555] cursor-pointer">
                 <input type="checkbox" checked={catForm.rapida} onChange={e => setCatForm({ ...catForm, rapida: e.target.checked })} className="accent-[#0EA5E9]" />
@@ -222,7 +222,7 @@ export function ConfigTab({ anos, onReload }: Props) {
             <div className="flex gap-2">
               <input placeholder="Nome" value={cardForm.nome} onChange={e => setCardForm({ ...cardForm, nome: e.target.value })}
                 className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60" />
-              <input type="color" value={cardForm.cor || '#555555'} onChange={e => setCardForm({ ...cardForm, cor: e.target.value })}
+              <input type="color" value={cardForm.cor || 'var(--text3)'} onChange={e => setCardForm({ ...cardForm, cor: e.target.value })}
                 className="w-10 h-9 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg cursor-pointer" />
               <button onClick={addCartao} className="px-4 py-1.5 text-sm font-medium bg-[#0EA5E9] text-black rounded-lg hover:bg-[#38bdf8]">
                 <Plus size={14} />

@@ -195,26 +195,26 @@ export function CommandPalette() {
       onClick={() => setOpen(false)}
     >
       <div
-        className="bg-[#111111] border border-[#2a2a2a] rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden"
+        className="bg-bg-2 border border-line rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
         {/* Input */}
-        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[#1f1f1f]">
-          <Search size={16} className="text-[#555] shrink-0" />
+        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-line">
+          <Search size={16} className="text-ink-3 shrink-0" />
           <input
             ref={inputRef}
             value={query}
             onChange={e => setQuery(e.target.value)}
             onKeyDown={onKeyDown}
             placeholder="Buscar tarefas, eventos, senhas, livros..."
-            className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-[#444]"
+            className="flex-1 bg-transparent text-ink text-sm outline-none placeholder:text-ink-3"
           />
           {query && (
-            <button onClick={() => setQuery('')} className="text-[#555] hover:text-white transition-colors">
+            <button onClick={() => setQuery('')} className="text-ink-3 hover:text-ink transition-colors">
               <X size={14} />
             </button>
           )}
-          <kbd className="hidden sm:inline text-[10px] text-[#444] border border-[#2a2a2a] rounded px-1.5 py-0.5">
+          <kbd className="hidden sm:inline text-[10px] text-ink-3 border border-line rounded px-1.5 py-0.5">
             ESC
           </kbd>
         </div>
@@ -222,11 +222,11 @@ export function CommandPalette() {
         {/* Results */}
         <div className="max-h-[60vh] overflow-y-auto">
           {loading && (
-            <div className="px-4 py-8 text-center text-xs text-[#444]">Buscando...</div>
+            <div className="px-4 py-8 text-center text-xs text-ink-3">Buscando...</div>
           )}
 
           {!loading && query && results.length === 0 && (
-            <div className="px-4 py-8 text-center text-xs text-[#444]">
+            <div className="px-4 py-8 text-center text-xs text-ink-3">
               Nenhum resultado para "{query}"
             </div>
           )}
@@ -248,12 +248,12 @@ export function CommandPalette() {
                     {r.icon}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm text-white truncate">{r.title}</div>
+                    <div className="text-sm text-ink truncate">{r.title}</div>
                     {r.subtitle && (
-                      <div className="text-[11px] text-[#555] truncate">{r.subtitle}</div>
+                      <div className="text-[11px] text-ink-3 truncate">{r.subtitle}</div>
                     )}
                   </div>
-                  <span className="text-[10px] text-[#444] shrink-0 px-1.5 py-0.5 rounded border border-[#2a2a2a]">
+                  <span className="text-[10px] text-ink-3 shrink-0 px-1.5 py-0.5 rounded border border-line">
                     {TYPE_CONFIG[r.type]?.label}
                   </span>
                 </button>
@@ -264,7 +264,7 @@ export function CommandPalette() {
           {/* Navegação rápida */}
           {!query && (
             <div className="py-2">
-              <div className="px-4 py-1.5 text-[10px] text-[#444] uppercase tracking-wider">
+              <div className="px-4 py-1.5 text-[10px] text-ink-3 uppercase tracking-wider">
                 Navegação rápida
               </div>
               {NAVIGATION.map((item, i) => (
@@ -275,9 +275,9 @@ export function CommandPalette() {
                   style={{ background: selected === i ? 'rgba(255,255,255,.05)' : 'transparent' }}
                   onMouseEnter={() => setSelected(i)}
                 >
-                  <span className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-[#555]">{item.icon}</span>
-                  <span className="text-sm text-[#ccc]">{item.title}</span>
-                  <ChevronRight size={12} className="text-[#333] ml-auto shrink-0" />
+                  <span className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-ink-3">{item.icon}</span>
+                  <span className="text-sm text-ink-2">{item.title}</span>
+                  <ChevronRight size={12} className="text-ink-3 ml-auto shrink-0" />
                 </button>
               ))}
             </div>
@@ -285,15 +285,15 @@ export function CommandPalette() {
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-2.5 border-t border-[#1f1f1f] flex items-center gap-4">
-          <span className="text-[10px] text-[#333]">
-            <kbd className="border border-[#2a2a2a] rounded px-1">↑↓</kbd> navegar
+        <div className="px-4 py-2.5 border-t border-line flex items-center gap-4">
+          <span className="text-[10px] text-ink-3">
+            <kbd className="border border-line rounded px-1">↑↓</kbd> navegar
           </span>
-          <span className="text-[10px] text-[#333]">
-            <kbd className="border border-[#2a2a2a] rounded px-1">↵</kbd> abrir
+          <span className="text-[10px] text-ink-3">
+            <kbd className="border border-line rounded px-1">↵</kbd> abrir
           </span>
-          <span className="text-[10px] text-[#333] ml-auto">
-            <kbd className="border border-[#2a2a2a] rounded px-1">⌘K</kbd> fechar
+          <span className="text-[10px] text-ink-3 ml-auto">
+            <kbd className="border border-line rounded px-1">⌘K</kbd> fechar
           </span>
         </div>
       </div>

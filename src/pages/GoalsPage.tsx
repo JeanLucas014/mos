@@ -18,11 +18,11 @@ const AREA_COLOR: Record<string, string> = {
   relações:    '#f87171',
   aprendizado: '#a78bfa',
   esportes:    '#fb923c',
-  pessoal:     '#6b7280',
-  geral:       '#888888',
+  pessoal:     'var(--text3)',
+  geral:       'var(--text2)',
 }
 
-function aColor(area?: string | null) { return AREA_COLOR[area ?? 'geral'] ?? '#888' }
+function aColor(area?: string | null) { return AREA_COLOR[area ?? 'geral'] ?? 'var(--text2)' }
 
 /* ── Skeleton ──────────────────────────────────────────────────── */
 function Skeleton() {
@@ -308,7 +308,7 @@ function AddModal({
                       padding: '5px 12px', borderRadius: 20, fontSize: 11, fontWeight: selected ? 600 : 400,
                       background: selected ? c + '18' : 'transparent',
                       border: selected ? `1px solid ${c}50` : '1px solid rgba(255,255,255,.08)',
-                      color: selected ? c : '#888', cursor: 'pointer', textTransform: 'capitalize',
+                      color: selected ? c : 'var(--text2)', cursor: 'pointer', textTransform: 'capitalize',
                     }}
                   >
                     {a}
@@ -440,7 +440,7 @@ export function GoalsPage() {
                   padding: '5px 14px', borderRadius: 20, fontSize: 11, fontWeight: active ? 600 : 400,
                   background: active ? (a === 'todas' ? '#0EA5E9' : c + '18') : 'transparent',
                   border: active ? `1px solid ${c}50` : '1px solid rgba(255,255,255,.08)',
-                  color: active ? (a === 'todas' ? '#fff' : c) : '#888',
+                  color: active ? (a === 'todas' ? '#fff' : c) : 'var(--text2)',
                   cursor: 'pointer', textTransform: 'capitalize',
                 }}
               >

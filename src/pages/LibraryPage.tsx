@@ -10,13 +10,13 @@ type BookStatus = 'lendo' | 'lido' | 'quero_ler' | 'nao_finalizado'
 const STATUS_CFG: Record<BookStatus, { label: string; color: string; bg: string }> = {
   lendo:     { label: 'Lendo',     color: '#0EA5E9', bg: 'rgba(14,165,233,.14)' },
   lido:      { label: 'Lido',      color: '#34d399', bg: 'rgba(52,211,153,.12)' },
-  quero_ler:      { label: 'Quero ler',      color: '#888',    bg: 'rgba(255,255,255,.06)' },
+  quero_ler:      { label: 'Quero ler',      color: 'var(--text2)',    bg: 'rgba(255,255,255,.06)' },
   nao_finalizado: { label: 'Não finalizado', color: '#f97316', bg: 'rgba(249,115,22,.14)' },
 }
 
 const SECTIONS: { key: BookStatus; label: string; color: string }[] = [
   { key: 'lendo',     label: 'Lendo',     color: '#0EA5E9' },
-  { key: 'quero_ler',      label: 'Quero ler',     color: '#888' },
+  { key: 'quero_ler',      label: 'Quero ler',     color: 'var(--text2)' },
   { key: 'nao_finalizado', label: 'Não finalizados', color: '#f97316' },
   { key: 'lido',           label: 'Lidos',          color: '#34d399' },
 ]
@@ -52,7 +52,7 @@ function Stars({ value }: { value: number | null }) {
   return (
     <div style={{ display: 'flex', gap: 1, lineHeight: 1 }}>
       {[1, 2, 3, 4, 5].map((i) => (
-        <Star key={i} size={9} fill={i <= value ? '#fbbf24' : 'transparent'} color={i <= value ? '#fbbf24' : '#444'} />
+        <Star key={i} size={9} fill={i <= value ? '#fbbf24' : 'transparent'} color={i <= value ? '#fbbf24' : 'var(--text3)'} />
       ))}
     </div>
   )
@@ -80,7 +80,7 @@ function StarPicker({ value, onChange }: { value: number; onChange: (v: number) 
             justifyContent: 'center',
           }}
         >
-          <Star size={22} fill={i <= value ? '#fbbf24' : 'transparent'} color={i <= value ? '#fbbf24' : '#444'} />
+          <Star size={22} fill={i <= value ? '#fbbf24' : 'transparent'} color={i <= value ? '#fbbf24' : 'var(--text3)'} />
         </button>
       ))}
     </div>
@@ -210,7 +210,7 @@ function BookCard({
           {book.title}
         </div>
         {book.author && (
-          <div style={{ fontSize: 10, color: '#888', fontFamily: 'Manrope, sans-serif', lineHeight: 1.3 }}>
+          <div style={{ fontSize: 10, color: 'var(--text2)', fontFamily: 'Manrope, sans-serif', lineHeight: 1.3 }}>
             {book.author}
           </div>
         )}
@@ -702,7 +702,7 @@ function BookRow({ book, onFavorite, onDelete, onClick }: {
           {book.title}
         </div>
         {book.author && (
-          <div style={{ fontSize: 11, color: '#888', marginTop: 1 }}>{book.author}</div>
+          <div style={{ fontSize: 11, color: 'var(--text2)', marginTop: 1 }}>{book.author}</div>
         )}
       </div>
 
@@ -885,9 +885,9 @@ export function LibraryPage() {
           className="flex items-center gap-1.5 rounded-input px-3 text-xs font-semibold transition-colors"
           style={{
             minHeight: 36,
-            background: filterFavorites ? 'rgba(248,113,113,.14)' : '#111111',
+            background: filterFavorites ? 'rgba(248,113,113,.14)' : 'var(--bg2)',
             border: filterFavorites ? '1px solid rgba(248,113,113,.4)' : '1px solid var(--border)',
-            color: filterFavorites ? '#f87171' : '#888',
+            color: filterFavorites ? '#f87171' : 'var(--text2)',
             fontFamily: 'Manrope, sans-serif',
           }}
         >
@@ -906,8 +906,8 @@ export function LibraryPage() {
                 onClick={() => setGridCols(n)}
                 className="w-7 h-7 rounded text-xs font-bold transition-colors"
                 style={{
-                  background: gridCols === n ? '#0EA5E9' : '#111111',
-                  color: gridCols === n ? '#000' : '#555',
+                  background: gridCols === n ? '#0EA5E9' : 'var(--bg2)',
+                  color: gridCols === n ? '#000' : 'var(--text3)',
                   border: '1px solid',
                   borderColor: gridCols === n ? '#0EA5E9' : 'var(--border)',
                   fontFamily: 'Manrope, sans-serif',
@@ -924,26 +924,26 @@ export function LibraryPage() {
           <button
             onClick={() => setViewMode('grid')}
             className="px-2.5 h-7 flex items-center transition-colors"
-            style={{ background: viewMode === 'grid' ? '#0EA5E9' : '#111111' }}
+            style={{ background: viewMode === 'grid' ? '#0EA5E9' : 'var(--bg2)' }}
             title="Grade"
           >
             <svg width="13" height="13" viewBox="0 0 12 12" fill="none">
-              <rect x="0" y="0" width="5" height="5" rx="1" fill={viewMode === 'grid' ? '#000' : '#555'} />
-              <rect x="7" y="0" width="5" height="5" rx="1" fill={viewMode === 'grid' ? '#000' : '#555'} />
-              <rect x="0" y="7" width="5" height="5" rx="1" fill={viewMode === 'grid' ? '#000' : '#555'} />
-              <rect x="7" y="7" width="5" height="5" rx="1" fill={viewMode === 'grid' ? '#000' : '#555'} />
+              <rect x="0" y="0" width="5" height="5" rx="1" fill={viewMode === 'grid' ? '#000' : 'var(--text3)'} />
+              <rect x="7" y="0" width="5" height="5" rx="1" fill={viewMode === 'grid' ? '#000' : 'var(--text3)'} />
+              <rect x="0" y="7" width="5" height="5" rx="1" fill={viewMode === 'grid' ? '#000' : 'var(--text3)'} />
+              <rect x="7" y="7" width="5" height="5" rx="1" fill={viewMode === 'grid' ? '#000' : 'var(--text3)'} />
             </svg>
           </button>
           <button
             onClick={() => setViewMode('list')}
             className="px-2.5 h-7 flex items-center transition-colors"
-            style={{ background: viewMode === 'list' ? '#0EA5E9' : '#111111' }}
+            style={{ background: viewMode === 'list' ? '#0EA5E9' : 'var(--bg2)' }}
             title="Lista"
           >
             <svg width="13" height="13" viewBox="0 0 12 12" fill="none">
-              <rect x="0" y="1" width="12" height="2" rx="1" fill={viewMode === 'list' ? '#000' : '#555'} />
-              <rect x="0" y="5" width="12" height="2" rx="1" fill={viewMode === 'list' ? '#000' : '#555'} />
-              <rect x="0" y="9" width="12" height="2" rx="1" fill={viewMode === 'list' ? '#000' : '#555'} />
+              <rect x="0" y="1" width="12" height="2" rx="1" fill={viewMode === 'list' ? '#000' : 'var(--text3)'} />
+              <rect x="0" y="5" width="12" height="2" rx="1" fill={viewMode === 'list' ? '#000' : 'var(--text3)'} />
+              <rect x="0" y="9" width="12" height="2" rx="1" fill={viewMode === 'list' ? '#000' : 'var(--text3)'} />
             </svg>
           </button>
         </div>

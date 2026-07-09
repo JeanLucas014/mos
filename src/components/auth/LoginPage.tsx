@@ -174,7 +174,7 @@ export function LoginPage() {
             onClick={handleDemo}
             className="w-full py-2.5 text-sm text-[#555] hover:text-white border border-[#1f1f1f] rounded-xl transition-colors hover:border-[#0EA5E9]/40 flex items-center justify-center gap-2"
           >
-            <Eye size={14} color="#6b7280" />
+            <Eye size={14} color="var(--text3)" />
             Explorar versão demo
           </button>
           <p className="text-[10px] text-[#444] text-center mt-2">

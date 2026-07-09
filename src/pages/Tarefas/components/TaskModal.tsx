@@ -200,7 +200,7 @@ export function TaskModal({ task, projects, onSave, onClose, onDelete }: Props) 
                           className="px-2.5 py-1 text-xs rounded-lg border transition-colors font-medium"
                           style={{
                             borderColor: priority === p ? c.color : 'var(--border)',
-                            color:       priority === p ? c.color : '#555',
+                            color:       priority === p ? c.color : 'var(--text3)',
                             background:  priority === p ? c.bg    : 'transparent',
                           }}
                         >

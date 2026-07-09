@@ -204,12 +204,12 @@ export function AdminPage() {
                   <XAxis
                     dataKey="date"
                     tickFormatter={fmtDateShort}
-                    tick={{ fill: '#4b5563', fontSize: 10 }}
+                    tick={{ fill: 'var(--text2)', fontSize: 10 }}
                     tickLine={false}
                     interval={6}
                   />
                   <YAxis
-                    tick={{ fill: '#4b5563', fontSize: 10 }}
+                    tick={{ fill: 'var(--text2)', fontSize: 10 }}
                     tickLine={false}
                     axisLine={false}
                     allowDecimals={false}
@@ -242,8 +242,8 @@ export function AdminPage() {
                   layout="vertical"
                   margin={{ top: 0, right: 40, bottom: 0, left: 0 }}
                 >
-                  <XAxis type="number" tick={{ fill: '#4b5563', fontSize: 10 }} tickLine={false} axisLine={false} />
-                  <YAxis type="category" dataKey="label" tick={{ fill: '#9ca3af', fontSize: 11 }} tickLine={false} axisLine={false} width={70} />
+                  <XAxis type="number" tick={{ fill: 'var(--text2)', fontSize: 10 }} tickLine={false} axisLine={false} />
+                  <YAxis type="category" dataKey="label" tick={{ fill: 'var(--text2)', fontSize: 11 }} tickLine={false} axisLine={false} width={70} />
                   <Tooltip
                     contentStyle={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
                     formatter={(v, _, p) => [`${v} usuários (${p.payload.pct}%)`, 'Ativos']}

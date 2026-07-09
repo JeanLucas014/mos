@@ -40,7 +40,7 @@ const TIPO_CFG: Record<TipoInv, { label: string; color: string }> = {
 
 const CORES = [
   '#22c55e', '#0EA5E9', '#f97316', '#a78bfa',
-  '#f59e0b', '#ec4899', '#14b8a6', '#6b7280',
+  '#f59e0b', '#ec4899', '#14b8a6', 'var(--text3)',
   '#ef4444', '#64748b',
 ]
 
@@ -207,7 +207,7 @@ function InvestimentoModal({
                   style={{
                     borderColor: form.tipo === tipo ? c.color : 'var(--border)',
                     background: form.tipo === tipo ? c.color + '15' : 'transparent',
-                    color: form.tipo === tipo ? c.color : '#555',
+                    color: form.tipo === tipo ? c.color : 'var(--text3)',
                   }}
                 >
                   {c.label}
@@ -626,7 +626,7 @@ function SimuladorTab({ taxas }: { taxas: Taxa[] }) {
                 style={{
                   borderColor: taxa === t.id ? '#0EA5E9' : 'var(--border)',
                   background: taxa === t.id ? 'rgba(14,165,233,.12)' : 'transparent',
-                  color: taxa === t.id ? '#0EA5E9' : '#555',
+                  color: taxa === t.id ? '#0EA5E9' : 'var(--text3)',
                 }}
               >
                 {t.label}
@@ -812,7 +812,7 @@ export function InvestimentosTab() {
             onClick={() => setActiveTab(t.id)}
             className="px-3 py-2 text-xs font-medium border-b-2 -mb-px transition-colors whitespace-nowrap"
             style={{
-              color: activeTab === t.id ? '#0EA5E9' : '#555',
+              color: activeTab === t.id ? '#0EA5E9' : 'var(--text3)',
               borderColor: activeTab === t.id ? '#0EA5E9' : 'transparent',
             }}
           >
@@ -880,7 +880,7 @@ export function InvestimentosTab() {
                       {pieData.map((entry, idx) => (
                         <Cell
                           key={idx}
-                          fill={TIPO_CFG[entry.tipo as TipoInv]?.color ?? '#6b7280'}
+                          fill={TIPO_CFG[entry.tipo as TipoInv]?.color ?? 'var(--text3)'}
                         />
                       ))}
                     </Pie>

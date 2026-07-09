@@ -264,7 +264,7 @@ export function EventModal({ event, onSave, onDelete, onClose }: Props) {
                             style={{
                               borderColor: recDays.includes(d.id) ? '#0EA5E9' : 'var(--border)',
                               background:  recDays.includes(d.id) ? 'rgba(14,165,233,.2)' : 'transparent',
-                              color:       recDays.includes(d.id) ? '#0EA5E9' : '#555',
+                              color:       recDays.includes(d.id) ? '#0EA5E9' : 'var(--text3)',
                             }}
                           >
                             {d.label}
@@ -344,7 +344,7 @@ export function EventModal({ event, onSave, onDelete, onClose }: Props) {
                       className="px-2.5 py-0.5 rounded-full text-xs font-medium transition-all"
                       style={{
                         background: active ? t.color + '33' : 'var(--border)',
-                        color:      active ? t.color : '#555',
+                        color:      active ? t.color : 'var(--text3)',
                         border:     `1px solid ${active ? t.color + '66' : '#2a2a2a'}`,
                       }}
                     >

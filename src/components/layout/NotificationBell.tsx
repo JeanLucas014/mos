@@ -42,7 +42,7 @@ export function NotificationBell() {
           <span style={{
             position: 'absolute', top: 2, right: 2,
             width: 8, height: 8, borderRadius: '50%',
-            background: '#ef4444', border: '2px solid #0a0a0a',
+            background: '#ef4444', border: '2px solid var(--bg)',
           }} />
         )}
       </button>
@@ -80,7 +80,7 @@ export function NotificationBell() {
                   <div
                     style={{
                       padding: '12px 16px',
-                      borderBottom: '1px solid #161616',
+                      borderBottom: '1px solid var(--border)',
                       display: 'flex', alignItems: 'flex-start', gap: 10,
                     }}
                     onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg3)')}
@@ -96,7 +96,7 @@ export function NotificationBell() {
                       <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>
                         {TYPE_LABELS[n.type]}
                       </div>
-                      <div style={{ fontSize: 13, color: '#d4d4d4', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <div style={{ fontSize: 13, color: 'var(--text)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {n.body}
                       </div>
                     </div>

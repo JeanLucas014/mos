@@ -260,7 +260,7 @@ function AparenciaTab() {
                 fontFamily: 'inherit',
               }}
             >
-              <Icon size={16} color={active ? '#0EA5E9' : '#6b7280'} />
+              <Icon size={16} color={active ? '#0EA5E9' : 'var(--text3)'} />
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 14, fontWeight: 600, color: active ? 'var(--text)' : 'var(--text3)' }}>
                   {opt.label}
@@ -417,7 +417,7 @@ export default function SettingsPage() {
             onClick={() => setTab(t.id)}
             className="px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors"
             style={{
-              color: tab === t.id ? '#0EA5E9' : '#555',
+              color: tab === t.id ? '#0EA5E9' : 'var(--text3)',
               borderColor: tab === t.id ? '#0EA5E9' : 'transparent',
             }}
           >

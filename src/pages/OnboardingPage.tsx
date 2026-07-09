@@ -88,7 +88,7 @@ export default function OnboardingPage() {
                           onClick={() => toggle(mod.id)}
                           className="flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-colors"
                           style={{
-                            background: isOn ? 'rgba(14,165,233,.08)' : '#111111',
+                            background: isOn ? 'rgba(14,165,233,.08)' : 'var(--bg2)',
                             borderColor: isOn ? '#0EA5E9' : 'var(--border)',
                           }}
                         >

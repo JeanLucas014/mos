@@ -13,7 +13,7 @@ type StudyStatus = 'ativo' | 'no prazo' | 'concluido'
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
   ativo:     { label: 'Ativo',    color: '#0EA5E9', bg: 'rgba(14,165,233,.14)' },
   'no prazo':{ label: 'No prazo', color: '#34d399', bg: 'rgba(52,211,153,.12)' },
-  concluido: { label: 'Concluído',color: '#888',    bg: 'rgba(255,255,255,.06)' },
+  concluido: { label: 'Concluído',color: 'var(--text2)',    bg: 'rgba(255,255,255,.06)' },
 }
 
 const KIND_CFG: Record<string, { icon: React.ReactNode; color: string }> = {
@@ -25,7 +25,7 @@ const KIND_CFG: Record<string, { icon: React.ReactNode; color: string }> = {
 }
 
 function kindCfg(kind: string | null): { icon: React.ReactNode; color: string } {
-  return KIND_CFG[kind ?? ''] ?? { icon: <Paperclip size={15} />, color: '#888' }
+  return KIND_CFG[kind ?? ''] ?? { icon: <Paperclip size={15} />, color: 'var(--text2)' }
 }
 
 function timeAgo(dateStr: string): string {

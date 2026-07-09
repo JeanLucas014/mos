@@ -30,7 +30,7 @@ export function PrivacyPage() {
 
           <Section title="2. Dados que coletamos">
             <P>Ao utilizar o MOS, coletamos as seguintes categorias de dados:</P>
-            <ul style={{ color: '#d4d4d4', lineHeight: 1.8, paddingLeft: 20, margin: 0 }}>
+            <ul style={{ color: 'var(--text)', lineHeight: 1.8, paddingLeft: 20, margin: 0 }}>
               <li><strong>Dados de cadastro:</strong> nome e endereço de e-mail fornecidos no momento do registro.</li>
               <li><strong>Dados financeiros:</strong> lançamentos, categorias, orçamentos e metas financeiras inseridos manualmente por você.</li>
               <li><strong>Dados bancários via Open Finance:</strong> quando você conecta uma conta bancária pelo recurso Pluggy, coletamos transações, saldos e informações da conta. Esses dados são obtidos com seu consentimento explícito e podem ser revogados a qualquer momento.</li>
@@ -43,7 +43,7 @@ export function PrivacyPage() {
 
           <Section title="3. Como usamos seus dados">
             <P>Utilizamos seus dados exclusivamente para:</P>
-            <ul style={{ color: '#d4d4d4', lineHeight: 1.8, paddingLeft: 20, margin: 0 }}>
+            <ul style={{ color: 'var(--text)', lineHeight: 1.8, paddingLeft: 20, margin: 0 }}>
               <li>Fornecer e personalizar as funcionalidades do MOS;</li>
               <li>Garantir a segurança e integridade da sua conta;</li>
               <li>Gerar resumos e análises dentro do próprio app;</li>
@@ -55,7 +55,7 @@ export function PrivacyPage() {
 
           <Section title="4. Compartilhamento de dados">
             <P>Seus dados podem ser compartilhados apenas com os seguintes fornecedores de infraestrutura, estritamente para operação do serviço:</P>
-            <ul style={{ color: '#d4d4d4', lineHeight: 1.8, paddingLeft: 20, margin: 0 }}>
+            <ul style={{ color: 'var(--text)', lineHeight: 1.8, paddingLeft: 20, margin: 0 }}>
               <li><strong>Supabase:</strong> banco de dados, autenticação e armazenamento de arquivos (servidores nos EUA com adequação às normas de proteção de dados).</li>
               <li><strong>Vercel:</strong> hospedagem da aplicação web.</li>
               <li><strong>Pluggy:</strong> plataforma de Open Finance para conexão com contas bancárias, mediante seu consentimento expresso.</li>
@@ -64,7 +64,7 @@ export function PrivacyPage() {
 
           <Section title="5. Segurança">
             <P>Adotamos as seguintes medidas para proteger seus dados:</P>
-            <ul style={{ color: '#d4d4d4', lineHeight: 1.8, paddingLeft: 20, margin: 0 }}>
+            <ul style={{ color: 'var(--text)', lineHeight: 1.8, paddingLeft: 20, margin: 0 }}>
               <li>Transmissão via HTTPS com TLS;</li>
               <li>Autenticação segura com tokens JWT;</li>
               <li>Criptografia AES-256 para senhas armazenadas no Cofre;</li>
@@ -75,7 +75,7 @@ export function PrivacyPage() {
 
           <Section title="6. Seus direitos (LGPD)">
             <P>Nos termos da Lei Geral de Proteção de Dados (Lei nº 13.709/2018), você tem direito a:</P>
-            <ul style={{ color: '#d4d4d4', lineHeight: 1.8, paddingLeft: 20, margin: 0 }}>
+            <ul style={{ color: 'var(--text)', lineHeight: 1.8, paddingLeft: 20, margin: 0 }}>
               <li>Confirmar a existência de tratamento dos seus dados;</li>
               <li>Acessar seus dados;</li>
               <li>Corrigir dados incompletos, inexatos ou desatualizados;</li>
@@ -129,5 +129,5 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 function P({ children }: { children: React.ReactNode }) {
-  return <p style={{ fontSize: 15, lineHeight: 1.75, color: '#d4d4d4', margin: 0 }}>{children}</p>
+  return <p style={{ fontSize: 15, lineHeight: 1.75, color: 'var(--text)', margin: 0 }}>{children}</p>
 }

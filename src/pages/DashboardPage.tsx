@@ -133,7 +133,7 @@ function ScoreGauge({ score, size = 176 }: { score: number; size?: number }) {
         fill={color} fontSize={size * 0.273} fontWeight="700"
         fontFamily="Sora, sans-serif">{score}</text>
       <text x={cx} y={cy + 18} textAnchor="middle"
-        fill="#6b7280" fontSize={13} fontFamily="Manrope, sans-serif">
+        fill="var(--text3)" fontSize={13} fontFamily="Manrope, sans-serif">
         {scoreLabel(score)}
       </text>
     </svg>
@@ -190,12 +190,12 @@ function LifeScoreSection() {
         style={{ background: 'var(--bg2)' }}
       >
         {/* LINHA SUPERIOR: Gauge | Mini scores */}
-        <div className="flex" style={{ borderBottom: '1px solid #161616' }}>
+        <div className="flex" style={{ borderBottom: '1px solid var(--border)' }}>
 
           {/* Gauge */}
           <div
             className="flex flex-col items-center justify-center flex-shrink-0"
-            style={{ padding: '20px 24px', borderRight: '1px solid #161616', gap: 4 }}
+            style={{ padding: '20px 24px', borderRight: '1px solid var(--border)', gap: 4 }}
           >
             <ScoreGauge score={overall} size={180} />
             <div style={{ fontSize: 10, color: 'var(--text3)', textAlign: 'center' as const }}>
@@ -225,7 +225,7 @@ function LifeScoreSection() {
             </div>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
               style={{ flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
-              <path d="M4 6l4 4 4-4" stroke="#4b5563" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M4 6l4 4 4-4" stroke="var(--text3)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
         </div>
@@ -237,14 +237,14 @@ function LifeScoreSection() {
             {/* Radar — mesma largura da coluna do gauge */}
             <div
               className="flex items-center justify-center flex-shrink-0"
-              style={{ borderRight: '1px solid #161616', padding: '8px 0', width: 228 }}
+              style={{ borderRight: '1px solid var(--border)', padding: '8px 0', width: 228 }}
             >
               <ResponsiveContainer width={228} height={200}>
                 <RadarChart data={radarData} margin={{ top: 14, right: 38, bottom: 14, left: 38 }}>
                   <PolarGrid stroke="var(--border)" />
                   <PolarAngleAxis
                     dataKey="subject"
-                    tick={{ fill: '#4b5563', fontSize: 10, fontFamily: 'Manrope', fontWeight: 400 }}
+                    tick={{ fill: 'var(--text2)', fontSize: 10, fontFamily: 'Manrope', fontWeight: 400 }}
                   />
                   <Radar
                     name="Score"
@@ -268,8 +268,8 @@ function LifeScoreSection() {
                     key={a.label}
                     style={{
                       padding: '12px 14px',
-                      borderBottom: i < 3 ? '1px solid #161616' : undefined,
-                      borderRight: i % 3 < 2 ? '1px solid #161616' : undefined,
+                      borderBottom: i < 3 ? '1px solid var(--border)' : undefined,
+                      borderRight: i % 3 < 2 ? '1px solid var(--border)' : undefined,
                     }}
                   >
                     <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--text3)', textTransform: 'uppercase' as const, letterSpacing: '0.06em', marginBottom: 3 }}>
@@ -350,7 +350,7 @@ function Widget({
   )
 }
 
-function BigStat({ value, label, color = '#fff' }: { value: string | number; label?: string; color?: string }) {
+function BigStat({ value, label, color = 'var(--text)' }: { value: string | number; label?: string; color?: string }) {
   return (
     <div className="mb-1">
       <div style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 800, fontSize: 26, color, lineHeight: 1 }}>
@@ -395,7 +395,7 @@ function TasksWidget() {
             <ul className="space-y-1.5 mt-3">
               {top3.map((t) => (
                 <li key={t.id} className="flex items-start gap-2">
-                  <span style={{ fontSize: 10, color: '#444', marginTop: 3, flexShrink: 0 }}>●</span>
+                  <span style={{ fontSize: 10, color: 'var(--text3)', marginTop: 3, flexShrink: 0 }}>●</span>
                   <span className="text-ink-2 text-xs leading-snug line-clamp-1">{t.title}</span>
                 </li>
               ))}
@@ -475,7 +475,7 @@ function AgendaWidget() {
             <li
               key={ev.id}
               className="rounded-xl px-3 py-2 bg-bg"
-              style={{ borderLeft: `3px solid ${ev.color ?? '#0EA5E9'}` }}
+              style={{ borderLeft: `3px solid ${ev.color ?? 'var(--blue)'}` }}
             >
               <div
                 className="text-ink text-xs font-semibold truncate mb-0.5"
@@ -504,7 +504,7 @@ function ProjectsWidget() {
 
   const STATUS_COLOR: Record<string, string> = {
     'em dev': '#60a5fa', inicio: '#fbbf24', ativo: '#34d399',
-    live: '#6ee7b7', pausado: '#555',
+    live: '#6ee7b7', pausado: 'var(--text3)',
   }
 
   return (
@@ -528,8 +528,8 @@ function ProjectsWidget() {
                       className="flex-shrink-0 text-xs font-bold px-1.5 py-0.5 rounded"
                       style={{
                         fontSize: 9, fontWeight: 700,
-                        color: STATUS_COLOR[p.status] ?? '#888',
-                        background: (STATUS_COLOR[p.status] ?? '#888') + '18',
+                        color: STATUS_COLOR[p.status] ?? 'var(--text2)',
+                        background: (STATUS_COLOR[p.status] ?? 'var(--text2)') + '18',
                       }}
                     >
                       {p.status}
@@ -756,7 +756,7 @@ function StreakWidget() {
         <div className="space-y-2"><Sk w="w-16" h="h-8" /><Sk w="w-3/4" /></div>
       ) : topStreak.streak === 0 ? (
         <div>
-          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 800, fontSize: 26, color: '#444', lineHeight: 1 }}>
+          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 800, fontSize: 26, color: 'var(--text3)', lineHeight: 1 }}>
             —
           </div>
           <p className="text-ink-3 text-xs mt-1">Marque habitos para iniciar streak.</p>
@@ -802,7 +802,7 @@ function FinanceiroWidget() {
   const today = new Date().getDate()
 
   return (
-    <Link to="/financeiro" className="block rounded-2xl border border-line bg-bg-2 p-[18px] hover:border-[#262626] transition-colors">
+    <Link to="/financeiro" className="block rounded-2xl border border-line bg-bg-2 p-[18px] hover:border-line/60 transition-colors">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-1.5">
@@ -824,7 +824,7 @@ function FinanceiroWidget() {
           fontWeight: 500,
           fontFamily: 'Sora, sans-serif',
           lineHeight: 1,
-          color: saldo >= 0 ? '#e5e5e5' : '#ef4444',
+          color: saldo >= 0 ? 'var(--text)' : '#ef4444',
         }}>
           {saldo < 0 ? '-' : ''}R$ {Math.abs(saldo).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </div>
@@ -850,7 +850,7 @@ function FinanceiroWidget() {
               <div
                 key={r.id}
                 className="flex items-center justify-between"
-                style={{ padding: '8px 0', borderBottom: i < vencidas.length - 1 || venceHoje.length > 0 ? '1px solid #1a1a1a' : undefined }}
+                style={{ padding: '8px 0', borderBottom: i < vencidas.length - 1 || venceHoje.length > 0 ? '1px solid var(--border)' : undefined }}
               >
                 <div>
                   <div style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--text)' }}>{r.nome}</div>
@@ -869,7 +869,7 @@ function FinanceiroWidget() {
               <div
                 key={r.id}
                 className="flex items-center justify-between"
-                style={{ padding: '8px 0', borderBottom: i < venceHoje.length - 1 ? '1px solid #1a1a1a' : undefined }}
+                style={{ padding: '8px 0', borderBottom: i < venceHoje.length - 1 ? '1px solid var(--border)' : undefined }}
               >
                 <div>
                   <div style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--text)' }}>{r.nome}</div>

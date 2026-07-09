@@ -153,7 +153,7 @@ function VaultModal({
                 style={{
                   borderColor: itemKind === k ? '#0EA5E9' : 'var(--border)',
                   background:  itemKind === k ? 'rgba(14,165,233,.1)' : 'transparent',
-                  color:       itemKind === k ? '#0EA5E9' : '#555',
+                  color:       itemKind === k ? '#0EA5E9' : 'var(--text3)',
                 }}
               >
                 {k === 'senha' ? 'Senha' : 'Chave de API'}

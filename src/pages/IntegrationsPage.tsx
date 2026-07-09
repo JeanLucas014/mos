@@ -8,12 +8,12 @@ import { PluggyConnect } from '@/components/PluggyConnect'
 /* ── Palette ──────────────────────────────────────────────────── */
 const C = {
   bg:     'var(--bg)',
-  card:   '#111111',
-  card2:  '#161616',
+  card:   'var(--bg2)',
+  card2:  'var(--bg3)',
   border: 'var(--border)',
-  tx:     '#ffffff',
-  dm:     '#888888',
-  dm2:    '#444444',
+  tx:     'var(--text)',
+  dm:     'var(--text2)',
+  dm2:    'var(--text3)',
   b:      '#0EA5E9',
   g:      '#34d399',
   r:      '#f87171',
@@ -239,7 +239,7 @@ export function IntegrationsPage() {
       <h1 style={{ fontFamily: 'Sora,sans-serif', fontWeight: 800, fontSize: 28, letterSpacing: '-0.03em', marginBottom: 6 }}>
         Integrações
       </h1>
-      <p style={{ fontSize: 13, color: '#888', marginBottom: 28 }}>
+      <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 28 }}>
         Conecte seus serviços e importe dados automaticamente.
       </p>
 

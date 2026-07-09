@@ -7,17 +7,17 @@ import { Plus, Edit2, Trash2, ExternalLink, Paperclip, X, Upload, ChevronDown, C
 /* ── Palette ─────────────────────────────────────────────────────── */
 const C = {
   bg:     'var(--bg)',
-  card:   '#111111',
-  card2:  '#161616',
+  card:   'var(--bg2)',
+  card2:  'var(--bg3)',
   border: 'var(--border)',
   b:      '#0EA5E9',
   g:      '#34d399',
   r:      '#f87171',
   a:      '#fbbf24',
   p:      '#a78bfa',
-  dm:     '#888888',
-  dm2:    '#555555',
-  ink:    '#e5e5e5',
+  dm:     'var(--text2)',
+  dm2:    'var(--text3)',
+  ink:    'var(--text)',
   ink2:   '#a3a3a3',
 }
 
@@ -190,7 +190,7 @@ function IframeModal({ title, url, onClose }: { title: string; url: string; onCl
           onClick={onClose}
           title="Fechar (ESC)"
           style={{
-            background: 'none', border: 'none', color: '#888',
+            background: 'none', border: 'none', color: 'var(--text2)',
             cursor: 'pointer', padding: 6, borderRadius: 6,
             display: 'flex', alignItems: 'center',
           }}
