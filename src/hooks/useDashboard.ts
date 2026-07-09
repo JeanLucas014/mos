@@ -371,3 +371,27 @@ export function useDashEstudos() {
     avgProgress,
   }
 }
+
+/* ── Recorrentes (alertas de vencimento) ──────────────────────── */
+export function useDashRecorrentes() {
+  return useQuery({
+    queryKey: ['dash_recorrentes'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('fin_recorrentes')
+        .select('id, nome, valor, dia_previsto, natureza, saida_tipo')
+        .eq('ativo', true)
+        .eq('natureza', 'saida')
+        .order('dia_previsto', { ascending: true })
+      if (error) throw error
+
+      const today = new Date().getDate()
+
+      const vencidas  = (data ?? []).filter((r: any) => r.dia_previsto < today)
+      const venceHoje = (data ?? []).filter((r: any) => r.dia_previsto === today)
+
+      return { vencidas, venceHoje }
+    },
+    staleTime: 1000 * 60 * 30,
+  })
+}
