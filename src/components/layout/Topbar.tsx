@@ -5,6 +5,7 @@ import { ptBR } from 'date-fns/locale'
 import { Search } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useUIStore } from '../../stores/useUIStore'
+import { NotificationBell } from './NotificationBell'
 
 const VIEW_LABELS: Record<string, string> = {
   '/': 'Dashboard',
@@ -92,13 +93,14 @@ export function Topbar() {
           </strong>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <span
             className="text-ink-2"
             style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11 }}
           >
             {dateStr}
           </span>
+          <NotificationBell />
         </div>
       </div>
     </header>

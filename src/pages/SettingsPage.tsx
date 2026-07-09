@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useState, useEffect, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CheckCircle, Eye, EyeOff, Shield } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
@@ -6,6 +6,8 @@ import { useProfile, useAllProfiles } from '@/hooks/useProfile'
 import { useUserSettings } from '@/hooks/useUserSettings'
 import { MODULES } from '@/lib/modules'
 import { supabase } from '@/lib/supabase'
+import { useNotificationPrefs } from '@/hooks/useNotifications'
+import type { NotificationPrefs } from '@/hooks/useNotifications'
 
 const ADMIN_EMAIL = 'jl.jean13@gmail.com'
 
@@ -224,6 +226,68 @@ function AdminSection() {
 }
 
 /* ══════════════════════════════════════════════════════════════════
+   NOTIFICAÇÕES TAB
+══════════════════════════════════════════════════════════════════ */
+function NotificacoesTab() {
+  const { prefs, update } = useNotificationPrefs()
+  const [local, setLocal] = useState<NotificationPrefs>(prefs)
+
+  useEffect(() => { setLocal(prefs) }, [prefs])
+
+  function toggle(key: keyof NotificationPrefs) {
+    const next = { ...local, [key]: !local[key] }
+    setLocal(next)
+    update.mutate(next)
+  }
+
+  const items: { key: keyof NotificationPrefs; label: string; desc: string }[] = [
+    { key: 'tarefas_vencidas', label: 'Tarefas vencidas',      desc: 'Tarefas com prazo já ultrapassado' },
+    { key: 'tarefas_hoje',     label: 'Tarefas para hoje',     desc: 'Tarefas com prazo para o dia atual' },
+    { key: 'eventos_agenda',   label: 'Eventos da agenda',     desc: 'Eventos que começam nas próximas 2 horas' },
+    { key: 'contas_vencidas',  label: 'Contas vencidas',       desc: 'Pagamentos recorrentes em atraso' },
+    { key: 'contas_hoje',      label: 'Contas vencem hoje',    desc: 'Pagamentos recorrentes com vencimento hoje' },
+    { key: 'habitos_fim_dia',  label: 'Hábitos pendentes',     desc: 'Hábitos não marcados (exibido após 18h)' },
+  ]
+
+  return (
+    <div className="space-y-2">
+      <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 16 }}>
+        Escolha quais alertas aparecem no sino de notificações.
+      </p>
+      {items.map(item => (
+        <div
+          key={item.key}
+          className="flex items-center justify-between rounded-xl border border-line bg-bg-2 px-4 py-3"
+        >
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#e5e5e5', marginBottom: 2 }}>
+              {item.label}
+            </div>
+            <div style={{ fontSize: 12, color: '#4b5563' }}>{item.desc}</div>
+          </div>
+          <button
+            onClick={() => toggle(item.key)}
+            style={{
+              width: 40, height: 22, borderRadius: 11,
+              background: local[item.key] ? '#0ea5e9' : '#262626',
+              border: 'none', cursor: 'pointer', position: 'relative',
+              transition: 'background 0.2s', flexShrink: 0,
+            }}
+          >
+            <div style={{
+              position: 'absolute', top: 3,
+              left: local[item.key] ? 21 : 3,
+              width: 16, height: 16, borderRadius: '50%',
+              background: '#fff', transition: 'left 0.2s',
+            }} />
+          </button>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/* ══════════════════════════════════════════════════════════════════
    PAGE
 ══════════════════════════════════════════════════════════════════ */
 export default function SettingsPage() {
@@ -232,7 +296,7 @@ export default function SettingsPage() {
   const { data: profile, isLoading: profileLoading, updateProfile } = useProfile()
   const { data: settings, isLoading: settingsLoading, toggleModule } = useUserSettings()
 
-  const [tab,          setTab]          = useState<'perfil' | 'seguranca' | 'modulos' | 'instalar'>('perfil')
+  const [tab,          setTab]          = useState<'perfil' | 'seguranca' | 'modulos' | 'notificacoes' | 'instalar'>('perfil')
   const platform = detectPlatform()
   const [name,         setName]         = useState('')
   const [editingName,  setEditingName]  = useState(false)
@@ -270,10 +334,11 @@ export default function SettingsPage() {
   }
 
   const TABS = [
-    { id: 'perfil',    label: 'Perfil' },
-    { id: 'seguranca', label: 'Segurança' },
-    { id: 'modulos',   label: 'Módulos' },
-    { id: 'instalar',  label: 'Instalar app' },
+    { id: 'perfil',        label: 'Perfil' },
+    { id: 'seguranca',     label: 'Segurança' },
+    { id: 'modulos',       label: 'Módulos' },
+    { id: 'notificacoes',  label: 'Notificações' },
+    { id: 'instalar',      label: 'Instalar app' },
   ] as const
 
   return (
@@ -416,6 +481,9 @@ export default function SettingsPage() {
           )}
         </section>
       )}
+
+      {/* ── NOTIFICAÇÕES tab ── */}
+      {tab === 'notificacoes' && <NotificacoesTab />}
 
       {/* ── INSTALAR APP tab ── */}
       {tab === 'instalar' && (
