@@ -199,7 +199,7 @@ export function TaskModal({ task, projects, onSave, onClose, onDelete }: Props) 
                           onClick={() => setPriority(p)}
                           className="px-2.5 py-1 text-xs rounded-lg border transition-colors font-medium"
                           style={{
-                            borderColor: priority === p ? c.color : '#1f1f1f',
+                            borderColor: priority === p ? c.color : 'var(--border)',
                             color:       priority === p ? c.color : '#555',
                             background:  priority === p ? c.bg    : 'transparent',
                           }}

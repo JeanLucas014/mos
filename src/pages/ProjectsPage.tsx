@@ -193,7 +193,7 @@ function ProjectCard({
               style={{ fontFamily: 'Sora, sans-serif', fontSize: 15 }}
             >
               {project.name}
-              <span style={{ fontSize: 9, marginLeft: 6, color: '#555', verticalAlign: 'middle' }}>
+              <span style={{ fontSize: 9, marginLeft: 6, color: 'var(--text3)', verticalAlign: 'middle' }}>
                 {expanded ? '▲' : '▼'}
               </span>
             </div>
@@ -367,7 +367,7 @@ function AddModal({
     >
       <div
         className="w-full max-w-md rounded-2xl border border-line p-6"
-        style={{ background: '#111111' }}
+        style={{ background: 'var(--bg2)' }}
       >
         <div className="flex items-center justify-between mb-5">
           <h2 style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 18 }}>

@@ -28,7 +28,7 @@ function CtxMenu({
       <div
         ref={ref}
         className="fixed z-50 rounded-xl border border-line overflow-hidden"
-        style={{ top: state.y, left: state.x, background: '#161616', minWidth: 200, boxShadow: '0 8px 24px rgba(0,0,0,.6)' }}
+        style={{ top: state.y, left: state.x, background: 'var(--bg3)', minWidth: 200, boxShadow: '0 8px 24px rgba(0,0,0,.6)' }}
       >
         <button
           onClick={() => { onException(); onClose() }}

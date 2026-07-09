@@ -129,7 +129,7 @@ function VaultModal({
     >
       <div
         className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-line p-6 space-y-4 max-h-[90vh] overflow-y-auto"
-        style={{ background: '#111111' }}
+        style={{ background: 'var(--bg2)' }}
       >
         <div className="flex items-center justify-between">
           <h3 style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 17 }}>
@@ -151,7 +151,7 @@ function VaultModal({
                 onClick={() => setItemKind(k)}
                 className="flex-1 py-2 rounded-lg text-xs font-semibold border transition-colors"
                 style={{
-                  borderColor: itemKind === k ? '#0EA5E9' : '#1f1f1f',
+                  borderColor: itemKind === k ? '#0EA5E9' : 'var(--border)',
                   background:  itemKind === k ? 'rgba(14,165,233,.1)' : 'transparent',
                   color:       itemKind === k ? '#0EA5E9' : '#555',
                 }}

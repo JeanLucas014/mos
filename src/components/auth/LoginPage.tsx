@@ -183,10 +183,10 @@ export function LoginPage() {
         </div>
 
         <div style={{ textAlign: 'center', marginTop: 24, display: 'flex', gap: 16, justifyContent: 'center' }}>
-          <Link to="/privacidade" style={{ fontSize: 12, color: '#4b5563', textDecoration: 'none' }}>
+          <Link to="/privacidade" style={{ fontSize: 12, color: 'var(--text3)', textDecoration: 'none' }}>
             Política de Privacidade
           </Link>
-          <Link to="/termos" style={{ fontSize: 12, color: '#4b5563', textDecoration: 'none' }}>
+          <Link to="/termos" style={{ fontSize: 12, color: 'var(--text3)', textDecoration: 'none' }}>
             Termos de Uso
           </Link>
         </div>

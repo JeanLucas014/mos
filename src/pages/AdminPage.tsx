@@ -42,17 +42,17 @@ function StatCard({
   return (
     <div className="rounded-2xl border border-line bg-bg-2 p-5">
       <div className="flex items-center justify-between mb-3">
-        <span style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
           {label}
         </span>
         <div style={{ width: 30, height: 30, borderRadius: 8, background: color + '22', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Icon size={14} color={color} />
         </div>
       </div>
-      <div style={{ fontFamily: 'Sora, sans-serif', fontSize: 32, fontWeight: 800, color: '#f5f5f5', lineHeight: 1 }}>
+      <div style={{ fontFamily: 'Sora, sans-serif', fontSize: 32, fontWeight: 800, color: 'var(--text)', lineHeight: 1 }}>
         {value}
       </div>
-      {sub && <div style={{ fontSize: 12, color: '#6b7280', marginTop: 6 }}>{sub}</div>}
+      {sub && <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 6 }}>{sub}</div>}
     </div>
   )
 }
@@ -121,7 +121,7 @@ export function AdminPage() {
             Painel Admin
           </h1>
           {lastUpdate && (
-            <p style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>
+            <p style={{ fontSize: 12, color: 'var(--text3)', marginTop: 4 }}>
               Atualizado às {lastUpdate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
             </p>
           )}
@@ -195,12 +195,12 @@ export function AdminPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             {/* Signups chart */}
             <div className="rounded-2xl border border-line bg-bg-2 p-5">
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 16 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 16 }}>
                 Cadastros — últimos 30 dias
               </div>
               <ResponsiveContainer width="100%" height={200}>
                 <LineChart data={stats.dailySignups} margin={{ top: 0, right: 4, bottom: 0, left: -20 }}>
-                  <CartesianGrid stroke="#1f1f1f" vertical={false} />
+                  <CartesianGrid stroke="var(--border)" vertical={false} />
                   <XAxis
                     dataKey="date"
                     tickFormatter={fmtDateShort}
@@ -215,7 +215,7 @@ export function AdminPage() {
                     allowDecimals={false}
                   />
                   <Tooltip
-                    contentStyle={{ background: '#111111', border: '1px solid #1f1f1f', borderRadius: 8, fontSize: 12 }}
+                    contentStyle={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
                     labelFormatter={(v) => fmtDate(v as string)}
                     formatter={(v) => [v, 'Cadastros']}
                   />
@@ -233,7 +233,7 @@ export function AdminPage() {
 
             {/* Module adoption */}
             <div className="rounded-2xl border border-line bg-bg-2 p-5">
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 16 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 16 }}>
                 Adoção de módulos
               </div>
               <ResponsiveContainer width="100%" height={200}>
@@ -245,7 +245,7 @@ export function AdminPage() {
                   <XAxis type="number" tick={{ fill: '#4b5563', fontSize: 10 }} tickLine={false} axisLine={false} />
                   <YAxis type="category" dataKey="label" tick={{ fill: '#9ca3af', fontSize: 11 }} tickLine={false} axisLine={false} width={70} />
                   <Tooltip
-                    contentStyle={{ background: '#111111', border: '1px solid #1f1f1f', borderRadius: 8, fontSize: 12 }}
+                    contentStyle={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
                     formatter={(v, _, p) => [`${v} usuários (${p.payload.pct}%)`, 'Ativos']}
                   />
                   <Bar dataKey="count" fill="#0ea5e9" radius={[0, 4, 4, 0]} />
@@ -257,7 +257,7 @@ export function AdminPage() {
           {/* Recent signups table */}
           <div className="rounded-2xl border border-line bg-bg-2 overflow-hidden">
             <div className="px-5 py-4 border-b border-line">
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                 Cadastros recentes
               </span>
             </div>
@@ -265,18 +265,18 @@ export function AdminPage() {
               {stats.recentSignups.map((u, i) => (
                 <div key={i} className="flex items-center justify-between px-5 py-3">
                   <div className="flex items-center gap-3">
-                    <div style={{ width: 32, height: 32, borderRadius: 8, background: '#1f1f1f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#9ca3af' }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'var(--text2)' }}>
                       {u.email?.[0]?.toUpperCase() ?? '?'}
                     </div>
                     <div>
-                      <div style={{ fontSize: 13, color: '#e5e5e5', fontWeight: 500 }}>{u.email}</div>
-                      <div style={{ fontSize: 11, color: '#4b5563' }}>Cadastro: {fmtDate(u.created_at)}</div>
+                      <div style={{ fontSize: 13, color: 'var(--text)', fontWeight: 500 }}>{u.email}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text3)' }}>Cadastro: {fmtDate(u.created_at)}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 text-right">
                     <div>
-                      <div style={{ fontSize: 11, color: '#6b7280' }}>Último acesso</div>
-                      <div style={{ fontSize: 12, color: '#9ca3af' }}>{timeAgo(u.last_sign_in_at)}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text3)' }}>Último acesso</div>
+                      <div style={{ fontSize: 12, color: 'var(--text2)' }}>{timeAgo(u.last_sign_in_at)}</div>
                     </div>
                     <div style={{
                       fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
@@ -290,7 +290,7 @@ export function AdminPage() {
                 </div>
               ))}
               {stats.recentSignups.length === 0 && (
-                <div className="px-5 py-8 text-center" style={{ fontSize: 14, color: '#4b5563' }}>
+                <div className="px-5 py-8 text-center" style={{ fontSize: 14, color: 'var(--text3)' }}>
                   Nenhum cadastro ainda
                 </div>
               )}

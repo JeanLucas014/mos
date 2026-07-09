@@ -70,7 +70,7 @@ function TaskModal({
       style={{ background: 'rgba(0,0,0,.8)' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="w-full max-w-md rounded-2xl border border-line p-6 space-y-4" style={{ background: '#111111' }}>
+      <div className="w-full max-w-md rounded-2xl border border-line p-6 space-y-4" style={{ background: 'var(--bg2)' }}>
         <div className="flex items-center justify-between">
           <h3 style={{ fontFamily: 'Sora,sans-serif', fontWeight: 800, fontSize: 17 }}>
             {initial ? 'Editar tarefa' : 'Nova tarefa'}

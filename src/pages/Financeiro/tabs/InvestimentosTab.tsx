@@ -35,7 +35,7 @@ const TIPO_CFG: Record<TipoInv, { label: string; color: string }> = {
   fundos:      { label: 'Fundos',       color: '#f59e0b' },
   cripto:      { label: 'Criptomoedas', color: '#ec4899' },
   previdencia: { label: 'Previdência',  color: '#14b8a6' },
-  outros:      { label: 'Outros',       color: '#6b7280' },
+  outros:      { label: 'Outros',       color: 'var(--text3)' },
 }
 
 const CORES = [
@@ -205,7 +205,7 @@ function InvestimentoModal({
                   onClick={() => upd('tipo', tipo as TipoInv)}
                   className="py-2 px-1 rounded-xl border text-xs transition-colors"
                   style={{
-                    borderColor: form.tipo === tipo ? c.color : '#1f1f1f',
+                    borderColor: form.tipo === tipo ? c.color : 'var(--border)',
                     background: form.tipo === tipo ? c.color + '15' : 'transparent',
                     color: form.tipo === tipo ? c.color : '#555',
                   }}
@@ -624,7 +624,7 @@ function SimuladorTab({ taxas }: { taxas: Taxa[] }) {
                 onClick={() => setTaxa(t.id)}
                 className="px-3 py-1.5 text-xs rounded-lg border transition-colors"
                 style={{
-                  borderColor: taxa === t.id ? '#0EA5E9' : '#1f1f1f',
+                  borderColor: taxa === t.id ? '#0EA5E9' : 'var(--border)',
                   background: taxa === t.id ? 'rgba(14,165,233,.12)' : 'transparent',
                   color: taxa === t.id ? '#0EA5E9' : '#555',
                 }}
@@ -669,7 +669,7 @@ function SimuladorTab({ taxas }: { taxas: Taxa[] }) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
           { label: 'Montante final',  value: BRL(resultado.montante),      color: '#0EA5E9' },
-          { label: 'Total aportado',  value: BRL(resultado.totalAportado), color: '#888888' },
+          { label: 'Total aportado',  value: BRL(resultado.totalAportado), color: 'var(--text2)' },
           { label: 'Rendimento',      value: BRL(resultado.rendimento),    color: '#22c55e' },
         ].map((c, i) => (
           <div key={i} className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-4">

@@ -118,7 +118,7 @@ export function HorizonteSaldos({ ano }: Props) {
       <div style={{ display: 'flex', width: '100%' }}>
         {/* Dias */}
         <div style={{ width: DAY_W, flexShrink: 0 }}>
-          <div style={{ height: HDR_H, borderRight: '1px solid #1f1f1f' }} />
+          <div style={{ height: HDR_H, borderRight: '1px solid var(--border)' }} />
           {Array.from({ length: MAX }, (_, i) => {
             const isToday = months.some(m => m.mi === curM) && i + 1 === curD
             return (
@@ -130,7 +130,7 @@ export function HorizonteSaldos({ ano }: Props) {
                 fontWeight: isToday ? 700 : 400,
                 fontVariantNumeric: 'tabular-nums',
                 borderBottom: '1px solid #111',
-                borderRight: '1px solid #1f1f1f',
+                borderRight: '1px solid var(--border)',
               }}>
                 {i + 1}
               </div>

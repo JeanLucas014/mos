@@ -4,7 +4,7 @@ export const PRIORITY_CFG: Record<Priority, { label: string; color: string; bg: 
   1: { label: 'Urgente',        color: '#ef4444', bg: 'rgba(239,68,68,.15)'  },
   2: { label: 'Alta',           color: '#f97316', bg: 'rgba(249,115,22,.15)' },
   3: { label: 'Normal',         color: '#3b82f6', bg: 'rgba(59,130,246,.15)' },
-  4: { label: 'Sem prioridade', color: '#6b7280', bg: 'transparent'           },
+  4: { label: 'Sem prioridade', color: 'var(--text3)', bg: 'transparent'           },
 }
 
 export interface TaskProject {

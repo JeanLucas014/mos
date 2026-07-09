@@ -142,7 +142,7 @@ export function PluggyConnect() {
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all text-left"
             style={{
               background:  '#111111',
-              borderColor: connected ? '#22c55e44' : '#1f1f1f',
+              borderColor: connected ? '#22c55e44' : 'var(--border)',
               opacity:     connected || (!!pendingBank && !isLoading) ? 0.5 : 1,
               cursor:      connected || !!pendingBank ? 'default' : 'pointer',
             }}

@@ -66,7 +66,7 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
     >
       <div
         className="w-full max-w-md rounded-2xl border border-line p-6"
-        style={{ background: '#111111' }}
+        style={{ background: 'var(--bg2)' }}
       >
         {success ? (
           <div className="text-center py-6">
@@ -214,7 +214,7 @@ function AdminSection() {
   return (
     <div
       className="rounded-xl border border-line p-5 space-y-4"
-      style={{ background: '#111111' }}
+      style={{ background: 'var(--bg2)' }}
     >
       <div className="flex items-center gap-2">
         <Shield size={15} className="text-ink-2" />
@@ -243,7 +243,7 @@ function AdminSection() {
               >
                 <div
                   className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ background: '#1f1f1f', fontSize: 10, fontWeight: 700, color: '#0EA5E9' }}
+                  style={{ background: 'var(--border)', fontSize: 10, fontWeight: 700, color: '#0EA5E9' }}
                 >
                   {initials(p.name, undefined)}
                 </div>
@@ -349,7 +349,7 @@ export function ProfilePage() {
         {/* ── Avatar + basic info ── */}
         <div
           className="rounded-xl border border-line p-6 flex items-center gap-5"
-          style={{ background: '#111111' }}
+          style={{ background: 'var(--bg2)' }}
         >
           {/* Avatar */}
           <div
@@ -387,7 +387,7 @@ export function ProfilePage() {
         </div>
 
         {/* ── Name field ── */}
-        <div className="rounded-xl border border-line p-5 space-y-3" style={{ background: '#111111' }}>
+        <div className="rounded-xl border border-line p-5 space-y-3" style={{ background: 'var(--bg2)' }}>
           <p className="text-ink-2" style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.08em' }}>
             Informações pessoais
           </p>
@@ -456,7 +456,7 @@ export function ProfilePage() {
               <span
                 style={{
                   fontSize: 9, fontWeight: 700, fontFamily: 'Manrope, sans-serif',
-                  background: 'rgba(255,255,255,.06)', color: '#555',
+                  background: 'rgba(255,255,255,.06)', color: 'var(--text3)',
                   padding: '2px 6px', borderRadius: 5, letterSpacing: '.05em', flexShrink: 0,
                 }}
               >
@@ -467,7 +467,7 @@ export function ProfilePage() {
         </div>
 
         {/* ── Security ── */}
-        <div className="rounded-xl border border-line p-5 space-y-3" style={{ background: '#111111' }}>
+        <div className="rounded-xl border border-line p-5 space-y-3" style={{ background: 'var(--bg2)' }}>
           <p className="text-ink-2" style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.08em' }}>
             Segurança
           </p>

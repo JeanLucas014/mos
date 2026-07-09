@@ -248,7 +248,7 @@ function BookCard({
           <div style={{ marginTop: 2 }}>
             {book.total_pages && book.pages_read ? (
               <>
-                <div style={{ position: 'relative', height: 3, background: '#1f1f1f', borderRadius: 4, overflow: 'hidden' }}>
+                <div style={{ position: 'relative', height: 3, background: 'var(--border)', borderRadius: 4, overflow: 'hidden' }}>
                   <div
                     style={{
                       position: 'absolute', top: 0, left: 0, height: '100%',
@@ -441,7 +441,7 @@ function BookFormFields({
             <img
               src={coverPreview}
               alt="preview"
-              style={{ width: 48, height: 72, objectFit: 'cover', borderRadius: 6, border: '1px solid #1f1f1f', flexShrink: 0 }}
+              style={{ width: 48, height: 72, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)', flexShrink: 0 }}
             />
           )}
           <label
@@ -516,7 +516,7 @@ function AddModal({
     >
       <div
         className="w-full max-w-lg rounded-2xl border border-line p-6"
-        style={{ background: '#111111', maxHeight: '90vh', overflowY: 'auto' }}
+        style={{ background: 'var(--bg2)', maxHeight: '90vh', overflowY: 'auto' }}
       >
         <div className="flex items-center justify-between mb-5">
           <h2 style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 18 }}>Adicionar livro</h2>
@@ -622,7 +622,7 @@ function EditModal({
     >
       <div
         className="w-full max-w-lg rounded-2xl border border-line p-6"
-        style={{ background: '#111111', maxHeight: '90vh', overflowY: 'auto' }}
+        style={{ background: 'var(--bg2)', maxHeight: '90vh', overflowY: 'auto' }}
       >
         <div className="flex items-center justify-between mb-5">
           <h2 style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 18 }}>Editar livro</h2>
@@ -886,7 +886,7 @@ export function LibraryPage() {
           style={{
             minHeight: 36,
             background: filterFavorites ? 'rgba(248,113,113,.14)' : '#111111',
-            border: filterFavorites ? '1px solid rgba(248,113,113,.4)' : '1px solid #1f1f1f',
+            border: filterFavorites ? '1px solid rgba(248,113,113,.4)' : '1px solid var(--border)',
             color: filterFavorites ? '#f87171' : '#888',
             fontFamily: 'Manrope, sans-serif',
           }}
@@ -909,7 +909,7 @@ export function LibraryPage() {
                   background: gridCols === n ? '#0EA5E9' : '#111111',
                   color: gridCols === n ? '#000' : '#555',
                   border: '1px solid',
-                  borderColor: gridCols === n ? '#0EA5E9' : '#1f1f1f',
+                  borderColor: gridCols === n ? '#0EA5E9' : 'var(--border)',
                   fontFamily: 'Manrope, sans-serif',
                 }}
               >

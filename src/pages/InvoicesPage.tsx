@@ -10,10 +10,10 @@ type MotoRecord = Database['public']['Tables']['moto_revenue']['Row']
 
 /* ── Palette ─────────────────────────────────────────────────────── */
 const C = {
-  bg:     '#0a0a0a',
+  bg:     'var(--bg)',
   card:   '#111111',
   card2:  '#161616',
-  border: '#1f1f1f',
+  border: 'var(--border)',
   tx:     '#ffffff',
   dm:     '#888888',
   dm2:    '#444444',
@@ -32,7 +32,7 @@ const STATUS_CFG: Record<Status, { label: string; color: string; bg: string }> =
   'em dev':     { label: 'Em dev',     color: '#fcd34d', bg: '#1f1508' },
   'aprovado':   { label: 'Aprovado',   color: '#6ee7b7', bg: '#0a1f14' },
   'recorrente': { label: 'Recorrente', color: '#c4b5fd', bg: '#14112a' },
-  'pago':       { label: 'Pago',       color: '#9ca3af', bg: '#141414' },
+  'pago':       { label: 'Pago',       color: 'var(--text2)', bg: 'var(--bg3)' },
 }
 
 const ALL_STATUSES: Status[] = ['enviado', 'em dev', 'aprovado', 'recorrente', 'pago']
@@ -128,7 +128,7 @@ function InvoiceModal({ initial, onClose }: ModalProps) {
 
   const fs: React.CSSProperties = {
     width: '100%', boxSizing: 'border-box', marginBottom: 12,
-    background: '#1a1a1a',
+    background: 'var(--bg3)',
     border: '1px solid ' + C.border,
     borderRadius: 8, padding: '10px 12px',
     color: C.tx, fontSize: 13, outline: 'none',
@@ -421,7 +421,7 @@ function MotoAddModal({
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 640
   const fs: React.CSSProperties = {
     width: '100%', boxSizing: 'border-box', marginBottom: 10,
-    background: '#1a1a1a', border: '0.5px solid #2a2a2a',
+    background: 'var(--bg3)', border: '0.5px solid #2a2a2a',
     borderRadius: 8, padding: '10px 12px', color: C.tx, fontSize: 13, outline: 'none',
     fontFamily: 'Manrope, sans-serif',
   }

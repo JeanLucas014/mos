@@ -1081,7 +1081,7 @@ function AddPanel({
               key={cat.id}
               onClick={() => setQuickCat(quickCat?.id === cat.id ? null : cat)}
               style={cat.cor ? {
-                borderColor: quickCat?.id === cat.id ? cat.cor + '80' : '#1f1f1f',
+                borderColor: quickCat?.id === cat.id ? cat.cor + '80' : 'var(--border)',
                 color: quickCat?.id === cat.id ? cat.cor : '#666',
               } : {}}
               className={[

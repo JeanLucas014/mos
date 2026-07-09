@@ -126,7 +126,7 @@ export function ShoppingPage() {
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0"
                   style={{
                     background: isActive ? (cat === 'Todos' ? '#0EA5E9' : CAT_COLORS[cat]) + '22' : 'transparent',
-                    border: `1px solid ${isActive ? (cat === 'Todos' ? '#0EA5E9' : CAT_COLORS[cat]) + '80' : '#1f1f1f'}`,
+                    border: `1px solid ${isActive ? (cat === 'Todos' ? '#0EA5E9' : CAT_COLORS[cat]) + '80' : 'var(--border)'}`,
                     color: isActive ? (cat === 'Todos' ? '#0EA5E9' : CAT_COLORS[cat]) : '#555',
                   }}
                 >
@@ -141,7 +141,7 @@ export function ShoppingPage() {
                     <span
                       className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
                       style={{
-                        background: isActive ? (cat === 'Todos' ? '#0EA5E9' : CAT_COLORS[cat]) + '33' : '#1f1f1f',
+                        background: isActive ? (cat === 'Todos' ? '#0EA5E9' : CAT_COLORS[cat]) + '33' : 'var(--border)',
                         color: isActive ? (cat === 'Todos' ? '#0EA5E9' : CAT_COLORS[cat]) : '#555',
                       }}
                     >
@@ -220,7 +220,7 @@ export function ShoppingPage() {
               onSubmit={handleAdd}
               className="flex flex-col sm:flex-row sm:items-center gap-2 px-4 py-3 border-t border-line
                          fixed bottom-0 left-0 right-0 z-20 lg:static"
-              style={{ background: '#111111' }}
+              style={{ background: 'var(--bg2)' }}
             >
               {/* Linha 1 mobile: select */}
               <div className="flex items-center gap-2">

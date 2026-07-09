@@ -33,7 +33,7 @@ export function NotificationBell() {
         onClick={() => setOpen(p => !p)}
         style={{
           position: 'relative', background: 'none', border: 'none',
-          cursor: 'pointer', padding: 6, color: '#6b7280',
+          cursor: 'pointer', padding: 6, color: 'var(--text3)',
           display: 'flex', alignItems: 'center',
         }}
       >
@@ -50,23 +50,23 @@ export function NotificationBell() {
       {open && (
         <div style={{
           position: 'absolute', right: 0, top: 'calc(100% + 8px)',
-          width: 320, background: '#111111',
-          border: '1px solid #1f1f1f', borderRadius: 14,
+          width: 320, background: 'var(--bg2)',
+          border: '1px solid var(--border)', borderRadius: 14,
           boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
           zIndex: 100, overflow: 'hidden',
         }}>
           {/* Header */}
-          <div style={{ padding: '12px 16px', borderBottom: '1px solid #1f1f1f', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: '#e5e5e5' }}>Notificações</span>
+          <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>Notificações</span>
             {unread > 0 && (
-              <span style={{ fontSize: 11, color: '#6b7280' }}>{unread} nova(s)</span>
+              <span style={{ fontSize: 11, color: 'var(--text3)' }}>{unread} nova(s)</span>
             )}
           </div>
 
           {/* Lista */}
           <div style={{ maxHeight: 400, overflowY: 'auto' }}>
             {notifications.length === 0 ? (
-              <div style={{ padding: '24px 16px', textAlign: 'center', fontSize: 13, color: '#4b5563' }}>
+              <div style={{ padding: '24px 16px', textAlign: 'center', fontSize: 13, color: 'var(--text3)' }}>
                 Nenhuma notificação
               </div>
             ) : (
@@ -83,7 +83,7 @@ export function NotificationBell() {
                       borderBottom: '1px solid #161616',
                       display: 'flex', alignItems: 'flex-start', gap: 10,
                     }}
-                    onMouseEnter={e => (e.currentTarget.style.background = '#141414')}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg3)')}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   >
                     <div style={{
@@ -93,7 +93,7 @@ export function NotificationBell() {
                       flexShrink: 0, marginTop: 5,
                     }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>
                         {TYPE_LABELS[n.type]}
                       </div>
                       <div style={{ fontSize: 13, color: '#d4d4d4', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -107,11 +107,11 @@ export function NotificationBell() {
           </div>
 
           {/* Footer */}
-          <div style={{ padding: '10px 16px', borderTop: '1px solid #1f1f1f', textAlign: 'center' }}>
+          <div style={{ padding: '10px 16px', borderTop: '1px solid var(--border)', textAlign: 'center' }}>
             <Link
               to="/configuracoes"
               onClick={() => setOpen(false)}
-              style={{ fontSize: 11, color: '#4b5563', textDecoration: 'none' }}
+              style={{ fontSize: 11, color: 'var(--text3)', textDecoration: 'none' }}
             >
               Gerenciar notificações →
             </Link>

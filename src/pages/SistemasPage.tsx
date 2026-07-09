@@ -6,10 +6,10 @@ import { Plus, Edit2, Trash2, ExternalLink, Paperclip, X, Upload, ChevronDown, C
 
 /* ── Palette ─────────────────────────────────────────────────────── */
 const C = {
-  bg:     '#0a0a0a',
+  bg:     'var(--bg)',
   card:   '#111111',
   card2:  '#161616',
-  border: '#1f1f1f',
+  border: 'var(--border)',
   b:      '#0EA5E9',
   g:      '#34d399',
   r:      '#f87171',
@@ -56,10 +56,10 @@ const STATUS_COLOR: Record<string, string> = {
 /* ── Shared input style (dark) ───────────────────────────────────── */
 const inputStyle: React.CSSProperties = {
   width: '100%',
-  background: '#1a1a1a',
+  background: 'var(--bg3)',
   border: '0.5px solid #2a2a2a',
   borderRadius: 8,
-  color: '#e5e5e5',
+  color: 'var(--text)',
   fontSize: 13,
   padding: '9px 11px',
   outline: 'none',
@@ -175,15 +175,15 @@ function IframeModal({ title, url, onClose }: { title: string; url: string; onCl
     <div style={{
       position: 'fixed', inset: 0, zIndex: 200,
       display: 'flex', flexDirection: 'column',
-      background: '#0a0a0a',
+      background: 'var(--bg)',
     }}>
       {/* Header bar */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '0 16px', height: 48, flexShrink: 0,
-        borderBottom: '1px solid #1f1f1f', background: '#111111',
+        borderBottom: '1px solid var(--border)', background: 'var(--bg2)',
       }}>
-        <span style={{ fontWeight: 700, fontSize: 14, color: '#e5e5e5', fontFamily: 'Manrope, sans-serif' }}>
+        <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)', fontFamily: 'Manrope, sans-serif' }}>
           {title}
         </span>
         <button
@@ -345,13 +345,13 @@ function SystemModal({
             <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <span style={{ fontSize: 11, color: C.dm, textTransform: 'uppercase', letterSpacing: '.06em' }}>Categoria</span>
               <select value={category} onChange={e => setCategory(e.target.value)} style={inputStyle}>
-                {CATEGORIES.map(c => <option key={c} value={c} style={{ background: '#1a1a1a' }}>{c}</option>)}
+                {CATEGORIES.map(c => <option key={c} value={c} style={{ background: 'var(--bg3)' }}>{c}</option>)}
               </select>
             </label>
             <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <span style={{ fontSize: 11, color: C.dm, textTransform: 'uppercase', letterSpacing: '.06em' }}>Status</span>
               <select value={status} onChange={e => setStatus(e.target.value)} style={inputStyle}>
-                {STATUSES.map(s => <option key={s} value={s} style={{ background: '#1a1a1a' }}>{s}</option>)}
+                {STATUSES.map(s => <option key={s} value={s} style={{ background: 'var(--bg3)' }}>{s}</option>)}
               </select>
             </label>
           </div>
@@ -496,7 +496,7 @@ function FilesSection({ systemId }: { systemId: string }) {
                 placeholder="URL" style={{ ...inputStyle, fontSize: 11, padding: '5px 8px', flex: 1 }} />
               <select value={fileType} onChange={e => setFileType(e.target.value)}
                 style={{ ...inputStyle, fontSize: 11, padding: '5px 8px', flex: '0 0 68px' }}>
-                {['Link', 'Repo', 'Doc', 'Design', 'Video', 'Outro'].map(t => <option key={t} style={{ background: '#1a1a1a' }}>{t}</option>)}
+                {['Link', 'Repo', 'Doc', 'Design', 'Video', 'Outro'].map(t => <option key={t} style={{ background: 'var(--bg3)' }}>{t}</option>)}
               </select>
               <button type="submit" disabled={add.isPending}
                 style={{ ...btnStyle, fontSize: 11, padding: '5px 10px', background: C.b, color: '#fff', flexShrink: 0 }}>
@@ -509,7 +509,7 @@ function FilesSection({ systemId }: { systemId: string }) {
                 placeholder="Nome (opcional)" style={{ ...inputStyle, fontSize: 11, padding: '5px 8px', flex: '0 0 130px' }} />
               <select value={fileType} onChange={e => setFileType(e.target.value)}
                 style={{ ...inputStyle, fontSize: 11, padding: '5px 8px', flex: '0 0 68px' }}>
-                {['Doc', 'PDF', 'ZIP', 'IMG', 'Video', 'Outro'].map(t => <option key={t} style={{ background: '#1a1a1a' }}>{t}</option>)}
+                {['Doc', 'PDF', 'ZIP', 'IMG', 'Video', 'Outro'].map(t => <option key={t} style={{ background: 'var(--bg3)' }}>{t}</option>)}
               </select>
               <button type="button" onClick={() => uploadRef.current?.click()} disabled={uploading}
                 style={{ ...btnStyle, fontSize: 11, padding: '5px 12px', background: C.g + '20', color: C.g, border: '1px solid ' + C.g + '40', flexShrink: 0 }}>

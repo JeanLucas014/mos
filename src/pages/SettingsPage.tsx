@@ -110,7 +110,7 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
       style={{ background: 'rgba(0,0,0,.8)' }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="w-full max-w-md rounded-2xl border border-line p-6" style={{ background: '#111111' }}>
+      <div className="w-full max-w-md rounded-2xl border border-line p-6" style={{ background: 'var(--bg2)' }}>
         {success ? (
           <div className="text-center py-6">
             <div className="flex justify-center mb-3"><CheckCircle size={40} className="text-ok" /></div>
@@ -186,7 +186,7 @@ function AdminSection() {
   }
 
   return (
-    <div className="rounded-xl border border-line p-5 space-y-4" style={{ background: '#111111' }}>
+    <div className="rounded-xl border border-line p-5 space-y-4" style={{ background: 'var(--bg2)' }}>
       <div className="flex items-center gap-2">
         <Shield size={15} className="text-ink-2" />
         <h3 style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 14 }}>Administração</h3>
@@ -202,7 +202,7 @@ function AdminSection() {
             <div className="space-y-1">
               {profiles.map(p => (
                 <div key={p.id} className="flex items-center gap-2.5 px-3 py-2 rounded-input bg-bg-3">
-                  <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: '#1f1f1f', fontSize: 10, fontWeight: 700, color: '#0EA5E9' }}>
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'var(--border)', fontSize: 10, fontWeight: 700, color: '#0EA5E9' }}>
                     {initials(p.name, undefined)}
                   </div>
                   <span className="text-ink text-sm flex-1 truncate">{p.name || '—'}</span>
@@ -241,7 +241,7 @@ function AparenciaTab() {
 
   return (
     <div>
-      <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 16 }}>
+      <p style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 16 }}>
         Escolha como o MOS deve aparecer para você.
       </p>
       <div className="space-y-2">
@@ -309,7 +309,7 @@ function NotificacoesTab() {
 
   return (
     <div className="space-y-2">
-      <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 16 }}>
+      <p style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 16 }}>
         Escolha quais alertas aparecem no sino de notificações.
       </p>
       {items.map(item => (
@@ -318,16 +318,16 @@ function NotificacoesTab() {
           className="flex items-center justify-between rounded-xl border border-line bg-bg-2 px-4 py-3"
         >
           <div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#e5e5e5', marginBottom: 2 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 2 }}>
               {item.label}
             </div>
-            <div style={{ fontSize: 12, color: '#4b5563' }}>{item.desc}</div>
+            <div style={{ fontSize: 12, color: 'var(--text3)' }}>{item.desc}</div>
           </div>
           <button
             onClick={() => toggle(item.key)}
             style={{
               width: 40, height: 22, borderRadius: 11,
-              background: local[item.key] ? '#0ea5e9' : '#262626',
+              background: local[item.key] ? '#0ea5e9' : 'var(--border)',
               border: 'none', cursor: 'pointer', position: 'relative',
               transition: 'background 0.2s', flexShrink: 0,
             }}
@@ -428,9 +428,10 @@ export default function SettingsPage() {
 
       {/* ── PERFIL tab ── */}
       {tab === 'perfil' && (
+        <>
         <section className="space-y-3">
           {/* Avatar + name display */}
-          <div className="rounded-xl border border-line p-5 flex items-center gap-5" style={{ background: '#111111' }}>
+          <div className="rounded-xl border border-line p-5 flex items-center gap-5" style={{ background: 'var(--bg2)' }}>
             <div className="flex-shrink-0 flex items-center justify-center rounded-full text-white" style={{ width: 64, height: 64, background: '#0EA5E9', fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 24 }}>
               {initials(displayName, email)}
             </div>
@@ -449,7 +450,7 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-line p-5 space-y-4" style={{ background: '#111111' }}>
+          <div className="rounded-xl border border-line p-5 space-y-4" style={{ background: 'var(--bg2)' }}>
             <SectionLabel>Informações pessoais</SectionLabel>
             <div>
               <label className="block text-ink-2 mb-1.5" style={{ fontSize: 12, fontWeight: 600 }}>Nome</label>
@@ -473,17 +474,19 @@ export default function SettingsPage() {
               <label className="block text-ink-2 mb-1.5" style={{ fontSize: 12, fontWeight: 600 }}>E-mail</label>
               <div className="flex items-center gap-2 bg-bg-3 border border-line rounded-input px-3 text-ink-2 text-sm" style={{ minHeight: 40 }}>
                 <span className="flex-1 truncate">{email}</span>
-                <span style={{ fontSize: 9, fontWeight: 700, background: 'rgba(255,255,255,.06)', color: '#555', padding: '2px 6px', borderRadius: 5, letterSpacing: '.05em', flexShrink: 0 }}>SOMENTE LEITURA</span>
+                <span style={{ fontSize: 9, fontWeight: 700, background: 'rgba(255,255,255,.06)', color: 'var(--text3)', padding: '2px 6px', borderRadius: 5, letterSpacing: '.05em', flexShrink: 0 }}>SOMENTE LEITURA</span>
               </div>
             </div>
           </div>
         </section>
+        {isAdmin && <AdminSection />}
+        </>
       )}
 
       {/* ── SEGURANÇA tab ── */}
       {tab === 'seguranca' && (
         <section className="space-y-3">
-          <div className="rounded-xl border border-line p-5 space-y-3" style={{ background: '#111111' }}>
+          <div className="rounded-xl border border-line p-5 space-y-3" style={{ background: 'var(--bg2)' }}>
             <SectionLabel>Segurança da conta</SectionLabel>
             <p className="text-ink-3 text-xs">Sua senha nunca é armazenada em texto puro. Para alterá-la, informe a senha atual e defina uma nova.</p>
             <button
@@ -590,9 +593,6 @@ export default function SettingsPage() {
           )}
         </div>
       )}
-
-      {/* ── ALWAYS VISIBLE ── */}
-      {isAdmin && <AdminSection />}
 
       <button
         onClick={handleLogout}

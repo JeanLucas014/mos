@@ -158,7 +158,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
       style={{ background: 'rgba(0,0,0,.8)' }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="w-full max-w-md rounded-2xl border border-line p-6 space-y-4" style={{ background: '#111111', maxHeight: '90vh', overflowY: 'auto' }}>
+      <div className="w-full max-w-md rounded-2xl border border-line p-6 space-y-4" style={{ background: 'var(--bg2)', maxHeight: '90vh', overflowY: 'auto' }}>
         <div className="flex items-center justify-between">
           <h3 style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 17 }}>{title}</h3>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-ink-3 hover:text-ink rounded-input hover:bg-bg-3 transition-colors text-lg">×</button>
@@ -219,7 +219,7 @@ function YearStats({ workouts, year }: { workouts: Sport[]; year: string }) {
   ]
 
   return (
-    <div className="border border-[#1f1f1f] rounded-2xl p-5 mb-5" style={{ background: '#0a0a0a' }}>
+    <div className="border border-[#1f1f1f] rounded-2xl p-5 mb-5" style={{ background: 'var(--bg)' }}>
       <div className="flex items-start justify-between mb-5">
         <div>
           <div className="text-[10px] uppercase tracking-widest font-bold text-[#444] mb-1">Resumo anual</div>
@@ -238,7 +238,7 @@ function YearStats({ workouts, year }: { workouts: Sport[]; year: string }) {
       </div>
       <div className="grid grid-cols-3 gap-2">
         {stats.map(s => (
-          <div key={s.label} className="border border-[#1f1f1f] rounded-xl p-3" style={{ background: '#111111' }}>
+          <div key={s.label} className="border border-[#1f1f1f] rounded-xl p-3" style={{ background: 'var(--bg2)' }}>
             <div className="text-[9px] uppercase tracking-widest font-bold text-[#444] mb-1.5">{s.label}</div>
             <div className="text-sm font-bold" style={{ fontFamily: 'Sora, sans-serif', color: '#0EA5E9' }}>{s.value}</div>
           </div>
@@ -295,7 +295,7 @@ function MonthGroup({ monthKey, workouts, onDelete }: { monthKey: string; workou
   const label = fmtMonthLabel(monthKey + '-01')
 
   return (
-    <div className="border border-[#1f1f1f] rounded-2xl overflow-hidden mb-2" style={{ background: '#0a0a0a' }}>
+    <div className="border border-[#1f1f1f] rounded-2xl overflow-hidden mb-2" style={{ background: 'var(--bg)' }}>
       <button onClick={() => setOpen(!open)} className="w-full p-4 text-left hover:bg-[#0d0d0d] transition-colors">
         <div className="flex items-center gap-3">
           <div className="flex-1">
@@ -835,7 +835,7 @@ export function SportsPage() {
       <p className="text-ink-2 mt-1 text-sm mb-5">Treinos, metas, provas e gear.</p>
 
       {/* Sport tabs */}
-      <div className="flex gap-1.5 mb-6 p-1 rounded-xl border border-line overflow-x-auto" style={{ background: '#111111' }}>
+      <div className="flex gap-1.5 mb-6 p-1 rounded-xl border border-line overflow-x-auto" style={{ background: 'var(--bg2)' }}>
         {userSports.map((s) => (
           <button
             key={s.id}
@@ -843,7 +843,7 @@ export function SportsPage() {
             className="flex items-center gap-2 px-4 sm:px-5 rounded-lg transition-colors font-semibold flex-shrink-0"
             style={{
               minHeight: 40, fontSize: 13,
-              background: sport === s.key ? '#1f1f1f' : 'transparent',
+              background: sport === s.key ? 'var(--border)' : 'transparent',
               color: sport === s.key ? '#fff' : '#888',
               border: sport === s.key ? '1px solid rgba(255,255,255,.08)' : '1px solid transparent',
               whiteSpace: 'nowrap',

@@ -3,10 +3,10 @@ import { ArrowLeft } from 'lucide-react'
 
 export function TermsPage() {
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a0a', color: '#e5e5e5', fontFamily: "'Manrope', system-ui, sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)', fontFamily: "'Manrope', system-ui, sans-serif" }}>
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '48px 24px 80px' }}>
 
-        <Link to="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#6b7280', textDecoration: 'none', fontSize: 14, marginBottom: 40 }}>
+        <Link to="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--text3)', textDecoration: 'none', fontSize: 14, marginBottom: 40 }}>
           <ArrowLeft size={15} /> Voltar
         </Link>
 
@@ -17,7 +17,7 @@ export function TermsPage() {
           <h1 style={{ fontFamily: 'Sora, sans-serif', fontSize: 28, fontWeight: 800, letterSpacing: '-0.02em', margin: '0 0 8px' }}>
             Termos de Uso
           </h1>
-          <p style={{ color: '#6b7280', fontSize: 14, margin: 0 }}>
+          <p style={{ color: 'var(--text3)', fontSize: 14, margin: 0 }}>
             Última atualização: julho de 2026
           </p>
         </div>
@@ -100,9 +100,9 @@ export function TermsPage() {
 
         </div>
 
-        <div style={{ marginTop: 48, paddingTop: 24, borderTop: '1px solid #1f1f1f', display: 'flex', gap: 16, fontSize: 13, color: '#6b7280' }}>
-          <Link to="/privacidade" style={{ color: '#6b7280' }}>Política de Privacidade</Link>
-          <Link to="/login" style={{ color: '#6b7280' }}>Voltar ao login</Link>
+        <div style={{ marginTop: 48, paddingTop: 24, borderTop: '1px solid var(--border)', display: 'flex', gap: 16, fontSize: 13, color: 'var(--text3)' }}>
+          <Link to="/privacidade" style={{ color: 'var(--text3)' }}>Política de Privacidade</Link>
+          <Link to="/login" style={{ color: 'var(--text3)' }}>Voltar ao login</Link>
         </div>
 
       </div>
@@ -113,7 +113,7 @@ export function TermsPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h2 style={{ fontFamily: 'Sora, sans-serif', fontSize: 16, fontWeight: 700, color: '#f5f5f5', margin: '0 0 12px', letterSpacing: '-0.01em' }}>
+      <h2 style={{ fontFamily: 'Sora, sans-serif', fontSize: 16, fontWeight: 700, color: 'var(--text)', margin: '0 0 12px', letterSpacing: '-0.01em' }}>
         {title}
       </h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

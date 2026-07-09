@@ -99,14 +99,14 @@ export function AnoTab({ ano, onGoToMonth }: Props) {
         </div>
         <ResponsiveContainer width="100%" height={200}>
           <ComposedChart data={chartData} barSize={14}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--bg3)" vertical={false} />
             <XAxis dataKey="mes" tick={{ fill: '#555', fontSize: 11 }} axisLine={false} tickLine={false} />
             <YAxis
               tick={{ fill: '#555', fontSize: 11 }} axisLine={false} tickLine={false}
               tickFormatter={v => v === 0 ? '' : `${(v / 1000).toFixed(0)}k`}
             />
             <Tooltip
-              contentStyle={{ background: '#111111', border: '1px solid #1f1f1f', borderRadius: 8, fontSize: 12 }}
+              contentStyle={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
               labelStyle={{ color: '#aaa' }}
               formatter={(v, name) => [BRL(Number(v)), String(name)]}
             />

@@ -125,7 +125,7 @@ function ScoreGauge({ score, size = 176 }: { score: number; size?: number }) {
 
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <path d={arc(135, 405)} fill="none" stroke="#1a1a1a" strokeWidth={sw} strokeLinecap="round" />
+      <path d={arc(135, 405)} fill="none" stroke="var(--bg3)" strokeWidth={sw} strokeLinecap="round" />
       {score > 0 && (
         <path d={arc(135, end)} fill="none" stroke={color} strokeWidth={sw} strokeLinecap="round" />
       )}
@@ -187,7 +187,7 @@ function LifeScoreSection() {
     <div className="mb-6">
       <div
         className="rounded-2xl border border-line overflow-hidden"
-        style={{ background: '#111111' }}
+        style={{ background: 'var(--bg2)' }}
       >
         {/* LINHA SUPERIOR: Gauge | Mini scores */}
         <div className="flex" style={{ borderBottom: '1px solid #161616' }}>
@@ -198,7 +198,7 @@ function LifeScoreSection() {
             style={{ padding: '20px 24px', borderRight: '1px solid #161616', gap: 4 }}
           >
             <ScoreGauge score={overall} size={180} />
-            <div style={{ fontSize: 10, color: '#4b5563', textAlign: 'center' as const }}>
+            <div style={{ fontSize: 10, color: 'var(--text3)', textAlign: 'center' as const }}>
               Score de Vida
             </div>
           </div>
@@ -210,14 +210,14 @@ function LifeScoreSection() {
             onClick={() => setOpen(p => !p)}
           >
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: '#9ca3af', marginBottom: 10 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text2)', marginBottom: 10 }}>
                 Visao geral
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '6px 14px' }}>
                 {AREAS.map(a => (
                   <div key={a.label} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     <div style={{ width: 5, height: 5, borderRadius: '50%', background: scoreColor(a.score), flexShrink: 0 }} />
-                    <span style={{ fontSize: 11, color: '#4b5563' }}>{a.label}</span>
+                    <span style={{ fontSize: 11, color: 'var(--text3)' }}>{a.label}</span>
                     <span style={{ fontSize: 11, fontWeight: 600, color: scoreColor(a.score) }}>{a.score}</span>
                   </div>
                 ))}
@@ -241,7 +241,7 @@ function LifeScoreSection() {
             >
               <ResponsiveContainer width={228} height={200}>
                 <RadarChart data={radarData} margin={{ top: 14, right: 38, bottom: 14, left: 38 }}>
-                  <PolarGrid stroke="#1f1f1f" />
+                  <PolarGrid stroke="var(--border)" />
                   <PolarAngleAxis
                     dataKey="subject"
                     tick={{ fill: '#4b5563', fontSize: 10, fontFamily: 'Manrope', fontWeight: 400 }}
@@ -272,16 +272,16 @@ function LifeScoreSection() {
                       borderRight: i % 3 < 2 ? '1px solid #161616' : undefined,
                     }}
                   >
-                    <div style={{ fontSize: 9, fontWeight: 600, color: '#4b5563', textTransform: 'uppercase' as const, letterSpacing: '0.06em', marginBottom: 3 }}>
+                    <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--text3)', textTransform: 'uppercase' as const, letterSpacing: '0.06em', marginBottom: 3 }}>
                       {a.label}
                     </div>
                     <div style={{ fontSize: 18, fontWeight: 700, color: sc, fontFamily: 'Sora, sans-serif', lineHeight: 1, marginBottom: 5 }}>
                       {a.score}
                     </div>
-                    <div style={{ height: 2, background: '#1a1a1a', borderRadius: 2, overflow: 'hidden', marginBottom: 4 }}>
+                    <div style={{ height: 2, background: 'var(--bg3)', borderRadius: 2, overflow: 'hidden', marginBottom: 4 }}>
                       <div style={{ width: `${a.score}%`, height: '100%', background: sc, borderRadius: 2 }} />
                     </div>
-                    <div style={{ fontSize: 9.5, color: '#374151' }}>{a.meta}</div>
+                    <div style={{ fontSize: 9.5, color: 'var(--text3)' }}>{a.meta}</div>
                   </div>
                 )
               })}
@@ -305,7 +305,7 @@ function Sk({ w = 'w-full', h = 'h-3' }: { w?: string; h?: string }) {
 
 function Bar({ pct, color = '#0EA5E9' }: { pct: number; color?: string }) {
   return (
-    <div className="w-full rounded-full overflow-hidden" style={{ height: 4, background: '#1f1f1f' }}>
+    <div className="w-full rounded-full overflow-hidden" style={{ height: 4, background: 'var(--border)' }}>
       <div
         className="h-full rounded-full transition-all duration-500"
         style={{ width: `${Math.min(100, Math.max(0, pct))}%`, background: color }}
@@ -536,7 +536,7 @@ function ProjectsWidget() {
                     </span>
                   </div>
                   <Bar pct={p.progress} color={STATUS_COLOR[p.status] ?? '#0EA5E9'} />
-                  <div className="text-right mt-0.5" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: '#555' }}>
+                  <div className="text-right mt-0.5" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--text3)' }}>
                     {p.progress}%
                   </div>
                 </li>
@@ -610,7 +610,7 @@ function SportsWidget() {
         <>
           <div className="grid grid-cols-2 gap-3 mb-3">
             <div className="bg-bg rounded-xl px-3 py-2.5">
-              <div style={{ fontSize: 9, color: '#555', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 4 }}>
+              <div style={{ fontSize: 9, color: 'var(--text3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 4 }}>
                 km no mes
               </div>
               <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 18, fontWeight: 800, color: '#0EA5E9' }}>
@@ -618,7 +618,7 @@ function SportsWidget() {
               </div>
             </div>
             <div className="bg-bg rounded-xl px-3 py-2.5">
-              <div style={{ fontSize: 9, color: '#555', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 4 }}>
+              <div style={{ fontSize: 9, color: 'var(--text3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 4 }}>
                 treinos
               </div>
               <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 18, fontWeight: 800, color: '#a78bfa' }}>
@@ -672,7 +672,7 @@ function NotesWidget() {
           <BigStat value={notes.length} label={`nota${notes.length !== 1 ? 's' : ''} salva${notes.length !== 1 ? 's' : ''}`} color="#a78bfa" />
           {latest ? (
             <div className="mt-3 bg-bg rounded-xl px-3 py-2">
-              <div style={{ fontSize: 9, color: '#555', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 3 }}>
+              <div style={{ fontSize: 9, color: 'var(--text3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 3 }}>
                 Mais recente
               </div>
               <div className="text-ink-2 text-xs line-clamp-2" style={{ lineHeight: 1.5 }}>
@@ -707,7 +707,7 @@ function LibraryWidget() {
           <BigStat value={readCnt} label="lidos" color="#34d399" />
           {current ? (
             <div className="mt-3 bg-bg rounded-xl px-3 py-2.5">
-              <div style={{ fontSize: 9, color: '#555', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 4 }}>
+              <div style={{ fontSize: 9, color: 'var(--text3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 4 }}>
                 Lendo agora
               </div>
               <div className="text-ink text-xs font-semibold truncate mb-1" style={{ fontFamily: 'Sora, sans-serif' }}>
@@ -807,7 +807,7 @@ function FinanceiroWidget() {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-1.5">
           <DollarSign size={13} className="text-ink-3" />
-          <span style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             Financeiro
           </span>
         </div>
@@ -816,7 +816,7 @@ function FinanceiroWidget() {
 
       {/* Saldo */}
       <div className="mb-4">
-        <div style={{ fontSize: 11, color: '#4b5563', marginBottom: 4 }}>
+        <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 4 }}>
           {new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
         </div>
         <div style={{
@@ -829,10 +829,10 @@ function FinanceiroWidget() {
           {saldo < 0 ? '-' : ''}R$ {Math.abs(saldo).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </div>
         <div className="flex gap-3 mt-1.5">
-          <span style={{ fontSize: 11, color: '#4b5563' }}>
+          <span style={{ fontSize: 11, color: 'var(--text3)' }}>
             ↑ R$ {receitas.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
           </span>
-          <span style={{ fontSize: 11, color: '#4b5563' }}>
+          <span style={{ fontSize: 11, color: 'var(--text3)' }}>
             ↓ R$ {despesas.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
           </span>
         </div>
@@ -841,8 +841,8 @@ function FinanceiroWidget() {
       {/* Alertas — só se houver */}
       {alertas.length > 0 && (
         <>
-          <div style={{ height: 1, background: '#1a1a1a', marginBottom: 12 }} />
-          <div style={{ fontSize: 10, fontWeight: 700, color: '#4b5563', textTransform: 'uppercase' as const, letterSpacing: '0.05em', marginBottom: 8 }}>
+          <div style={{ height: 1, background: 'var(--bg3)', marginBottom: 12 }} />
+          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase' as const, letterSpacing: '0.05em', marginBottom: 8 }}>
             Atenção
           </div>
           <div>
@@ -853,13 +853,13 @@ function FinanceiroWidget() {
                 style={{ padding: '8px 0', borderBottom: i < vencidas.length - 1 || venceHoje.length > 0 ? '1px solid #1a1a1a' : undefined }}
               >
                 <div>
-                  <div style={{ fontSize: 12.5, fontWeight: 500, color: '#e5e5e5' }}>{r.nome}</div>
+                  <div style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--text)' }}>{r.nome}</div>
                   <div style={{ fontSize: 10.5, color: '#ef4444', marginTop: 1 }}>
                     Venceu há {today - r.dia_previsto} dia(s)
                   </div>
                 </div>
                 {r.valor > 0 && (
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#9ca3af' }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text2)' }}>
                     R$ {Number(r.valor).toLocaleString('pt-BR', { minimumFractionDigits: 0 })}
                   </div>
                 )}
@@ -872,11 +872,11 @@ function FinanceiroWidget() {
                 style={{ padding: '8px 0', borderBottom: i < venceHoje.length - 1 ? '1px solid #1a1a1a' : undefined }}
               >
                 <div>
-                  <div style={{ fontSize: 12.5, fontWeight: 500, color: '#e5e5e5' }}>{r.nome}</div>
+                  <div style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--text)' }}>{r.nome}</div>
                   <div style={{ fontSize: 10.5, color: '#f59e0b', marginTop: 1 }}>Vence hoje</div>
                 </div>
                 {r.valor > 0 && (
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#9ca3af' }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text2)' }}>
                     R$ {Number(r.valor).toLocaleString('pt-BR', { minimumFractionDigits: 0 })}
                   </div>
                 )}
@@ -888,7 +888,7 @@ function FinanceiroWidget() {
 
       {/* Sem alertas */}
       {alertas.length === 0 && !financas.isLoading && (
-        <div style={{ fontSize: 11, color: '#374151' }}>Nenhuma conta vencida ou com vencimento hoje.</div>
+        <div style={{ fontSize: 11, color: 'var(--text3)' }}>Nenhuma conta vencida ou com vencimento hoje.</div>
       )}
     </Link>
   )
@@ -928,7 +928,7 @@ export function DashboardPage() {
 
       {/* Widget grid */}
       <div
-        style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}
+        style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}
       >
         Modulos
       </div>

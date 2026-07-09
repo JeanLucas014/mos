@@ -247,7 +247,7 @@ const CWV_IDS = [
 ];
 
 function cwvStatus(score: number | null): { label: string; color: string; bg: string; border: string } {
-  if (score === null) return { label: "–", color: "#6b7280", bg: "#111111", border: "#1f1f1f" };
+  if (score === null) return { label: "–", color: "#6b7280", bg: "#111111", border: "var(--border)" };
   if (score >= 0.9) return { label: "Bom", color: "#22c55e", bg: "#0d2818", border: "#1a5c38" };
   if (score >= 0.5) return { label: "Melhorar", color: "#f59e0b", bg: "#2a2410", border: "#5c4d1a" };
   return { label: "Crítico", color: "#ef4444", bg: "#2a1210", border: "#5c241a" };
@@ -311,7 +311,7 @@ function ScoreGauge({ score, strategy }: { score: number; strategy: string }) {
         <path
           d={arcPath(startDeg, startDeg + totalDeg)}
           fill="none"
-          stroke="#262626"
+          stroke="var(--border)"
           strokeWidth={strokeW}
           strokeLinecap="round"
         />
@@ -408,7 +408,7 @@ function ProblemItem({
 }) {
   const cor = ESFORCO_COR[item.esforco];
   return (
-    <div style={{ background: "#111111", border: "1px solid #1f1f1f", borderRadius: 12, overflow: "hidden" }}>
+    <div style={{ background: "#111111", border: "1px solid var(--border)", borderRadius: 12, overflow: "hidden" }}>
       <button
         onClick={onToggle}
         style={{
@@ -455,7 +455,7 @@ function ProblemItem({
       </button>
       {expanded && (
         <div style={{ padding: "0 18px 18px 52px" }}>
-          <div style={{ background: "#0a0a0a", border: "1px solid #1f1f1f", borderRadius: 10, padding: 16 }}>
+          <div style={{ background: "#0a0a0a", border: "1px solid var(--border)", borderRadius: 10, padding: 16 }}>
             <div
               style={{
                 fontSize: 12,
@@ -674,7 +674,7 @@ export default function WPSpeedAudit() {
       <div
         style={{
           background: "#111111",
-          border: "1px solid #1f1f1f",
+          border: "1px solid var(--border)",
           borderRadius: 14,
           padding: 24,
           marginBottom: 24,
@@ -722,7 +722,7 @@ export default function WPSpeedAudit() {
                 fontFamily: "inherit",
                 background: strategy === val ? "#0ea5e9" : "#0a0a0a",
                 color: strategy === val ? "#0a0a0a" : "#9ca3af",
-                border: `1px solid ${strategy === val ? "#0ea5e9" : "#262626"}`,
+                border: `1px solid ${strategy === val ? "#0ea5e9" : "var(--border)"}`,
               }}
             >
               {val === "mobile" ? <Smartphone size={15} /> : <Monitor size={15} />}
@@ -743,7 +743,7 @@ export default function WPSpeedAudit() {
             fontSize: 15,
             fontWeight: 700,
             fontFamily: "'Sora', sans-serif",
-            background: loading ? "#1f1f1f" : "#0ea5e9",
+            background: loading ? "var(--border)" : "#0ea5e9",
             color: loading ? "#6b7280" : "#0a0a0a",
             display: "flex",
             alignItems: "center",
@@ -795,7 +795,7 @@ export default function WPSpeedAudit() {
             <div
               style={{
                 background: "#111111",
-                border: "1px solid #1f1f1f",
+                border: "1px solid var(--border)",
                 borderRadius: 14,
                 padding: "24px 28px",
                 display: "flex",
@@ -825,7 +825,7 @@ export default function WPSpeedAudit() {
           <QuickWins items={[...result.opportunities, ...result.diagnostics]} />
 
           {/* Tabs */}
-          <div style={{ display: "flex", gap: 0, borderBottom: "1px solid #1f1f1f", marginBottom: 20 }}>
+          <div style={{ display: "flex", gap: 0, borderBottom: "1px solid var(--border)", marginBottom: 20 }}>
             {tabs.map((tab) => {
               const active = activeTab === tab.id;
               return (
@@ -851,7 +851,7 @@ export default function WPSpeedAudit() {
                     style={{
                       marginLeft: 6,
                       fontSize: 12,
-                      background: active ? "#0c3450" : "#1f1f1f",
+                      background: active ? "#0c3450" : "var(--border)",
                       color: active ? "#0ea5e9" : "#6b7280",
                       borderRadius: 10,
                       padding: "1px 7px",
@@ -870,7 +870,7 @@ export default function WPSpeedAudit() {
               <div
                 style={{
                   background: "#111111",
-                  border: "1px solid #1f1f1f",
+                  border: "1px solid var(--border)",
                   borderRadius: 12,
                   padding: 24,
                   color: "#6b7280",

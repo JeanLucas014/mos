@@ -10,10 +10,10 @@ type EventInsert = Database['public']['Tables']['events']['Insert']
 
 /* ── Palette ──────────────────────────────────────────────────── */
 const C = {
-  bg:     '#0a0a0a',
+  bg:     'var(--bg)',
   card:   '#111111',
   card2:  '#161616',
-  border: '#1f1f1f',
+  border: 'var(--border)',
   tx:     '#ffffff',
   dm:     '#888888',
   dm2:    '#444444',
