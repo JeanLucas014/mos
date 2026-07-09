@@ -142,7 +142,7 @@ function ScoreGauge({ score, size = 176 }: { score: number; size?: number }) {
 
 /* ── Life Score Section ─────────────────────────────────────────── */
 function LifeScoreSection() {
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(false)
 
   const financas   = useDashFinancas()
   const tasksScore = useDashTasksScore()
@@ -820,8 +820,8 @@ function FinanceiroWidget() {
           {new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
         </div>
         <div style={{
-          fontSize: 28,
-          fontWeight: 700,
+          fontSize: 22,
+          fontWeight: 500,
           fontFamily: 'Sora, sans-serif',
           lineHeight: 1,
           color: saldo >= 0 ? '#e5e5e5' : '#ef4444',
