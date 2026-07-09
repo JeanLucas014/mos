@@ -306,16 +306,25 @@ export function useDashFinancas() {
         .gte('data', start)
         .lte('data', today())
       if (error) throw error
-      // dados Notion têm is_grupo=null — filtrar em JS
-      const rows = (data ?? []).filter((r: any) => !r.is_grupo && r.valor != null)
+
+      // filtrar is_grupo em JS — dados Notion têm is_grupo=null
+      // natureza válida: 'entrada' (receita) ou 'saida' (despesa); 'diario' = Notion, ignorar
+      const rows = (data ?? []).filter(
+        (r: any) => !r.is_grupo && r.valor != null && (r.natureza === 'entrada' || r.natureza === 'saida'),
+      )
+
       const receitas = rows
-        .filter((r: any) => r.natureza === 'receita')
-        .reduce((s: number, r: any) => s + r.valor, 0)
+        .filter((r: any) => r.natureza === 'entrada')
+        .reduce((s: number, r: any) => s + Number(r.valor), 0)
+
       const despesas = rows
-        .filter((r: any) => r.natureza !== 'receita')
-        .reduce((s: number, r: any) => s + r.valor, 0)
+        .filter((r: any) => r.natureza === 'saida')
+        .reduce((s: number, r: any) => s + Number(r.valor), 0)
+
       return { receitas, despesas, saldo: receitas - despesas }
     },
+    staleTime: 0,
+    refetchInterval: 60_000,
   })
 }
 

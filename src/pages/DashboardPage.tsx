@@ -824,9 +824,9 @@ function FinanceiroWidget() {
           fontWeight: 700,
           fontFamily: 'Sora, sans-serif',
           lineHeight: 1,
-          color: '#e5e5e5',
+          color: saldo >= 0 ? '#e5e5e5' : '#ef4444',
         }}>
-          {saldo >= 0 ? '+' : ''}R$ {Math.abs(saldo).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+          {saldo < 0 ? '-' : ''}R$ {Math.abs(saldo).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </div>
         <div className="flex gap-3 mt-1.5">
           <span style={{ fontSize: 11, color: '#4b5563' }}>
