@@ -6,17 +6,18 @@ export default {
     extend: {
       colors: {
         bg: {
-          DEFAULT: '#0a0a0a',
-          2: '#111111',
-          3: '#161616',
+          DEFAULT: 'var(--bg)',
+          2: 'var(--bg2)',
+          3: 'var(--bg3)',
         },
-        line: '#1f1f1f',
+        line: 'var(--border)',
         ink: {
-          DEFAULT: '#ffffff',
-          2: '#888888',
-          3: '#444444',
+          DEFAULT: 'var(--text)',
+          2: 'var(--text2)',
+          3: 'var(--text3)',
         },
-        brand: '#0EA5E9',
+        brand: 'var(--blue)',
+        accent: 'var(--blue)',
         ok: '#34d399',
         warn: '#fbbf24',
       },

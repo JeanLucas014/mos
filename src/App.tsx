@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
+import { useTheme } from './hooks/useTheme'
 import { AppShell } from './components/layout/AppShell'
 import { RequireAuth } from './components/auth/RequireAuth'
 import { LoginPage } from './components/auth/LoginPage'
@@ -27,8 +28,15 @@ import { AdminPage } from './pages/AdminPage'
 import { PrivacyPage } from './pages/PrivacyPage'
 import { TermsPage } from './pages/TermsPage'
 
+function ThemeApplier() {
+  useTheme()
+  return null
+}
+
 export default function App() {
   return (
+    <>
+    <ThemeApplier />
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/recuperar-senha" element={<ForgotPasswordPage />} />
@@ -72,5 +80,6 @@ export default function App() {
         <Route path="admin" element={<AdminPage />} />
       </Route>
     </Routes>
+    </>
   )
 }
