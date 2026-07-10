@@ -71,11 +71,12 @@ export function MOSChat() {
         body: { messages: newMessages },
       })
       if (error) throw error
+      if (data?.error) throw new Error(data.detail ?? data.error)
       setMessages([...newMessages, { role: 'assistant', content: data.reply }])
-    } catch {
+    } catch (err: any) {
       setMessages([...newMessages, {
         role: 'assistant',
-        content: 'Não consegui processar sua pergunta. Tente novamente.',
+        content: `[DEBUG] ${err?.message ?? String(err)}`,
       }])
     }
     setLoading(false)
