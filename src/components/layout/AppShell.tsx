@@ -3,6 +3,7 @@ import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
 import { MobileScrim } from './MobileScrim'
 import { CommandPalette } from '../CommandPalette'
+import { MOSChat } from '../chat/MOSChat'
 import { useUIStore } from '../../stores/useUIStore'
 import { useUserSettings } from '../../hooks/useUserSettings'
 
@@ -45,6 +46,7 @@ export function AppShell() {
         </main>
       </div>
     </div>
+    <MOSChat />
     </>
   )
 }
