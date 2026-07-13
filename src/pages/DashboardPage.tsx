@@ -262,7 +262,7 @@ function LifeScoreSection() {
 
             {/* Grid 2x3 das áreas — 2 colunas em mobile, 3 em desktop */}
             <div className="flex-1 grid grid-cols-2 sm:grid-cols-3">
-              {AREAS.map((a, i) => {
+              {AREAS.map((a) => {
                 const sc = scoreColor(a.score)
                 return (
                   <div
