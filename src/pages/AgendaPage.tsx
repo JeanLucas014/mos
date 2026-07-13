@@ -415,9 +415,7 @@ function WeekView({
   const nowTop     = ((now.getHours() * 60 + now.getMinutes()) / (24 * 60)) * HOUR_H * 24
 
   const LABEL_W = 44
-  const DAY_W   = isMobile
-    ? Math.floor((window.innerWidth - LABEL_W - 8) / 3)
-    : undefined
+  const DAY_W   = isMobile ? 90 : undefined
 
   // Group events by day key
   const byDay = useMemo(() => {

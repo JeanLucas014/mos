@@ -698,24 +698,34 @@ export default function SettingsPage() {
       </div>
 
       {/* Tab bar */}
-      <div className="flex w-full border-b border-line mb-6">
-        {TABS.map(t => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className="flex-1 py-2.5 text-xs font-semibold transition-colors border-b-2"
-            style={{
-              borderColor: tab === t.id ? '#0ea5e9' : 'transparent',
-              color: tab === t.id ? '#0ea5e9' : 'var(--text3)',
-              background: 'none',
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              marginBottom: -1,
-            }}
-          >
-            {t.label}
-          </button>
-        ))}
+      <div className="border-b border-line mb-6">
+        <div
+          className="flex gap-0"
+          style={{ overflowX: 'auto', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
+        >
+          {TABS.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              style={{
+                padding: '10px 14px',
+                fontSize: 13,
+                fontWeight: 600,
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+                background: 'none',
+                border: 'none',
+                borderBottom: `2px solid ${tab === t.id ? '#0ea5e9' : 'transparent'}`,
+                color: tab === t.id ? '#0ea5e9' : 'var(--text3)',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                marginBottom: -1,
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* ── PERFIL tab ── */}

@@ -1142,6 +1142,7 @@ function EditModal({ item, categorias, cartoes, onSave, onClose }: EditModalProp
             value={form.data}
             onChange={e => set('data', e.target.value)}
             className="w-full bg-bg border border-line rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#0EA5E9]/60"
+            style={{ maxWidth: '100%', boxSizing: 'border-box' }}
           />
         </div>
 

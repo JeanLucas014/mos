@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Search } from 'lucide-react'
+import { Search, MessageCircle } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useUIStore } from '../../stores/useUIStore'
 import { NotificationBell } from './NotificationBell'
@@ -74,14 +74,23 @@ export function Topbar() {
           className="h-7 w-auto absolute left-1/2 -translate-x-1/2"
         />
 
-        {/* Botão busca mobile */}
-        <button
-          onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true }))}
-          className="ml-auto flex items-center justify-center w-10 h-10 -mr-1 rounded-input text-ink-2 hover:text-ink hover:bg-bg-3 transition-colors"
-          aria-label="Buscar"
-        >
-          <Search size={18} />
-        </button>
+        {/* Botões direita mobile */}
+        <div className="ml-auto flex items-center">
+          <button
+            onClick={() => (window as Record<string, unknown>).openMOSChat?.()}
+            className="flex items-center justify-center w-10 h-10 rounded-input text-ink-2 hover:text-ink hover:bg-bg-3 transition-colors"
+            aria-label="MOS Chat"
+          >
+            <MessageCircle size={18} />
+          </button>
+          <button
+            onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true }))}
+            className="flex items-center justify-center w-10 h-10 -mr-1 rounded-input text-ink-2 hover:text-ink hover:bg-bg-3 transition-colors"
+            aria-label="Buscar"
+          >
+            <Search size={18} />
+          </button>
+        </div>
       </div>
 
       {/* ── Desktop layout ── */}

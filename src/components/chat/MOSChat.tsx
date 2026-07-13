@@ -45,7 +45,7 @@ export function MOSChat() {
     if (open) setTimeout(() => inputRef.current?.focus(), 150)
   }, [open])
 
-  // CMD+J shortcut
+  // CMD+J shortcut + global open hook for mobile Topbar
   useEffect(() => {
     function handle(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === 'j') {
@@ -54,7 +54,11 @@ export function MOSChat() {
       }
     }
     window.addEventListener('keydown', handle)
-    return () => window.removeEventListener('keydown', handle)
+    ;(window as Record<string, unknown>).openMOSChat = () => setOpen(true)
+    return () => {
+      window.removeEventListener('keydown', handle)
+      delete (window as Record<string, unknown>).openMOSChat
+    }
   }, [])
 
   const send = useCallback(async (text?: string) => {
@@ -197,16 +201,15 @@ export function MOSChat() {
         </div>
       )}
 
-      {/* FAB */}
+      {/* FAB — desktop only */}
       <button
         onClick={() => setOpen(p => !p)}
+        className="hidden md:flex fixed bottom-6 right-6 items-center justify-center"
         style={{
-          position: 'fixed', bottom: 24, right: 24,
           width: 50, height: 50, borderRadius: '50%',
           background: open ? 'var(--bg2)' : '#0ea5e9',
           border: open ? '1px solid var(--border)' : 'none',
           cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: open ? 'none' : '0 4px 20px rgba(14,165,233,0.35)',
           transition: 'all 0.2s',
           zIndex: 1000,
