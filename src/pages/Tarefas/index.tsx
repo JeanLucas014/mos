@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Plus, Inbox, Sun, Calendar, CalendarDays, FolderOpen, ChevronDown, ChevronRight, History, Settings } from 'lucide-react'
+import { Plus, Sun, Calendar, CalendarDays, FolderOpen, ChevronDown, ChevronRight, History, Settings } from 'lucide-react'
 import type { Task, TaskProject, ViewId } from './types'
 import { TaskItem } from './components/TaskItem'
 import { TaskModal } from './components/TaskModal'

@@ -355,7 +355,6 @@ export default function SettingsPage() {
   const { data: settings, isLoading: settingsLoading, toggleModule } = useUserSettings()
 
   const [tab,          setTab]          = useState<'perfil' | 'seguranca' | 'modulos' | 'notificacoes' | 'aparencia' | 'instalar'>('perfil')
-  const platform = detectPlatform()
   const [name,         setName]         = useState('')
   const [editingName,  setEditingName]  = useState(false)
   const [savingName,   setSavingName]   = useState(false)
