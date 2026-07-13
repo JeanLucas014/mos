@@ -386,38 +386,42 @@ export function useDashRecorrentes() {
   return useQuery({
     queryKey: ['dash_recorrentes'],
     queryFn: async () => {
-      const now = new Date()
+      const now        = new Date()
+      const todayDay   = now.getDate()
+      const monthStart = now.toISOString().slice(0, 7) + '-01'
       const todayStr   = now.toISOString().slice(0, 10)
-      const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
 
-      const [{ data, error }, { data: pagos }] = await Promise.all([
+      const [{ data: recorrentes, error }, { data: lancamentosPagos }] = await Promise.all([
         supabase
           .from('fin_recorrentes')
-          .select('id, nome, valor, dia_previsto, natureza, saida_tipo')
+          .select('id, nome, valor, dia_previsto, saida_tipo')
           .eq('ativo', true)
           .eq('natureza', 'saida')
           .order('dia_previsto', { ascending: true }),
         supabase
           .from('fin_lancamentos')
-          .select('nome')
+          .select('nome, data')
           .eq('pago', true)
           .gte('data', monthStart)
           .lte('data', todayStr),
       ])
       if (error) throw error
 
-      const today = now.getDate()
-      const nomesPageos = new Set((pagos ?? []).map((p: any) => p.nome.toLowerCase()))
+      const diasPagos = new Set(
+        (lancamentosPagos ?? []).map((l: any) => new Date(l.data + 'T12:00:00').getDate())
+      )
+      const nomesPagos = new Set(
+        (lancamentosPagos ?? []).map((l: any) => l.nome?.toLowerCase().trim())
+      )
+      const isPago = (r: any) =>
+        diasPagos.has(r.dia_previsto) || nomesPagos.has(r.nome?.toLowerCase().trim())
 
-      const vencidas  = (data ?? [])
-        .filter((r: any) => r.dia_previsto < today)
-        .filter((r: any) => !nomesPageos.has(r.nome.toLowerCase()))
-      const venceHoje = (data ?? [])
-        .filter((r: any) => r.dia_previsto === today)
-        .filter((r: any) => !nomesPageos.has(r.nome.toLowerCase()))
+      const vencidas  = (recorrentes ?? []).filter((r: any) => r.dia_previsto < todayDay  && !isPago(r))
+      const venceHoje = (recorrentes ?? []).filter((r: any) => r.dia_previsto === todayDay && !isPago(r))
 
       return { vencidas, venceHoje }
     },
-    staleTime: 1000 * 60 * 5,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   })
 }

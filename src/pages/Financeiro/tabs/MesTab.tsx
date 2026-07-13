@@ -660,7 +660,7 @@ function ItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDelete, on
   const isExpanded = expandedItems.has(node.id)
   const natColor   = node.natureza === 'entrada' ? '#22c55e' : node.natureza === 'saida' ? '#ef4444' : '#f97316'
   const pl         = 8 + depth * 20
-  const isSaida    = node.natureza === 'saida' && !node.is_grupo
+  const isSaida    = node.natureza === 'saida'
   const [showConfirm, setShowConfirm] = useState(false)
   const [confirmPos, setConfirmPos]   = useState({ x: 0, y: 0 })
 
@@ -833,7 +833,7 @@ function MobileItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDele
   const isExpanded = expandedItems.has(node.id)
   const natColor   = node.natureza === 'entrada' ? '#22c55e' : node.natureza === 'saida' ? '#ef4444' : '#f97316'
   const pl         = depth * 14
-  const isSaida    = node.natureza === 'saida' && !node.is_grupo
+  const isSaida    = node.natureza === 'saida'
   const [showConfirm, setShowConfirm] = useState(false)
   const [confirmPos, setConfirmPos]   = useState({ x: 0, y: 0 })
 
