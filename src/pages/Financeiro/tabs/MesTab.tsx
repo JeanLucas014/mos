@@ -5,6 +5,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
 import { Plus, ChevronDown, ChevronRight, Trash2, Pencil, X, CalendarDays, List } from 'lucide-react'
 import { ExtratoView } from './ExtratoView'
 import type {
@@ -96,7 +97,10 @@ export function MesTab({ ano, initialMonth }: Props) {
   const [addForm, setAddForm]           = useState<AddForm>(defaultForm())
   const [saving, setSaving]             = useState(false)
   const [mobileCol, setMobileCol]       = useState<Natureza>('diario')
+  const [editingDiarioId, setEditingDiarioId] = useState<string | null>(null)
+  const [editingValue, setEditingValue]       = useState<string>('')
   const queryClient = useQueryClient()
+  const { user } = useAuth()
 
   useEffect(() => { loadAll() }, [ano.id, month])
 
@@ -140,7 +144,19 @@ export function MesTab({ ano, initialMonth }: Props) {
   }
 
   async function generatePrevisoesIfNeeded(currentRows: FinLancamento[]) {
-    if (ano.ano < 2026 || (ano.ano === 2026 && month < 7)) return
+    const JEAN_ID = '64ab5956-18b1-432d-82f0-1ad8bc4761db'
+    const now = new Date()
+    const currentYear  = now.getFullYear()
+    const currentMonth = now.getMonth() // 0-indexed
+
+    if (user?.id === JEAN_ID) {
+      if (ano.ano < 2026 || (ano.ano === 2026 && month < 8)) return
+    } else {
+      const isFutureOrCurrent =
+        ano.ano > currentYear ||
+        (ano.ano === currentYear && month >= currentMonth + 1)
+      if (!isFutureOrCurrent) return
+    }
 
     const jaTemDiario = currentRows.some(l => l.natureza === 'diario')
     if (jaTemDiario) return
@@ -301,6 +317,18 @@ export function MesTab({ ano, initialMonth }: Props) {
     loadAll()
   }
 
+  async function saveDiario(id: string) {
+    const valor = parseFloat(editingValue.replace(',', '.'))
+    if (isNaN(valor) || valor < 0) { setEditingDiarioId(null); return }
+    await (supabase.from('fin_lancamentos') as any).update({
+      valor,
+      is_previsao: false,
+      nome: 'Diário',
+    }).eq('id', id)
+    setEditingDiarioId(null)
+    loadAll()
+  }
+
   async function togglePago(id: string, pago: boolean) {
     await (supabase.from('fin_lancamentos') as any).update({ pago }).eq('id', id)
     loadAll()
@@ -433,7 +461,7 @@ export function MesTab({ ano, initialMonth }: Props) {
               <th className="text-left py-2 px-2 w-12">Dia</th>
               <th className="text-right py-2 px-3 text-[#22c55e]/60" title="Clique na célula para adicionar">Entrada ↓</th>
               <th className="text-right py-2 px-3 text-[#ef4444]/60" title="Clique na célula para adicionar">Saída ↓</th>
-              <th className="text-right py-2 px-3 text-[#f97316]/60" title="Clique na célula para adicionar">Diário ↓</th>
+              <th className="text-right py-2 px-3 text-[#f97316]/60" title="Clique no valor para registrar o gasto real do dia">Diário ↓</th>
               <th className="text-right py-2 px-2">Saldo</th>
               <th className="w-8" />
             </tr>
@@ -521,6 +549,11 @@ export function MesTab({ ano, initialMonth }: Props) {
                       onDelete={deleteLancamento}
                       onAddChild={parent => openAdd(d.dia, parent.natureza, parent.id, (parent.saida_tipo as SaidaTipo) ?? 'fixa')}
                       onTogglePago={togglePago}
+                      editingDiarioId={editingDiarioId}
+                      editingValue={editingValue}
+                      onEditDiario={(id, val) => { setEditingDiarioId(id); setEditingValue(String(val)) }}
+                      onEditDiarioChange={setEditingValue}
+                      onSaveDiario={saveDiario}
                     />
                   ))}
 
@@ -529,6 +562,10 @@ export function MesTab({ ano, initialMonth }: Props) {
             })}
           </tbody>
         </table>
+        <div style={{ fontSize: 11, color: '#4b5563', marginTop: 8 }}>
+          <span style={{ fontStyle: 'italic' }}>Itálico</span> = previsão ·{' '}
+          <span style={{ color: '#f59e0b' }}>Colorido</span> = gasto real registrado
+        </div>
       </div>
 
       {/* ── MOBILE LIST ── */}
@@ -580,6 +617,11 @@ export function MesTab({ ano, initialMonth }: Props) {
                   onDelete={deleteLancamento}
                   onAddChild={parent => openAdd(d.dia, parent.natureza, parent.id, (parent.saida_tipo as SaidaTipo) ?? 'fixa')}
                   onTogglePago={togglePago}
+                  editingDiarioId={editingDiarioId}
+                  editingValue={editingValue}
+                  onEditDiario={(id, val) => { setEditingDiarioId(id); setEditingValue(String(val)) }}
+                  onEditDiarioChange={setEditingValue}
+                  onSaveDiario={saveDiario}
                 />
               ))}
             </div>
@@ -654,9 +696,14 @@ interface ItemRowsProps {
   onDelete: (id: string) => void
   onAddChild: (parent: FinLancamentoTree) => void
   onTogglePago: (id: string, pago: boolean) => Promise<void>
+  editingDiarioId: string | null
+  editingValue: string
+  onEditDiario: (id: string, currentVal: number) => void
+  onEditDiarioChange: (v: string) => void
+  onSaveDiario: (id: string) => Promise<void>
 }
 
-function ItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDelete, onAddChild, onTogglePago }: ItemRowsProps) {
+function ItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDelete, onAddChild, onTogglePago, editingDiarioId, editingValue, onEditDiario, onEditDiarioChange, onSaveDiario }: ItemRowsProps) {
   const isExpanded = expandedItems.has(node.id)
   const natColor   = node.natureza === 'entrada' ? '#22c55e' : node.natureza === 'saida' ? '#ef4444' : '#f97316'
   const pl         = 8 + depth * 20
@@ -707,8 +754,42 @@ function ItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDelete, on
         </td>
 
         {/* Valor */}
-        <td className="py-1.5 px-2 text-right text-xs tabular-nums" style={{ color: natColor, opacity: node.pago ? 0.45 : 1 }}>
-          {BRL(node.valorTotal)}
+        <td className="py-1.5 px-2 text-right text-xs tabular-nums" style={{ opacity: node.pago ? 0.45 : 1 }}>
+          {node.natureza === 'diario' && !node.is_grupo ? (
+            editingDiarioId === node.id ? (
+              <input
+                autoFocus
+                type="number"
+                value={editingValue}
+                onChange={e => onEditDiarioChange(e.target.value)}
+                onBlur={() => onSaveDiario(node.id)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') onSaveDiario(node.id)
+                  if (e.key === 'Escape') onEditDiarioChange('')
+                }}
+                style={{
+                  width: 90, background: 'transparent', border: 'none',
+                  borderBottom: '1px solid #0ea5e9', color: '#f59e0b',
+                  fontSize: 12, textAlign: 'right', outline: 'none', fontFamily: 'inherit',
+                }}
+              />
+            ) : (
+              <span
+                onClick={() => onEditDiario(node.id, node.valor ?? 0)}
+                style={{
+                  color: node.is_previsao ? '#4b5563' : '#f59e0b',
+                  fontStyle: node.is_previsao ? 'italic' : 'normal',
+                  cursor: 'pointer',
+                  borderBottom: '1px dashed #262626',
+                }}
+                title={node.is_previsao ? 'Clique para registrar o gasto real' : 'Clique para editar'}
+              >
+                {BRL(node.valor ?? 0)}
+              </span>
+            )
+          ) : (
+            <span style={{ color: natColor }}>{BRL(node.valorTotal)}</span>
+          )}
         </td>
 
         {/* Actions (hover) */}
@@ -804,6 +885,11 @@ function ItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDelete, on
               onDelete={onDelete}
               onAddChild={onAddChild}
               onTogglePago={onTogglePago}
+              editingDiarioId={editingDiarioId}
+              editingValue={editingValue}
+              onEditDiario={onEditDiario}
+              onEditDiarioChange={onEditDiarioChange}
+              onSaveDiario={onSaveDiario}
             />
           ))}
 
@@ -829,7 +915,7 @@ function ItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDelete, on
 // MobileItemRows — versão mobile do ItemRows (divs ao invés de tr/td)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function MobileItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDelete, onAddChild, onTogglePago }: ItemRowsProps) {
+function MobileItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDelete, onAddChild, onTogglePago, editingDiarioId, editingValue, onEditDiario, onEditDiarioChange, onSaveDiario }: ItemRowsProps) {
   const isExpanded = expandedItems.has(node.id)
   const natColor   = node.natureza === 'entrada' ? '#22c55e' : node.natureza === 'saida' ? '#ef4444' : '#f97316'
   const pl         = depth * 14
@@ -864,8 +950,40 @@ function MobileItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDele
           )}
           <span style={{ opacity: node.pago ? 0.45 : 1 }}>{node.nome}</span>
         </span>
-        <span className="text-xs tabular-nums shrink-0" style={{ color: natColor, opacity: node.pago ? 0.45 : 1 }}>
-          {BRL(node.valorTotal)}
+        <span className="text-xs tabular-nums shrink-0" style={{ opacity: node.pago ? 0.45 : 1 }}>
+          {node.natureza === 'diario' && !node.is_grupo ? (
+            editingDiarioId === node.id ? (
+              <input
+                autoFocus
+                type="number"
+                value={editingValue}
+                onChange={e => onEditDiarioChange(e.target.value)}
+                onBlur={() => onSaveDiario(node.id)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') onSaveDiario(node.id)
+                  if (e.key === 'Escape') onEditDiarioChange('')
+                }}
+                style={{
+                  width: 80, background: 'transparent', border: 'none',
+                  borderBottom: '1px solid #0ea5e9', color: '#f59e0b',
+                  fontSize: 12, textAlign: 'right', outline: 'none', fontFamily: 'inherit',
+                }}
+              />
+            ) : (
+              <span
+                onClick={() => onEditDiario(node.id, node.valor ?? 0)}
+                style={{
+                  color: node.is_previsao ? '#4b5563' : '#f59e0b',
+                  fontStyle: node.is_previsao ? 'italic' : 'normal',
+                  cursor: 'pointer', borderBottom: '1px dashed #2a2a2a',
+                }}
+              >
+                {BRL(node.valor ?? 0)}
+              </span>
+            )
+          ) : (
+            <span style={{ color: natColor }}>{BRL(node.valorTotal)}</span>
+          )}
         </span>
         <div className="flex items-center gap-2 shrink-0">
           <button onClick={() => onEdit(node)} className="text-[#444]"><Pencil size={11} /></button>
@@ -936,6 +1054,11 @@ function MobileItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDele
           onDelete={onDelete}
           onAddChild={onAddChild}
           onTogglePago={onTogglePago}
+          editingDiarioId={editingDiarioId}
+          editingValue={editingValue}
+          onEditDiario={onEditDiario}
+          onEditDiarioChange={onEditDiarioChange}
+          onSaveDiario={onSaveDiario}
         />
       ))}
     </>
