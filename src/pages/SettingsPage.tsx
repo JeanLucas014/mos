@@ -13,13 +13,6 @@ import type { ThemeOption } from '@/hooks/useTheme'
 
 const ADMIN_EMAIL = 'jl.jean13@gmail.com'
 
-function detectPlatform(): 'ios' | 'android' | 'desktop' {
-  const ua = navigator.userAgent
-  if (/iPhone|iPad|iPod/.test(ua)) return 'ios'
-  if (/Android/.test(ua)) return 'android'
-  return 'desktop'
-}
-
 function Step({ n, text }: { n: number; text: string }) {
   return (
     <div className="flex gap-3">
