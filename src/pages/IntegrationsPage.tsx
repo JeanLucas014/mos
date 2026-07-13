@@ -1,26 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
-import { Activity, RefreshCw, Unplug, Check, X } from 'lucide-react'
+import { Activity, Landmark, RefreshCw, Check, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { PluggyConnect } from '@/components/PluggyConnect'
-
-/* ── Palette ──────────────────────────────────────────────────── */
-const C = {
-  bg:     'var(--bg)',
-  card:   'var(--bg2)',
-  card2:  'var(--bg3)',
-  border: 'var(--border)',
-  tx:     'var(--text)',
-  dm:     'var(--text2)',
-  dm2:    'var(--text3)',
-  b:      '#0EA5E9',
-  g:      '#34d399',
-  r:      '#f87171',
-  a:      '#fbbf24',
-  p:      '#a78bfa',
-}
-
 
 /* ── Hook: check integration status ─────────────────────────────── */
 function useIntegration(provider: string) {
@@ -37,7 +20,6 @@ function useIntegration(provider: string) {
   })
 }
 
-
 /* ── Toast ────────────────────────────────────────────────────── */
 function Toast({ msg, ok, onClose }: { msg: string; ok: boolean; onClose: () => void }) {
   useEffect(() => { const t = setTimeout(onClose, 4000); return () => clearTimeout(t) }, [])
@@ -45,52 +27,98 @@ function Toast({ msg, ok, onClose }: { msg: string; ok: boolean; onClose: () => 
     <div style={{
       position: 'fixed', bottom: 24, right: 24, zIndex: 600,
       background: ok ? '#1a2a1a' : '#2a1010',
-      border: `1px solid ${ok ? C.g + '40' : C.r + '40'}`,
+      border: `1px solid ${ok ? '#34d39940' : '#f8717140'}`,
       borderRadius: 12, padding: '12px 18px', display: 'flex', alignItems: 'center', gap: 10,
       boxShadow: '0 8px 32px rgba(0,0,0,.5)',
     }}>
-      {ok ? <Check size={14} style={{ color: C.g, flexShrink: 0 }} /> : <X size={14} style={{ color: C.r, flexShrink: 0 }} />}
-      <span style={{ color: C.tx, fontSize: 13 }}>{msg}</span>
+      {ok
+        ? <Check size={14} style={{ color: '#34d399', flexShrink: 0 }} />
+        : <X size={14} style={{ color: '#f87171', flexShrink: 0 }} />}
+      <span style={{ color: 'var(--text)', fontSize: 13 }}>{msg}</span>
     </div>
   )
 }
 
-/* ── Card shell ───────────────────────────────────────────────── */
+type Status = 'connected' | 'sandbox' | 'disconnected'
+
+const BTN_PRIMARY: React.CSSProperties = {
+  fontSize: 12, fontWeight: 600, padding: '6px 14px', borderRadius: 8,
+  cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
+  border: '1px solid #0ea5e9', color: '#0ea5e9', background: 'transparent',
+}
+const BTN_SECONDARY: React.CSSProperties = {
+  fontSize: 12, fontWeight: 600, padding: '6px 14px', borderRadius: 8,
+  cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
+  border: '1px solid var(--border)', color: 'var(--text3)', background: 'transparent',
+}
+
+/* ── IntCard ─────────────────────────────────────────────────────── */
 function IntCard({
-  logo, title, description, connected, children,
+  icon, nome, infoExtra, status, descricao, erro, children,
 }: {
-  logo: React.ReactNode
-  title: string
-  description: string
-  connected: boolean
+  icon: React.ReactNode
+  nome: string
+  infoExtra?: string | null
+  status: Status
+  descricao: string
+  erro?: string | null
   children: React.ReactNode
 }) {
   return (
-    <div style={{
-      background: C.card, border: `1px solid ${connected ? C.g + '30' : C.border}`,
-      borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 16,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-        <div style={{
-          width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-          background: C.card2, border: `1px solid ${C.border}`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          {logo}
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-            <span style={{ fontFamily: 'Sora,sans-serif', fontWeight: 700, fontSize: 15, color: C.tx }}>{title}</span>
-            {connected && (
-              <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 20, background: C.g + '18', color: C.g, letterSpacing: '.06em' }}>
-                CONECTADO
-              </span>
+    <div className="rounded-2xl border border-line bg-bg-2 p-5 flex flex-col gap-3">
+
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div
+            className="flex items-center justify-center rounded-xl bg-bg-3 flex-shrink-0"
+            style={{ width: 40, height: 40 }}
+          >
+            {icon}
+          </div>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>
+              {nome}
+            </div>
+            {infoExtra && (
+              <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>
+                {infoExtra}
+              </div>
             )}
           </div>
-          <p style={{ fontSize: 12, color: C.dm, lineHeight: 1.5, margin: 0 }}>{description}</p>
+        </div>
+
+        {/* Badge de status */}
+        <div style={{
+          fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
+          background: status === 'connected' ? '#0d2818'
+            : status === 'sandbox' ? '#2a2410' : 'var(--bg3)',
+          border: `1px solid ${status === 'connected' ? '#1a5c38'
+            : status === 'sandbox' ? '#5c4d1a' : 'var(--border)'}`,
+          color: status === 'connected' ? '#4ade80'
+            : status === 'sandbox' ? '#fbbf24' : 'var(--text3)',
+          flexShrink: 0,
+        }}>
+          {status === 'connected' ? 'Conectado'
+            : status === 'sandbox' ? 'Sandbox' : 'Desconectado'}
         </div>
       </div>
-      {children}
+
+      {/* Descrição */}
+      <p style={{ fontSize: 13, color: 'var(--text3)', margin: 0, lineHeight: 1.6 }}>
+        {descricao}
+      </p>
+
+      {/* Erro */}
+      {erro && (
+        <div style={{ fontSize: 12, color: '#f87171' }}>{erro}</div>
+      )}
+
+      {/* Ações */}
+      <div className="flex gap-2 flex-wrap mt-auto pt-1">
+        {children}
+      </div>
+
     </div>
   )
 }
@@ -102,6 +130,7 @@ function StravaCard() {
   const qc = useQueryClient()
   const { data: int, isLoading } = useIntegration('strava')
   const connected = int?.connected === true
+  const status: Status = connected ? 'connected' : 'disconnected'
 
   const [loading,   setLoading]   = useState(false)
   const [syncing,   setSyncing]   = useState(false)
@@ -114,7 +143,7 @@ function StravaCard() {
       const { data, error } = await supabase.functions.invoke('strava-auth-url')
       if (error) throw error
       window.location.href = data.url
-    } catch (e) {
+    } catch {
       setToast({ msg: 'Erro ao conectar Strava.', ok: false })
       setLoading(false)
     }
@@ -144,76 +173,85 @@ function StravaCard() {
     qc.invalidateQueries({ queryKey: ['integration', 'strava'] })
   }
 
+  const athlete = int?.meta?.athlete as { firstname?: string; lastname?: string } | undefined
+  const infoExtra = athlete
+    ? `${athlete.firstname ?? ''} ${athlete.lastname ?? ''}`.trim() || null
+    : null
+
+  const erro = syncError
+    ? `Conexão expirada. `
+    : null
+
   return (
     <>
       <IntCard
-        logo={<Activity size={22} style={{ color: '#FC4C02' }} />}
-        title="Strava"
-        description="Importe treinos de corrida e triathlon automaticamente."
-        connected={connected}
+        icon={<Activity size={18} color="#6b7280" />}
+        nome="Strava"
+        infoExtra={infoExtra}
+        status={status}
+        descricao="Importe treinos de corrida, triathlon e musculação automaticamente via OAuth."
+        erro={erro}
       >
         {isLoading ? (
-          <div style={{ height: 36, background: C.card2, borderRadius: 8, animation: 'pulse 1.5s infinite' }} />
+          <div style={{ height: 32, width: 120, background: 'var(--bg3)', borderRadius: 8, opacity: 0.5 }} />
         ) : connected ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {int?.meta?.athlete ? (
-              <div style={{ fontSize: 12, color: C.dm }}>
-                Atleta: <span style={{ color: C.tx }}>
-                  {(int.meta.athlete as { firstname?: string; lastname?: string }).firstname}{' '}
-                  {(int.meta.athlete as { firstname?: string; lastname?: string }).lastname}
-                </span>
-              </div>
-            ) : null}
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button
-                onClick={handleSync} disabled={syncing}
-                style={{
-                  flex: 1, padding: '10px 16px', borderRadius: 9,
-                  background: 'rgba(252,76,2,.12)', border: '1px solid rgba(252,76,2,.3)',
-                  color: '#FC4C02', fontSize: 12, fontWeight: 600,
-                  cursor: syncing ? 'not-allowed' : 'pointer', opacity: syncing ? 0.7 : 1,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                }}
-              >
-                <RefreshCw size={13} style={{ animation: syncing ? 'spin 1s linear infinite' : 'none' }} />
-                {syncing ? 'Sincronizando...' : 'Sincronizar treinos'}
-              </button>
-              <button
-                onClick={handleDisconnect}
-                style={{ padding: '10px 14px', borderRadius: 9, background: 'transparent', border: `1px solid ${C.border}`, color: C.dm, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}
-              >
-                <Unplug size={13} /> Desconectar
-              </button>
-            </div>
+          <>
+            <button
+              onClick={handleSync}
+              disabled={syncing}
+              style={{ ...BTN_PRIMARY, opacity: syncing ? 0.6 : 1, cursor: syncing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}
+            >
+              <RefreshCw size={12} style={{ animation: syncing ? 'spin 1s linear infinite' : 'none' }} />
+              {syncing ? 'Sincronizando...' : 'Sincronizar'}
+            </button>
+            <button onClick={handleDisconnect} style={BTN_SECONDARY}>
+              Desconectar
+            </button>
             {syncError && (
-              <div style={{ fontSize: 12, color: C.r }}>
-                Conexão expirada. Reconecte para continuar sincronizando.{' '}
-                <button
-                  onClick={handleConnect}
-                  style={{ background: 'none', border: 'none', color: C.b, fontSize: 12, cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
-                >
-                  Reconectar Strava
-                </button>
-              </div>
+              <button
+                onClick={handleConnect}
+                style={{ ...BTN_PRIMARY, fontSize: 11 }}
+              >
+                Reconectar
+              </button>
             )}
-          </div>
+          </>
         ) : (
           <button
-            onClick={handleConnect} disabled={loading}
-            style={{
-              width: '100%', padding: '11px 16px', borderRadius: 9,
-              background: loading ? 'rgba(252,76,2,.3)' : 'rgba(252,76,2,.15)',
-              border: '1px solid rgba(252,76,2,.4)',
-              color: '#FC4C02', fontSize: 13, fontWeight: 600,
-              cursor: loading ? 'not-allowed' : 'pointer',
-            }}
+            onClick={handleConnect}
+            disabled={loading}
+            style={{ ...BTN_PRIMARY, opacity: loading ? 0.6 : 1, cursor: loading ? 'not-allowed' : 'pointer' }}
           >
-            {loading ? 'Redirecionando...' : 'Conectar Strava'}
+            {loading ? 'Redirecionando...' : 'Conectar'}
           </button>
         )}
       </IntCard>
       {toast && <Toast msg={toast.msg} ok={toast.ok} onClose={() => setToast(null)} />}
     </>
+  )
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   OPEN FINANCE
+══════════════════════════════════════════════════════════════════ */
+function OpenFinanceCard() {
+  const { data: int } = useIntegration('pluggy')
+
+  const status: Status = int?.connected === true
+    ? 'connected'
+    : int != null
+    ? 'sandbox'
+    : 'disconnected'
+
+  return (
+    <IntCard
+      icon={<Landmark size={18} color="#6b7280" />}
+      nome="Open Finance"
+      status={status}
+      descricao="Conecte suas contas bancárias e cartões para importar transações. Aguardando aprovação para produção."
+    >
+      <PluggyConnect />
+    </IntCard>
   )
 }
 
@@ -234,7 +272,7 @@ export function IntegrationsPage() {
 
   return (
     <div style={{ fontFamily: 'Manrope,sans-serif' }}>
-      <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}`}</style>
+      <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
 
       <h1 style={{ fontFamily: 'Sora,sans-serif', fontWeight: 800, fontSize: 28, letterSpacing: '-0.03em', marginBottom: 6 }}>
         Integrações
@@ -243,19 +281,9 @@ export function IntegrationsPage() {
         Conecte seus serviços e importe dados automaticamente.
       </p>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <StravaCard />
-      </div>
-
-      <div className="mt-6 bg-[#111111] border border-[#1f1f1f] rounded-xl p-5">
-        <div className="flex items-center gap-2 mb-1">
-          <span className="w-2 h-2 rounded-full bg-[#22c55e]" />
-          <span className="text-sm font-semibold font-[Sora] text-white">Open Finance</span>
-        </div>
-        <p className="text-xs text-[#555] mb-4">
-          Transações automáticas no Financeiro · Pluggy
-        </p>
-        <PluggyConnect />
+        <OpenFinanceCard />
       </div>
     </div>
   )
