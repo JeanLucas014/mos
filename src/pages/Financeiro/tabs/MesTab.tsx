@@ -2,6 +2,8 @@
 // v2 — editar lançamentos, subitens em grupos, clique por coluna, nova cat rápida, cards de resumo
 
 import { useState, useEffect, useMemo } from 'react'
+import { createPortal } from 'react-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { Plus, ChevronDown, ChevronRight, Trash2, Pencil, X, CalendarDays, List } from 'lucide-react'
 import { ExtratoView } from './ExtratoView'
@@ -94,6 +96,7 @@ export function MesTab({ ano, initialMonth }: Props) {
   const [addForm, setAddForm]           = useState<AddForm>(defaultForm())
   const [saving, setSaving]             = useState(false)
   const [mobileCol, setMobileCol]       = useState<Natureza>('diario')
+  const queryClient = useQueryClient()
 
   useEffect(() => { loadAll() }, [ano.id, month])
 
@@ -296,6 +299,12 @@ export function MesTab({ ano, initialMonth }: Props) {
     if (!confirm('Excluir este lançamento e todos os seus subitens?')) return
     await (supabase.from('fin_lancamentos') as any).delete().eq('id', id)
     loadAll()
+  }
+
+  async function togglePago(id: string, pago: boolean) {
+    await (supabase.from('fin_lancamentos') as any).update({ pago }).eq('id', id)
+    loadAll()
+    queryClient.invalidateQueries({ queryKey: ['dash_recorrentes'] })
   }
 
   async function quickLaunch(dia: number, cat: FinCategoria, nome: string, valor: string) {
@@ -511,6 +520,7 @@ export function MesTab({ ano, initialMonth }: Props) {
                       onEdit={setEditingItem}
                       onDelete={deleteLancamento}
                       onAddChild={parent => openAdd(d.dia, parent.natureza, parent.id, (parent.saida_tipo as SaidaTipo) ?? 'fixa')}
+                      onTogglePago={togglePago}
                     />
                   ))}
 
@@ -569,6 +579,7 @@ export function MesTab({ ano, initialMonth }: Props) {
                   onEdit={setEditingItem}
                   onDelete={deleteLancamento}
                   onAddChild={parent => openAdd(d.dia, parent.natureza, parent.id, (parent.saida_tipo as SaidaTipo) ?? 'fixa')}
+                  onTogglePago={togglePago}
                 />
               ))}
             </div>
@@ -642,12 +653,23 @@ interface ItemRowsProps {
   onEdit: (item: FinLancamento) => void
   onDelete: (id: string) => void
   onAddChild: (parent: FinLancamentoTree) => void
+  onTogglePago: (id: string, pago: boolean) => Promise<void>
 }
 
-function ItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDelete, onAddChild }: ItemRowsProps) {
+function ItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDelete, onAddChild, onTogglePago }: ItemRowsProps) {
   const isExpanded = expandedItems.has(node.id)
   const natColor   = node.natureza === 'entrada' ? '#22c55e' : node.natureza === 'saida' ? '#ef4444' : '#f97316'
   const pl         = 8 + depth * 20
+  const isSaida    = node.natureza === 'saida' && !node.is_grupo
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [confirmPos, setConfirmPos]   = useState({ x: 0, y: 0 })
+
+  useEffect(() => {
+    if (!showConfirm) return
+    function handle() { setShowConfirm(false) }
+    document.addEventListener('click', handle)
+    return () => document.removeEventListener('click', handle)
+  }, [showConfirm])
 
   return (
     <>
@@ -664,8 +686,18 @@ function ItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDelete, on
         </td>
 
         {/* Nome + badges */}
-        <td className="py-1.5 px-2 text-xs text-[#aaa]" colSpan={3}>
-          <span>{node.nome}</span>
+        <td
+          className="py-1.5 px-2 text-xs text-[#aaa]"
+          colSpan={3}
+          onClick={isSaida ? (e) => { e.stopPropagation(); setConfirmPos({ x: e.clientX, y: e.clientY }); setShowConfirm(true) } : undefined}
+          style={isSaida ? { cursor: 'pointer' } : undefined}
+        >
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            {node.pago && (
+              <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', flexShrink: 0, display: 'inline-block' }} />
+            )}
+            <span style={{ opacity: node.pago ? 0.45 : 1 }}>{node.nome}</span>
+          </span>
           {node.saida_tipo === 'cartao' && (
             <span className="ml-2 text-[9px] text-[#a78bfa] border border-[#a78bfa]/30 rounded px-1 py-0.5">cartão</span>
           )}
@@ -675,7 +707,7 @@ function ItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDelete, on
         </td>
 
         {/* Valor */}
-        <td className="py-1.5 px-2 text-right text-xs tabular-nums" style={{ color: natColor }}>
+        <td className="py-1.5 px-2 text-right text-xs tabular-nums" style={{ color: natColor, opacity: node.pago ? 0.45 : 1 }}>
           {BRL(node.valorTotal)}
         </td>
 
@@ -709,6 +741,55 @@ function ItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDelete, on
         </td>
       </tr>
 
+      {showConfirm && createPortal(
+        <div
+          style={{
+            position: 'fixed',
+            top: Math.max(10, confirmPos.y - 70),
+            left: Math.min(confirmPos.x - 20, window.innerWidth - 260),
+            background: '#1a1a1a',
+            border: '1px solid #1f1f1f',
+            borderRadius: 12,
+            padding: '14px 16px',
+            boxShadow: '0 8px 32px rgba(0,0,0,.5)',
+            zIndex: 200,
+            minWidth: 220,
+          }}
+          onClick={e => e.stopPropagation()}
+        >
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#e5e5e5', marginBottom: 10 }}>
+            {node.pago ? 'Marcar como pendente?' : 'Confirmar pagamento?'}
+          </div>
+          <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 12 }}>
+            {node.nome} — {BRL(node.valor ?? 0)}
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={async () => { await onTogglePago(node.id, !node.pago); setShowConfirm(false) }}
+              style={{
+                flex: 1, padding: '7px 0', borderRadius: 8, border: 'none',
+                background: node.pago ? '#2a1210' : '#0d2818',
+                color: node.pago ? '#f87171' : '#4ade80',
+                fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              {node.pago ? 'Marcar pendente' : 'Confirmar pago'}
+            </button>
+            <button
+              onClick={() => setShowConfirm(false)}
+              style={{
+                padding: '7px 12px', borderRadius: 8,
+                border: '1px solid #262626', background: 'transparent',
+                color: '#4b5563', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
+
       {/* Children */}
       {isExpanded && (
         <>
@@ -722,6 +803,7 @@ function ItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDelete, on
               onEdit={onEdit}
               onDelete={onDelete}
               onAddChild={onAddChild}
+              onTogglePago={onTogglePago}
             />
           ))}
 
@@ -747,10 +829,20 @@ function ItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDelete, on
 // MobileItemRows — versão mobile do ItemRows (divs ao invés de tr/td)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function MobileItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDelete, onAddChild }: ItemRowsProps) {
+function MobileItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDelete, onAddChild, onTogglePago }: ItemRowsProps) {
   const isExpanded = expandedItems.has(node.id)
   const natColor   = node.natureza === 'entrada' ? '#22c55e' : node.natureza === 'saida' ? '#ef4444' : '#f97316'
   const pl         = depth * 14
+  const isSaida    = node.natureza === 'saida' && !node.is_grupo
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [confirmPos, setConfirmPos]   = useState({ x: 0, y: 0 })
+
+  useEffect(() => {
+    if (!showConfirm) return
+    function handle() { setShowConfirm(false) }
+    document.addEventListener('click', handle)
+    return () => document.removeEventListener('click', handle)
+  }, [showConfirm])
 
   return (
     <>
@@ -762,8 +854,17 @@ function MobileItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDele
         ) : (
           <span className="w-[11px] shrink-0" />
         )}
-        <span className="flex-1 text-xs text-[#aaa] truncate">{node.nome}</span>
-        <span className="text-xs tabular-nums shrink-0" style={{ color: natColor }}>
+        <span
+          className="flex-1 text-xs text-[#aaa] truncate"
+          onClick={isSaida ? (e) => { e.stopPropagation(); setConfirmPos({ x: e.clientX, y: e.clientY }); setShowConfirm(true) } : undefined}
+          style={isSaida ? { cursor: 'pointer' } : undefined}
+        >
+          {node.pago && (
+            <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', display: 'inline-block', marginRight: 4, verticalAlign: 'middle' }} />
+          )}
+          <span style={{ opacity: node.pago ? 0.45 : 1 }}>{node.nome}</span>
+        </span>
+        <span className="text-xs tabular-nums shrink-0" style={{ color: natColor, opacity: node.pago ? 0.45 : 1 }}>
           {BRL(node.valorTotal)}
         </span>
         <div className="flex items-center gap-2 shrink-0">
@@ -774,6 +875,56 @@ function MobileItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDele
           <button onClick={() => onDelete(node.id)} className="text-[#444]"><Trash2 size={11} /></button>
         </div>
       </div>
+
+      {showConfirm && createPortal(
+        <div
+          style={{
+            position: 'fixed',
+            top: Math.max(10, confirmPos.y - 70),
+            left: Math.min(confirmPos.x - 20, window.innerWidth - 260),
+            background: '#1a1a1a',
+            border: '1px solid #1f1f1f',
+            borderRadius: 12,
+            padding: '14px 16px',
+            boxShadow: '0 8px 32px rgba(0,0,0,.5)',
+            zIndex: 200,
+            minWidth: 220,
+          }}
+          onClick={e => e.stopPropagation()}
+        >
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#e5e5e5', marginBottom: 10 }}>
+            {node.pago ? 'Marcar como pendente?' : 'Confirmar pagamento?'}
+          </div>
+          <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 12 }}>
+            {node.nome} — {BRL(node.valor ?? 0)}
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={async () => { await onTogglePago(node.id, !node.pago); setShowConfirm(false) }}
+              style={{
+                flex: 1, padding: '7px 0', borderRadius: 8, border: 'none',
+                background: node.pago ? '#2a1210' : '#0d2818',
+                color: node.pago ? '#f87171' : '#4ade80',
+                fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              {node.pago ? 'Marcar pendente' : 'Confirmar pago'}
+            </button>
+            <button
+              onClick={() => setShowConfirm(false)}
+              style={{
+                padding: '7px 12px', borderRadius: 8,
+                border: '1px solid #262626', background: 'transparent',
+                color: '#4b5563', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
+
       {isExpanded && node.children.map(child => (
         <MobileItemRows
           key={child.id}
@@ -784,6 +935,7 @@ function MobileItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDele
           onEdit={onEdit}
           onDelete={onDelete}
           onAddChild={onAddChild}
+          onTogglePago={onTogglePago}
         />
       ))}
     </>

@@ -41,6 +41,7 @@ export interface FinLancamento {
   saida_tipo: SaidaTipo | null
   ordem: number
   is_previsao?: boolean
+  pago?: boolean
   created_at: string
 }
 

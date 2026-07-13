@@ -386,21 +386,38 @@ export function useDashRecorrentes() {
   return useQuery({
     queryKey: ['dash_recorrentes'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('fin_recorrentes')
-        .select('id, nome, valor, dia_previsto, natureza, saida_tipo')
-        .eq('ativo', true)
-        .eq('natureza', 'saida')
-        .order('dia_previsto', { ascending: true })
+      const now = new Date()
+      const todayStr   = now.toISOString().slice(0, 10)
+      const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
+
+      const [{ data, error }, { data: pagos }] = await Promise.all([
+        supabase
+          .from('fin_recorrentes')
+          .select('id, nome, valor, dia_previsto, natureza, saida_tipo')
+          .eq('ativo', true)
+          .eq('natureza', 'saida')
+          .order('dia_previsto', { ascending: true }),
+        supabase
+          .from('fin_lancamentos')
+          .select('nome')
+          .eq('pago', true)
+          .gte('data', monthStart)
+          .lte('data', todayStr),
+      ])
       if (error) throw error
 
-      const today = new Date().getDate()
+      const today = now.getDate()
+      const nomesPageos = new Set((pagos ?? []).map((p: any) => p.nome.toLowerCase()))
 
-      const vencidas  = (data ?? []).filter((r: any) => r.dia_previsto < today)
-      const venceHoje = (data ?? []).filter((r: any) => r.dia_previsto === today)
+      const vencidas  = (data ?? [])
+        .filter((r: any) => r.dia_previsto < today)
+        .filter((r: any) => !nomesPageos.has(r.nome.toLowerCase()))
+      const venceHoje = (data ?? [])
+        .filter((r: any) => r.dia_previsto === today)
+        .filter((r: any) => !nomesPageos.has(r.nome.toLowerCase()))
 
       return { vencidas, venceHoje }
     },
-    staleTime: 1000 * 60 * 30,
+    staleTime: 1000 * 60 * 5,
   })
 }
