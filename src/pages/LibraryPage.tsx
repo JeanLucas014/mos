@@ -849,7 +849,7 @@ export function LibraryPage() {
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
           className="bg-bg-2 border border-line rounded-input px-3 text-ink-2 text-xs focus:outline-none focus:border-brand transition-colors"
-          style={{ minHeight: 36, fontFamily: 'Manrope, sans-serif' }}
+          style={{ minHeight: 36, minWidth: 130, fontFamily: 'Manrope, sans-serif' }}
         >
           <option value="all">Todos os status</option>
           <option value="lendo">Lendo</option>
@@ -863,7 +863,7 @@ export function LibraryPage() {
           value={filterYear}
           onChange={(e) => setFilterYear(e.target.value)}
           className="bg-bg-2 border border-line rounded-input px-3 text-ink-2 text-xs focus:outline-none focus:border-brand transition-colors"
-          style={{ minHeight: 36, fontFamily: 'Manrope, sans-serif' }}
+          style={{ minHeight: 36, minWidth: 110, fontFamily: 'Manrope, sans-serif' }}
         >
           <option value="all">Todos os anos</option>
           {years.map((y) => <option key={y} value={y}>{y}</option>)}
@@ -874,7 +874,7 @@ export function LibraryPage() {
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value)}
           className="bg-bg-2 border border-line rounded-input px-3 text-ink-2 text-xs focus:outline-none focus:border-brand transition-colors"
-          style={{ minHeight: 36, fontFamily: 'Manrope, sans-serif' }}
+          style={{ minHeight: 36, minWidth: 140, fontFamily: 'Manrope, sans-serif' }}
         >
           {SORT_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
         </select>
@@ -894,8 +894,8 @@ export function LibraryPage() {
           <Heart size={12} className="mr-1 inline" /> Favoritos
         </button>
 
-        {/* Separador */}
-        <div className="flex-1" />
+        {/* Separador — só visível em desktop */}
+        <div className="hidden sm:block sm:flex-1" />
 
         {/* Seletor de colunas (só no grid) */}
         {viewMode === 'grid' && (

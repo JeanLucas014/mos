@@ -93,7 +93,7 @@ export default function TarefasPage() {
         title:       payload.title,
         description: payload.description ?? null,
         priority:    payload.priority ?? 4,
-        project_id:  payload.project_id ?? (!SYSTEM_VIEWS.includes(viewId) ? viewId : null),
+        project_id:  payload.project_id !== undefined ? payload.project_id : (!SYSTEM_VIEWS.includes(viewId) ? viewId : null),
         parent_id:   payload.parent_id ?? null,
         due_date:    payload.due_date ?? (viewId === 'hoje' ? new Date().toISOString().slice(0, 10) : null),
         due_time:    payload.due_time ?? null,
@@ -364,11 +364,15 @@ export default function TarefasPage() {
           { id: 'hoje',      label: 'Hoje',   Icon: Sun      },
           { id: 'proximos7', label: '7 dias', Icon: Calendar },
           { id: 'projetos',  label: 'Projetos', Icon: FolderOpen },
-        ].map(({ id, label, Icon }) => (
+        ].map(({ id, label, Icon }) => {
+          const isActive = id === 'projetos'
+            ? !SYSTEM_VIEWS.includes(viewId) && viewId !== 'historico'
+            : viewId === id
+          return (
           <button key={id}
             onClick={() => id === 'projetos' ? setShowProjectDrawer(true) : setViewId(id as ViewId)}
             className={['flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[10px] relative min-h-[52px]',
-              viewId === id ? 'text-[#0EA5E9]' : 'text-[#555]',
+              isActive ? 'text-[#0EA5E9]' : 'text-[#555]',
             ].join(' ')}>
             <Icon size={18} />
             {label}
@@ -378,7 +382,8 @@ export default function TarefasPage() {
               </span>
             )}
           </button>
-        ))}
+          )
+        })}
       </div>
 
       {/* Mobile project drawer */}

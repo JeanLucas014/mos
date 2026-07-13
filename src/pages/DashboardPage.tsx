@@ -190,14 +190,15 @@ function LifeScoreSection() {
         style={{ background: 'var(--bg2)' }}
       >
         {/* LINHA SUPERIOR: Gauge | Mini scores */}
-        <div className="flex" style={{ borderBottom: '1px solid var(--border)' }}>
+        <div className="flex flex-col sm:flex-row" style={{ borderBottom: '1px solid var(--border)' }}>
 
           {/* Gauge */}
           <div
-            className="flex flex-col items-center justify-center flex-shrink-0"
-            style={{ padding: '20px 24px', borderRight: '1px solid var(--border)', gap: 4 }}
+            className="flex flex-col items-center justify-center flex-shrink-0 border-b sm:border-b-0 sm:border-r border-line"
+            style={{ padding: '16px 20px', gap: 4 }}
           >
-            <ScoreGauge score={overall} size={180} />
+            <div className="sm:hidden"><ScoreGauge score={overall} size={100} /></div>
+            <div className="hidden sm:block"><ScoreGauge score={overall} size={180} /></div>
             <div style={{ fontSize: 10, color: 'var(--text3)', textAlign: 'center' as const }}>
               Score de Vida
             </div>
@@ -206,7 +207,7 @@ function LifeScoreSection() {
           {/* Mini scores + chevron */}
           <div
             className="flex-1 flex items-center gap-3 cursor-pointer"
-            style={{ padding: '16px 18px' }}
+            style={{ padding: '14px 16px' }}
             onClick={() => setOpen(p => !p)}
           >
             <div style={{ flex: 1 }}>
@@ -232,11 +233,11 @@ function LifeScoreSection() {
 
         {/* LINHA INFERIOR: Radar | Grid de áreas — só quando aberto */}
         {open && (
-          <div className="flex">
+          <div className="flex flex-col sm:flex-row">
 
-            {/* Radar — mesma largura da coluna do gauge */}
+            {/* Radar — oculto em mobile */}
             <div
-              className="flex items-center justify-center flex-shrink-0"
+              className="hidden sm:flex items-center justify-center flex-shrink-0"
               style={{ borderRight: '1px solid var(--border)', padding: '8px 0', width: 228 }}
             >
               <ResponsiveContainer width={228} height={200}>
@@ -259,8 +260,8 @@ function LifeScoreSection() {
               </ResponsiveContainer>
             </div>
 
-            {/* Grid 2x3 das áreas */}
-            <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
+            {/* Grid 2x3 das áreas — 2 colunas em mobile, 3 em desktop */}
+            <div className="flex-1 grid grid-cols-2 sm:grid-cols-3">
               {AREAS.map((a, i) => {
                 const sc = scoreColor(a.score)
                 return (
@@ -268,8 +269,8 @@ function LifeScoreSection() {
                     key={a.label}
                     style={{
                       padding: '12px 14px',
-                      borderBottom: i < 3 ? '1px solid var(--border)' : undefined,
-                      borderRight: i % 3 < 2 ? '1px solid var(--border)' : undefined,
+                      borderBottom: '1px solid var(--border)',
+                      borderRight: '1px solid var(--border)',
                     }}
                   >
                     <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--text3)', textTransform: 'uppercase' as const, letterSpacing: '0.06em', marginBottom: 3 }}>

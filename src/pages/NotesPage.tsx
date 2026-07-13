@@ -216,7 +216,7 @@ export function NotesPage() {
                   fontFamily: 'JetBrains Mono, Manrope, sans-serif',
                   fontSize: 13,
                   lineHeight: 1.7,
-                  minHeight: 200,
+                  minHeight: 'calc(100vh - 200px)',
                 }}
                 placeholder="Comece a escrever..."
               />

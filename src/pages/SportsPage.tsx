@@ -236,11 +236,11 @@ function YearStats({ workouts, year }: { workouts: Sport[]; year: string }) {
           </div>
         )}
       </div>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         {stats.map(s => (
           <div key={s.label} className="border border-[#1f1f1f] rounded-xl p-3" style={{ background: 'var(--bg2)' }}>
-            <div className="text-[9px] uppercase tracking-widest font-bold text-[#444] mb-1.5">{s.label}</div>
-            <div className="text-sm font-bold" style={{ fontFamily: 'Sora, sans-serif', color: '#0EA5E9' }}>{s.value}</div>
+            <div className="text-[9px] sm:text-[10px] uppercase tracking-widest font-bold text-[#444] mb-1.5">{s.label}</div>
+            <div className="text-xl sm:text-2xl font-bold" style={{ fontFamily: 'Sora, sans-serif', color: '#0EA5E9', wordBreak: 'break-word' }}>{s.value}</div>
           </div>
         ))}
       </div>

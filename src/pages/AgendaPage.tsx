@@ -882,7 +882,7 @@ function CalendarView({ onDisconnect }: { onDisconnect: () => void }) {
         />
       ) : viewMode === 'year' ? (
         /* ── Year view ── */
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
+        <div style={{ display:'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(3,1fr)', gap:10 }}>
           {MONTHS.map((mName, mIdx) => {
             const firstDay  = new Date(year, mIdx, 1)
             const lastDay   = new Date(year, mIdx + 1, 0)
@@ -1069,7 +1069,8 @@ function CalendarView({ onDisconnect }: { onDisconnect: () => void }) {
 const navBtn: React.CSSProperties = {
   background:C.card, border:`1px solid ${C.border}`,
   borderRadius:8, cursor:'pointer', color:C.dm,
-  display:'flex', alignItems:'center', padding:6,
+  display:'flex', alignItems:'center', justifyContent:'center',
+  padding:6, minWidth:44, minHeight:44,
 }
 
 /* ── Main ─────────────────────────────────────────────────────── */

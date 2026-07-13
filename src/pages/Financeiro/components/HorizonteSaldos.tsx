@@ -201,9 +201,9 @@ export function HorizonteSaldos({ ano }: Props) {
   return (
     <div style={{ width: '100%' }}>
       {/* Cabeçalho + legenda */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-3">
         <span className="text-sm font-semibold font-[Sora] text-white">Horizonte de saldos</span>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           {[
             { bg: '#7f1d1d', label: 'Negativo' },
             { bg: '#14532d', label: '0–300'    },
@@ -211,7 +211,7 @@ export function HorizonteSaldos({ ano }: Props) {
             { bg: '#15803d', label: '800–1.5K' },
             { bg: '#16a34a', label: '1.5K+'    },
           ].map(l => (
-            <div key={l.label} className="flex items-center gap-1.5">
+            <div key={l.label} className="flex items-center gap-1.5 whitespace-nowrap">
               <span className="inline-block w-2.5 h-2.5 rounded-[2px]" style={{ background: l.bg }} />
               <span className="text-[10px] text-[#555]">{l.label}</span>
             </div>

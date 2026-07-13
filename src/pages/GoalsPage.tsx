@@ -238,10 +238,6 @@ function GoalRow({
           title={`${pct}%`}
         />
       </div>
-      <div className="text-right mt-1" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: colorPct }}>
-        {pct}%
-      </div>
-
       {/* Submetas */}
       {expanded && <GoalItemsList goalId={goal.id} onProgressChange={handleAutoProgress} />}
     </div>
@@ -297,7 +293,7 @@ function AddModal({
           {/* Area */}
           <div>
             <label className="block text-ink-2 mb-2" style={{ fontSize: 12, fontWeight: 600 }}>Área</label>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="grid grid-cols-3 gap-1.5">
               {AREAS.map(a => {
                 const selected = area === a
                 const c = aColor(a)
