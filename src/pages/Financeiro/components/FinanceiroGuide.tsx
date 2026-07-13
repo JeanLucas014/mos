@@ -1,4 +1,4 @@
-import { X, Calendar, TrendingUp, CreditCard, Tag, Target, PiggyBank } from 'lucide-react'
+﻿import { X, Calendar, TrendingUp, CreditCard, Tag, Target, PiggyBank } from 'lucide-react'
 
 interface Props {
   onClose: () => void
@@ -50,10 +50,10 @@ export function FinanceiroGuide({ onClose }: Props) {
       onClick={onClose}
     >
       <div
-        className="bg-[#111111] border border-[#1f1f1f] rounded-t-2xl sm:rounded-2xl w-full sm:max-w-lg max-h-[85vh] overflow-y-auto"
+        className="bg-bg-2 border border-line rounded-t-2xl sm:rounded-2xl w-full sm:max-w-lg max-h-[85vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#1f1f1f] sticky top-0 bg-[#111111]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-line sticky top-0 bg-bg-2">
           <div>
             <span className="text-sm font-semibold font-[Sora] text-white">
               Como funciona o Financeiro
@@ -84,7 +84,7 @@ export function FinanceiroGuide({ onClose }: Props) {
           ))}
         </div>
 
-        <div className="px-5 py-4 border-t border-[#1f1f1f] sticky bottom-0 bg-[#111111]">
+        <div className="px-5 py-4 border-t border-line sticky bottom-0 bg-bg-2">
           <button
             onClick={onClose}
             className="w-full py-2.5 bg-[#0EA5E9] text-black font-semibold text-sm rounded-xl hover:bg-[#38bdf8] transition-colors"

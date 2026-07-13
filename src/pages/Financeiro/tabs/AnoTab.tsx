@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import {
   ComposedChart, Bar, Line, XAxis, YAxis, Tooltip,
@@ -81,7 +81,7 @@ export function AnoTab({ ano, onGoToMonth }: Props) {
           <div
             key={c.label}
             className={[
-              'bg-[#111111] border border-[#1f1f1f] rounded-xl p-4 relative',
+              'bg-bg-2 border border-line rounded-xl p-4 relative',
               idx === cards.length - 1 ? 'col-span-2 sm:col-span-1' : '',
             ].join(' ')}
           >
@@ -93,7 +93,7 @@ export function AnoTab({ ano, onGoToMonth }: Props) {
       </div>
 
       {/* Chart */}
-      <div className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-5">
+      <div className="bg-bg-2 border border-line rounded-xl p-5">
         <div className="text-xs text-[#555] font-[Sora] uppercase tracking-wider mb-4">
           Entradas vs Saídas · {ano.ano}
         </div>
@@ -128,8 +128,8 @@ export function AnoTab({ ano, onGoToMonth }: Props) {
               key={m.mes}
               onClick={() => onGoToMonth(m.mes)}
               className={[
-                'bg-[#111111] border rounded-xl p-4 text-left transition-colors hover:border-[#0EA5E9]/40 focus:outline-none',
-                isCurrent ? 'border-[#0EA5E9]/50' : 'border-[#1f1f1f]',
+                'bg-bg-2 border rounded-xl p-4 text-left transition-colors hover:border-[#0EA5E9]/40 focus:outline-none',
+                isCurrent ? 'border-[#0EA5E9]/50' : 'border-line',
               ].join(' ')}
             >
               <div className={['text-sm font-semibold font-[Sora] mb-3', isCurrent ? 'text-[#0EA5E9]' : 'text-white'].join(' ')}>
@@ -146,7 +146,7 @@ export function AnoTab({ ano, onGoToMonth }: Props) {
                     <span style={{ color: row.color }}>{BRL(row.value)}</span>
                   </div>
                 ))}
-                <div className="border-t border-[#1f1f1f] my-1" />
+                <div className="border-t border-line my-1" />
                 <div className="flex justify-between">
                   <span className="text-[#555]">Resultado</span>
                   <span style={{ color: resultado >= 0 ? '#22c55e' : '#ef4444' }}>{BRL(resultado)}</span>
@@ -158,7 +158,7 @@ export function AnoTab({ ano, onGoToMonth }: Props) {
       </div>
 
       {/* ── Horizonte de saldos ── */}
-      <div className="mt-6 -mx-4 lg:-mx-7 border-t border-[#1f1f1f] pt-6 px-4 lg:px-7">
+      <div className="mt-6 -mx-4 lg:-mx-7 border-t border-line pt-6 px-4 lg:px-7">
         <HorizonteSaldos ano={ano} />
       </div>
     </div>

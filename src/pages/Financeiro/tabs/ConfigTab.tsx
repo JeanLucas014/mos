@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+﻿import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Plus, Trash2, Download, Upload, AlertTriangle } from 'lucide-react'
 import type { FinAno, FinCategoria, FinCartao } from '../types'
@@ -153,7 +153,7 @@ export function ConfigTab({ anos, onReload }: Props) {
 
   return (
     <div>
-      <div className="flex gap-1 mb-6 border-b border-[#1f1f1f] overflow-x-auto">
+      <div className="flex gap-1 mb-6 border-b border-line overflow-x-auto">
         {subtabs.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
             className={['px-3 py-2 text-xs font-medium border-b-2 -mb-px transition-colors whitespace-nowrap',
@@ -166,19 +166,19 @@ export function ConfigTab({ anos, onReload }: Props) {
       {/* Categorias */}
       {tab === 'categorias' && (
         <div className="space-y-4">
-          <div className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-4 space-y-3">
+          <div className="bg-bg-2 border border-line rounded-xl p-4 space-y-3">
             <div className="text-xs text-[#555] font-[Sora] uppercase tracking-wider">Nova categoria</div>
             <div className="flex gap-2 flex-wrap">
               <input placeholder="Nome" value={catForm.nome} onChange={e => setCatForm({ ...catForm, nome: e.target.value })}
-                className="flex-1 min-w-32 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60" />
+                className="flex-1 min-w-32 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60" />
               <select value={catForm.natureza} onChange={e => setCatForm({ ...catForm, natureza: e.target.value })}
-                className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none">
+                className="bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none">
                 <option value="entrada">Entrada</option>
                 <option value="saida">Saída</option>
                 <option value="diario">Diário</option>
               </select>
               <input type="color" value={catForm.cor || 'var(--text3)'} onChange={e => setCatForm({ ...catForm, cor: e.target.value })}
-                className="w-10 h-9 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg cursor-pointer" />
+                className="w-10 h-9 bg-bg border border-line rounded-lg cursor-pointer" />
               <label className="flex items-center gap-1.5 text-xs text-[#555] cursor-pointer">
                 <input type="checkbox" checked={catForm.rapida} onChange={e => setCatForm({ ...catForm, rapida: e.target.checked })} className="accent-[#0EA5E9]" />
                 Rápida
@@ -199,7 +199,7 @@ export function ConfigTab({ anos, onReload }: Props) {
                   {nat === 'entrada' ? 'Entrada' : nat === 'saida' ? 'Saída' : 'Diário'}
                 </div>
                 {cats.map(c => (
-                  <div key={c.id} className="group flex items-center gap-2 py-2 border-b border-[#1f1f1f]">
+                  <div key={c.id} className="group flex items-center gap-2 py-2 border-b border-line">
                     {c.cor && <span className="w-2 h-2 rounded-full shrink-0" style={{ background: c.cor }} />}
                     <span className="flex-1 text-sm text-[#aaa]">{c.nome}</span>
                     {c.rapida && <span className="text-[10px] text-[#0EA5E9] border border-[#0EA5E9]/30 rounded px-1.5">rápida</span>}
@@ -217,20 +217,20 @@ export function ConfigTab({ anos, onReload }: Props) {
       {/* Cartões */}
       {tab === 'cartoes' && (
         <div className="space-y-4">
-          <div className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-4 space-y-3">
+          <div className="bg-bg-2 border border-line rounded-xl p-4 space-y-3">
             <div className="text-xs text-[#555] font-[Sora] uppercase tracking-wider">Novo cartão</div>
             <div className="flex gap-2">
               <input placeholder="Nome" value={cardForm.nome} onChange={e => setCardForm({ ...cardForm, nome: e.target.value })}
-                className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60" />
+                className="flex-1 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60" />
               <input type="color" value={cardForm.cor || 'var(--text3)'} onChange={e => setCardForm({ ...cardForm, cor: e.target.value })}
-                className="w-10 h-9 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg cursor-pointer" />
+                className="w-10 h-9 bg-bg border border-line rounded-lg cursor-pointer" />
               <button onClick={addCartao} className="px-4 py-1.5 text-sm font-medium bg-[#0EA5E9] text-black rounded-lg hover:bg-[#38bdf8]">
                 <Plus size={14} />
               </button>
             </div>
           </div>
           {cartoes.map(c => (
-            <div key={c.id} className="group flex items-center gap-3 py-2.5 border-b border-[#1f1f1f]">
+            <div key={c.id} className="group flex items-center gap-3 py-2.5 border-b border-line">
               {c.cor && <span className="w-3 h-3 rounded-full shrink-0" style={{ background: c.cor }} />}
               <span className="flex-1 text-sm text-white">{c.nome}</span>
               <button onClick={() => delCartao(c.id)} className="opacity-0 group-hover:opacity-100 text-[#555] hover:text-[#ef4444] transition-all">
@@ -244,27 +244,27 @@ export function ConfigTab({ anos, onReload }: Props) {
       {/* Anos */}
       {tab === 'anos' && (
         <div className="space-y-4">
-          <div className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-4 space-y-3">
+          <div className="bg-bg-2 border border-line rounded-xl p-4 space-y-3">
             <div className="text-xs text-[#555] font-[Sora] uppercase tracking-wider">Criar novo ano</div>
             <div className="flex gap-2">
               <input placeholder="2027" value={anoForm.ano} onChange={e => setAnoForm({ ...anoForm, ano: e.target.value })}
-                className="w-24 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums" />
+                className="w-24 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums" />
               <input placeholder="Saldo inicial" value={anoForm.saldo_inicial} onChange={e => setAnoForm({ ...anoForm, saldo_inicial: e.target.value })}
-                className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums" />
+                className="flex-1 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums" />
               <button onClick={addAno} className="px-4 py-1.5 text-sm font-medium bg-[#0EA5E9] text-black rounded-lg hover:bg-[#38bdf8]">
                 Criar
               </button>
             </div>
           </div>
           {anos.map(a => (
-            <div key={a.id} className="flex items-center gap-3 py-2.5 border-b border-[#1f1f1f]">
+            <div key={a.id} className="flex items-center gap-3 py-2.5 border-b border-line">
               <span className="text-sm font-semibold text-white w-12">{a.ano}</span>
               <span className="text-xs text-[#555]">Saldo inicial:</span>
               <input
                 type="number"
                 defaultValue={a.saldo_inicial}
                 onBlur={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) updateSaldoInicial(a.id, v) }}
-                className="w-32 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-2 py-1 text-xs text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums"
+                className="w-32 bg-bg border border-line rounded-lg px-2 py-1 text-xs text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums"
               />
             </div>
           ))}
@@ -277,21 +277,21 @@ export function ConfigTab({ anos, onReload }: Props) {
       {/* Previsão do diário */}
       {tab === 'previsao' && (
         <div className="space-y-4">
-          <div className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-4 space-y-3">
+          <div className="bg-bg-2 border border-line rounded-xl p-4 space-y-3">
             <div className="text-xs text-[#555] font-[Sora] uppercase tracking-wider">Nova categoria</div>
             <div className="flex gap-2">
               <input
                 placeholder="Ex: Mercado"
                 value={prevForm.nome}
                 onChange={e => setPrevForm({ ...prevForm, nome: e.target.value })}
-                className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60"
+                className="flex-1 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60"
               />
               <input
                 placeholder="R$ 0"
                 value={prevForm.valor}
                 onChange={e => setPrevForm({ ...prevForm, valor: e.target.value })}
                 onKeyDown={e => e.key === 'Enter' && addPrevisaoItem()}
-                className="w-28 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums"
+                className="w-28 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums"
               />
               <button onClick={addPrevisaoItem}
                 className="px-4 py-1.5 text-sm font-medium bg-[#0EA5E9] text-black rounded-lg hover:bg-[#38bdf8]">
@@ -301,13 +301,13 @@ export function ConfigTab({ anos, onReload }: Props) {
           </div>
 
           {previsaoItems.map(item => (
-            <div key={item.id} className="group flex items-center gap-3 py-2.5 border-b border-[#1f1f1f]">
+            <div key={item.id} className="group flex items-center gap-3 py-2.5 border-b border-line">
               <span className="flex-1 text-sm text-white">{item.nome}</span>
               <input
                 type="number"
                 defaultValue={item.valor}
                 onBlur={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) updatePrevisaoValor(item.id, v) }}
-                className="w-28 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1 text-xs text-white outline-none tabular-nums text-right focus:border-[#0EA5E9]/60"
+                className="w-28 bg-bg border border-line rounded-lg px-3 py-1 text-xs text-white outline-none tabular-nums text-right focus:border-[#0EA5E9]/60"
               />
               <button onClick={() => delPrevisaoItem(item.id)}
                 className="opacity-0 group-hover:opacity-100 text-[#555] hover:text-[#ef4444] transition-all">
@@ -321,7 +321,7 @@ export function ConfigTab({ anos, onReload }: Props) {
             const daysThisMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate()
             const daily = Math.round((total / daysThisMonth) * 100) / 100
             return (
-              <div className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-4 space-y-2">
+              <div className="bg-bg-2 border border-line rounded-xl p-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-[#555]">Total mensal</span>
                   <span className="text-white font-medium tabular-nums">
@@ -801,7 +801,7 @@ function BackupTab({ anos }: { anos: FinAno[] }) {
     <div className="space-y-5">
 
       {/* ── Seção A: Exportar ── */}
-      <div className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-5">
+      <div className="bg-bg-2 border border-line rounded-xl p-5">
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="text-xs text-[#555] font-[Sora] uppercase tracking-wider mb-1">Exportar backup</div>
@@ -821,7 +821,7 @@ function BackupTab({ anos }: { anos: FinAno[] }) {
       </div>
 
       {/* ── Seção B: Importar ── */}
-      <div className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-5 space-y-4">
+      <div className="bg-bg-2 border border-line rounded-xl p-5 space-y-4">
         <div className="text-xs text-[#555] font-[Sora] uppercase tracking-wider">Restaurar backup</div>
 
         {/* Aviso */}
@@ -852,7 +852,7 @@ function BackupTab({ anos }: { anos: FinAno[] }) {
         {/* Preview */}
         {importState === 'preview' && preview && (
           <div className="space-y-3">
-            <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-4 py-3 space-y-1.5">
+            <div className="bg-bg border border-line rounded-lg px-4 py-3 space-y-1.5">
               <div className="text-[10px] text-[#555] uppercase tracking-wider mb-2">
                 {preview.format === 'mos-v1' ? 'Formato MOS v1' : 'Formato legado'}{preview.counts.extras ? ` · ${preview.counts.extras}` : ''}
               </div>
@@ -870,7 +870,7 @@ function BackupTab({ anos }: { anos: FinAno[] }) {
                 <select
                   value={selectedAnoId}
                   onChange={e => setSelectedAnoId(e.target.value)}
-                  className="w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none"
+                  className="w-full bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none"
                 >
                   <option value="">Selecione…</option>
                   {anos.map(a => <option key={a.id} value={a.id}>{a.ano}</option>)}
@@ -879,7 +879,7 @@ function BackupTab({ anos }: { anos: FinAno[] }) {
             )}
 
             <div className="flex gap-2">
-              <button onClick={reset} className="px-4 py-2 text-sm text-[#555] border border-[#1f1f1f] rounded-lg hover:text-white transition-colors">
+              <button onClick={reset} className="px-4 py-2 text-sm text-[#555] border border-line rounded-lg hover:text-white transition-colors">
                 Cancelar
               </button>
               <button

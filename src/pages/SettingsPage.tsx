@@ -1,6 +1,6 @@
 import { useState, useEffect, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CheckCircle, Eye, EyeOff, Shield, Monitor, Moon, Sun } from 'lucide-react'
+import { CheckCircle, Eye, EyeOff, Shield, Monitor, Moon, Sun, LogOut } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useProfile, useAllProfiles } from '@/hooks/useProfile'
 import { useUserSettings } from '@/hooks/useUserSettings'
@@ -480,6 +480,14 @@ export default function SettingsPage() {
           </div>
         </section>
         {isAdmin && <AdminSection />}
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center justify-center gap-2 rounded-input border border-red-400/30 text-red-400 hover:bg-red-400/08 transition-colors text-sm font-semibold"
+          style={{ minHeight: 48 }}
+        >
+          <LogOut size={15} />
+          Sair da conta
+        </button>
         </>
       )}
 
@@ -519,11 +527,11 @@ export default function SettingsPage() {
               {groups.map(group => (
                 <div key={group}>
                   <div className="text-[10px] text-[#555] uppercase tracking-wider font-[Sora] mb-1.5 px-0.5">{group}</div>
-                  <div className="bg-[#111111] border border-[#1f1f1f] rounded-xl overflow-hidden">
+                  <div className="bg-bg-2 border border-line rounded-xl overflow-hidden">
                     {visibleModules.filter(m => m.group === group).map(mod => {
                       const isOn = enabled.includes(mod.id)
                       return (
-                        <div key={mod.id} className="flex items-center justify-between px-4 py-3.5 border-b border-[#1f1f1f] last:border-0">
+                        <div key={mod.id} className="flex items-center justify-between px-4 py-3.5 border-b border-line last:border-0">
                           <div className="flex-1 min-w-0 pr-4">
                             <div className="text-sm font-medium text-white">{mod.label}</div>
                             <div className="text-xs text-[#555] mt-0.5">{mod.description}</div>
@@ -552,59 +560,32 @@ export default function SettingsPage() {
 
       {/* ── INSTALAR APP tab ── */}
       {tab === 'instalar' && (
-        <div className="max-w-xl">
-          <div className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-5 mb-4">
-            <h3 className="text-sm font-semibold text-white mb-1">
-              Instale o MOS no seu celular
-            </h3>
-            <p className="text-xs text-[#888]">
-              O MOS funciona como um app nativo — sem precisar de loja de aplicativos.
-            </p>
+        <div className="max-w-xl space-y-4">
+          <p className="text-xs text-ink-3">Instale o MOS como um app nativo na tela inicial — sem precisar de loja de aplicativos.</p>
+
+          <div className="bg-bg-2 border border-line rounded-xl p-5 space-y-3">
+            <div className="text-[10px] text-ink-3 font-[Sora] uppercase tracking-wider">iPhone / Safari</div>
+            <Step n={1} text='No Safari, toque no ícone de Compartilhar (quadrado com seta para cima) na barra inferior.' />
+            <Step n={2} text='Role para baixo e toque em "Adicionar à Tela de Início".' />
+            <Step n={3} text='Toque em "Adicionar" no canto superior direito.' />
+            <p className="text-[11px] text-ink-3 mt-1">Funciona apenas no Safari — outros navegadores no iPhone não suportam essa opção.</p>
           </div>
 
-          {platform === 'ios' && (
-            <div className="space-y-3">
-              <Step n={1} text='No Safari, toque no ícone de Compartilhar (quadrado com seta para cima) na barra inferior.' />
-              <Step n={2} text='Role para baixo e toque em "Adicionar à Tela de Início".' />
-              <Step n={3} text='Toque em "Adicionar" no canto superior direito.' />
-              <p className="text-[11px] text-[#555] mt-3">
-                Funciona apenas no Safari — outros navegadores no iPhone não suportam essa opção.
-              </p>
-            </div>
-          )}
+          <div className="bg-bg-2 border border-line rounded-xl p-5 space-y-3">
+            <div className="text-[10px] text-ink-3 font-[Sora] uppercase tracking-wider">Android / Chrome</div>
+            <Step n={1} text='No Chrome, toque nos três pontinhos no canto superior direito.' />
+            <Step n={2} text='Toque em "Instalar app" ou "Adicionar à tela inicial".' />
+            <Step n={3} text='Confirme tocando em "Instalar".' />
+          </div>
 
-          {platform === 'android' && (
-            <div className="space-y-3">
-              <Step n={1} text='No Chrome, toque nos três pontinhos no canto superior direito.' />
-              <Step n={2} text='Toque em "Instalar app" ou "Adicionar à tela inicial".' />
-              <Step n={3} text='Confirme tocando em "Instalar".' />
-            </div>
-          )}
-
-          {platform === 'desktop' && (
-            <div className="space-y-3">
-              <Step n={1} text='No Chrome ou Edge, clique no ícone de instalação que aparece na barra de endereço (geralmente um ícone de tela com seta).' />
-              <Step n={2} text='Clique em "Instalar".' />
-              <p className="text-[11px] text-[#555] mt-3">
-                Você também pode acessar pelo celular para instalar lá — escaneie ou
-                acesse app.jlmos.com.br no navegador do seu telefone.
-              </p>
-            </div>
-          )}
+          <div className="bg-bg-2 border border-line rounded-xl p-5 space-y-3">
+            <div className="text-[10px] text-ink-3 font-[Sora] uppercase tracking-wider">Desktop</div>
+            <Step n={1} text='No Chrome ou Edge, clique no ícone de instalação na barra de endereço (ícone de tela com seta).' />
+            <Step n={2} text='Clique em "Instalar".' />
+            <p className="text-[11px] text-ink-3 mt-1">Você também pode acessar pelo celular — acesse app.jlmos.com.br no navegador do seu telefone.</p>
+          </div>
         </div>
       )}
-
-      <button
-        onClick={handleLogout}
-        className="w-full flex items-center justify-center gap-2 rounded-input border border-red-400/30 text-red-400 hover:bg-red-400/08 transition-colors text-sm font-semibold"
-        style={{ minHeight: 48 }}
-      >
-        <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-          <path d="M9 3L4 8L9 13" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M4 8h9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-        </svg>
-        Sair da conta
-      </button>
 
       {showChangePw && <ChangePasswordModal onClose={() => setShowChangePw(false)} />}
     </div>

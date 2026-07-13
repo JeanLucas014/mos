@@ -424,7 +424,7 @@ export function GoalsPage() {
 
       {/* Area filter chips */}
       {!isLoading && presentAreas.length > 1 && (
-        <div className="flex gap-1.5 mt-4 mb-2 flex-wrap">
+        <div className="grid grid-cols-3 gap-1.5 mt-4 mb-2">
           {['todas', ...presentAreas].map(a => {
             const c = a === 'todas' ? '#0EA5E9' : aColor(a)
             const active = areaFilter === a

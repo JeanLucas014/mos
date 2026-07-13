@@ -154,7 +154,7 @@ export function HorizonteSaldos({ ano }: Props) {
                 fontSize: narrow ? 12 : 13, fontWeight: 700,
                 fontFamily: 'Sora, sans-serif',
                 background: isCur ? 'var(--blue)' : 'transparent',
-                color: isCur ? '#ffffff' : 'var(--text3)',
+                color: isCur ? 'var(--text)' : 'var(--text3)',
               }}>
                 {MONTHS[m.mi]}/{String(ano.ano).slice(2)}
               </div>
@@ -220,7 +220,7 @@ export function HorizonteSaldos({ ano }: Props) {
       </div>
 
       {/* Desktop — 12 meses, full width */}
-      <div className="hidden sm:block overflow-x-auto" style={{ borderRadius: 8, border: '1px solid #1a1a1a', width: '100%' }}>
+      <div className="hidden sm:block overflow-x-auto" style={{ borderRadius: 8, border: '1px solid var(--border)', width: '100%' }}>
         <Grid months={monthsData} narrow={false} />
       </div>
 

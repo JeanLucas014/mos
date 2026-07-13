@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Plus, Trash2, Pencil } from 'lucide-react'
 import type { FinMeta } from '../types'
@@ -71,19 +71,19 @@ export function MetasTab() {
       </div>
 
       {showForm && (
-        <div className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-4 space-y-3">
+        <div className="bg-bg-2 border border-line rounded-xl p-4 space-y-3">
           <div className="text-sm font-medium text-white">{editing ? 'Editar meta' : 'Nova meta'}</div>
           <input placeholder="Nome da meta" value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })}
-            className="w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60" />
+            className="w-full bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60" />
           <div className="flex gap-2">
             <input placeholder="Valor alvo" value={form.alvo} onChange={e => setForm({ ...form, alvo: e.target.value })}
-              className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums" />
+              className="flex-1 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums" />
             <input placeholder="Atual" value={form.atual} onChange={e => setForm({ ...form, atual: e.target.value })}
-              className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums" />
+              className="flex-1 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums" />
           </div>
           <div className="flex gap-2">
             <button onClick={() => { setShowForm(false); setEditing(null) }}
-              className="px-4 py-1.5 text-sm text-[#555] border border-[#1f1f1f] rounded-lg hover:text-white">Cancelar</button>
+              className="px-4 py-1.5 text-sm text-[#555] border border-line rounded-lg hover:text-white">Cancelar</button>
             <button onClick={save}
               className="flex-1 py-1.5 text-sm font-medium bg-[#0EA5E9] text-black rounded-lg hover:bg-[#38bdf8]">Salvar</button>
           </div>
@@ -93,7 +93,7 @@ export function MetasTab() {
       {metas.map(meta => {
         const pct = meta.alvo > 0 ? Math.min((meta.atual / meta.alvo) * 100, 100) : 0
         return (
-          <div key={meta.id} className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-4 group">
+          <div key={meta.id} className="bg-bg-2 border border-line rounded-xl p-4 group">
             <div className="flex items-start justify-between mb-3">
               <div>
                 <div className="text-sm font-medium text-white">{meta.nome}</div>
@@ -125,7 +125,7 @@ export function MetasTab() {
                 type="number"
                 defaultValue={meta.atual}
                 onBlur={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) updateAtual(meta, v) }}
-                className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-2 py-1 text-xs text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums"
+                className="flex-1 bg-bg border border-line rounded-lg px-2 py-1 text-xs text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums"
                 placeholder="Atualizar valor atual"
               />
             </div>

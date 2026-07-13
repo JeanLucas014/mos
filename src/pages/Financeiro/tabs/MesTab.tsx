@@ -1,4 +1,4 @@
-// src/pages/Financeiro/tabs/MesTab.tsx
+﻿// src/pages/Financeiro/tabs/MesTab.tsx
 // v2 — editar lançamentos, subitens em grupos, clique por coluna, nova cat rápida, cards de resumo
 
 import { useState, useEffect, useMemo } from 'react'
@@ -381,7 +381,7 @@ export function MesTab({ ano, initialMonth }: Props) {
           <select
             value={month}
             onChange={e => setMonth(Number(e.target.value))}
-            className="bg-[#111111] border border-[#1f1f1f] text-white text-sm rounded-lg px-3 py-1.5 outline-none focus:border-[#0EA5E9]/60"
+            className="bg-bg-2 border border-line text-white text-sm rounded-lg px-3 py-1.5 outline-none focus:border-[#0EA5E9]/60"
           >
             {MS_OPT.map((m, i) => <option key={i + 1} value={i + 1}>{m}</option>)}
           </select>
@@ -400,7 +400,7 @@ export function MesTab({ ano, initialMonth }: Props) {
             'flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border transition-colors',
             viewMode === 'calendario'
               ? 'border-[#0EA5E9]/50 text-[#0EA5E9]'
-              : 'border-[#1f1f1f] text-[#555] hover:text-white',
+              : 'border-line text-[#555] hover:text-white',
           ].join(' ')}
         >
           <CalendarDays size={12} /> Calendário
@@ -411,7 +411,7 @@ export function MesTab({ ano, initialMonth }: Props) {
             'flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border transition-colors',
             viewMode === 'extrato'
               ? 'border-[#0EA5E9]/50 text-[#0EA5E9]'
-              : 'border-[#1f1f1f] text-[#555] hover:text-white',
+              : 'border-line text-[#555] hover:text-white',
           ].join(' ')}
         >
           <List size={12} /> Extrato
@@ -426,7 +426,7 @@ export function MesTab({ ano, initialMonth }: Props) {
           { label: 'Diário',   value: totD, color: '#f97316' },
           { label: 'Resultado',value: res,  color: res >= 0 ? '#22c55e' : '#ef4444' },
         ].map(c => (
-          <div key={c.label} className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-3.5 relative">
+          <div key={c.label} className="bg-bg-2 border border-line rounded-xl p-3.5 relative">
             <span className="absolute top-3.5 right-3.5 w-2 h-2 rounded-full" style={{ background: c.color }} />
             <div className="text-[10px] text-[#555] uppercase tracking-wider font-[Sora] mb-1.5">{c.label}</div>
             <div className="text-sm font-bold tabular-nums" style={{ color: c.color }}>{BRL(c.value)}</div>
@@ -443,7 +443,7 @@ export function MesTab({ ano, initialMonth }: Props) {
               onClick={() => setMobileCol(col)}
               className={[
                 'flex-1 py-1.5 text-xs rounded-lg border transition-colors',
-                mobileCol === col ? 'border-[#0EA5E9]/50 text-[#0EA5E9]' : 'border-[#1f1f1f] text-[#555]',
+                mobileCol === col ? 'border-[#0EA5E9]/50 text-[#0EA5E9]' : 'border-line text-[#555]',
               ].join(' ')}
             >
               {col === 'entrada' ? 'Entrada' : col === 'saida' ? 'Saída' : 'Diário'}
@@ -477,7 +477,7 @@ export function MesTab({ ano, initialMonth }: Props) {
                   {/* ── Day row ── */}
                   <tr
                     key={`day-${d.dia}`}
-                    className={['border-t border-[#1f1f1f] group', isToday ? 'bg-[#0EA5E9]/5' : ''].join(' ')}
+                    className={['border-t border-line group', isToday ? 'bg-[#0EA5E9]/5' : ''].join(' ')}
                   >
                     {/* Dia */}
                     <td className="py-2.5 px-2">
@@ -639,7 +639,7 @@ export function MesTab({ ano, initialMonth }: Props) {
           onClick={() => setAddingToDay(null)}
         >
           <div
-            className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-5 w-full max-w-sm max-h-[90vh] overflow-y-auto"
+            className="bg-bg-2 border border-line rounded-xl p-5 w-full max-w-sm max-h-[90vh] overflow-y-auto"
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
@@ -932,7 +932,7 @@ function MobileItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDele
 
   return (
     <>
-      <div className="flex items-center gap-2 py-2 border-t border-[#1f1f1f]/60" style={{ paddingLeft: pl }}>
+      <div className="flex items-center gap-2 py-2 border-t border-line/60" style={{ paddingLeft: pl }}>
         {node.is_grupo ? (
           <button onClick={() => toggleItem(node.id)} className="text-[#444] shrink-0">
             {isExpanded ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
@@ -1115,7 +1115,7 @@ function EditModal({ item, categorias, cartoes, onSave, onClose }: EditModalProp
       onClick={onClose}
     >
       <div
-        className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-5 w-full max-w-sm space-y-3.5"
+        className="bg-bg-2 border border-line rounded-xl p-5 w-full max-w-sm space-y-3.5"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -1131,7 +1131,7 @@ function EditModal({ item, categorias, cartoes, onSave, onClose }: EditModalProp
           value={form.nome}
           onChange={e => set('nome', e.target.value)}
           placeholder="Nome"
-          className="w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#0EA5E9]/60"
+          className="w-full bg-bg border border-line rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#0EA5E9]/60"
         />
 
         {/* Data */}
@@ -1141,7 +1141,7 @@ function EditModal({ item, categorias, cartoes, onSave, onClose }: EditModalProp
             type="date"
             value={form.data}
             onChange={e => set('data', e.target.value)}
-            className="w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#0EA5E9]/60"
+            className="w-full bg-bg border border-line rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#0EA5E9]/60"
           />
         </div>
 
@@ -1149,7 +1149,7 @@ function EditModal({ item, categorias, cartoes, onSave, onClose }: EditModalProp
           value={form.valor}
           onChange={e => set('valor', e.target.value)}
           placeholder="Valor"
-          className="w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums"
+          className="w-full bg-bg border border-line rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums"
         />
 
         {/* Natureza (somente raízes) */}
@@ -1163,7 +1163,7 @@ function EditModal({ item, categorias, cartoes, onSave, onClose }: EditModalProp
                   onClick={() => set('natureza', n)}
                   className={[
                     'flex-1 py-1.5 text-xs rounded-lg border transition-colors',
-                    form.natureza === n ? 'border-[#0EA5E9]/50 text-[#0EA5E9]' : 'border-[#1f1f1f] text-[#555] hover:text-white',
+                    form.natureza === n ? 'border-[#0EA5E9]/50 text-[#0EA5E9]' : 'border-line text-[#555] hover:text-white',
                   ].join(' ')}
                 >
                   {n === 'entrada' ? 'Entrada' : n === 'saida' ? 'Saída' : 'Diário'}
@@ -1184,7 +1184,7 @@ function EditModal({ item, categorias, cartoes, onSave, onClose }: EditModalProp
                   onClick={() => set('saida_tipo', t)}
                   className={[
                     'flex-1 py-1.5 text-xs rounded-lg border transition-colors',
-                    form.saida_tipo === t ? 'border-[#a78bfa]/50 text-[#a78bfa]' : 'border-[#1f1f1f] text-[#555] hover:text-white',
+                    form.saida_tipo === t ? 'border-[#a78bfa]/50 text-[#a78bfa]' : 'border-line text-[#555] hover:text-white',
                   ].join(' ')}
                 >
                   {t === 'fixa' ? 'Fixa' : 'Cartão'}
@@ -1199,7 +1199,7 @@ function EditModal({ item, categorias, cartoes, onSave, onClose }: EditModalProp
           <select
             value={form.cartao_id}
             onChange={e => set('cartao_id', e.target.value)}
-            className="w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-2 text-sm text-white outline-none"
+            className="w-full bg-bg border border-line rounded-lg px-3 py-2 text-sm text-white outline-none"
           >
             <option value="">Selecione o cartão</option>
             {cartoes.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
@@ -1211,7 +1211,7 @@ function EditModal({ item, categorias, cartoes, onSave, onClose }: EditModalProp
           <select
             value={form.categoria_id}
             onChange={e => set('categoria_id', e.target.value)}
-            className="w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-2 text-sm text-white outline-none"
+            className="w-full bg-bg border border-line rounded-lg px-3 py-2 text-sm text-white outline-none"
           >
             <option value="">Sem categoria</option>
             {filteredCats.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
@@ -1222,7 +1222,7 @@ function EditModal({ item, categorias, cartoes, onSave, onClose }: EditModalProp
         <div className="flex gap-2 pt-1">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-[#555] border border-[#1f1f1f] rounded-lg hover:text-white transition-colors"
+            className="px-4 py-2 text-sm text-[#555] border border-line rounded-lg hover:text-white transition-colors"
           >
             Cancelar
           </button>
@@ -1331,13 +1331,13 @@ function AddPanel({
               value={newCatNome}
               onChange={e => setNewCatNome(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && saveNewCat()}
-              className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-2 py-1 text-xs text-white outline-none focus:border-[#0EA5E9]/60"
+              className="flex-1 bg-bg border border-line rounded-lg px-2 py-1 text-xs text-white outline-none focus:border-[#0EA5E9]/60"
             />
             <input
               type="color"
               value={newCatCor}
               onChange={e => setNewCatCor(e.target.value)}
-              className="w-9 h-7 bg-[#0a0a0a] border border-[#1f1f1f] rounded cursor-pointer p-0.5"
+              className="w-9 h-7 bg-bg border border-line rounded cursor-pointer p-0.5"
             />
             <button
               onClick={saveNewCat}
@@ -1363,7 +1363,7 @@ function AddPanel({
                 'px-2.5 py-1 text-xs rounded-lg border transition-colors',
                 !cat.cor && (quickCat?.id === cat.id
                   ? 'border-[#0EA5E9]/50 text-[#0EA5E9]'
-                  : 'border-[#1f1f1f] text-[#666] hover:text-white'),
+                  : 'border-line text-[#666] hover:text-white'),
               ].join(' ')}
             >
               {cat.nome}
@@ -1379,14 +1379,14 @@ function AddPanel({
               value={quickNome}
               onChange={e => setQuickNome(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && fireQuick()}
-              className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60"
+              className="flex-1 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60"
             />
             <input
               placeholder="R$ 0,00"
               value={quickValor}
               onChange={e => setQuickValor(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && fireQuick()}
-              className="w-28 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums"
+              className="w-28 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums"
               autoFocus
             />
             <button
@@ -1401,7 +1401,7 @@ function AddPanel({
       </div>
 
       {/* ── Full form ── */}
-      <div className="border-t border-[#1f1f1f] pt-4">
+      <div className="border-t border-line pt-4">
         <div className="text-[10px] text-[#555] uppercase tracking-wider mb-3">
           {form.parent_id ? '↳ Subitem do grupo' : 'Lançamento'}
         </div>
@@ -1415,7 +1415,7 @@ function AddPanel({
                 onClick={() => set('natureza', n)}
                 className={[
                   'flex-1 py-1.5 text-xs rounded-lg border transition-colors',
-                  form.natureza === n ? 'border-[#0EA5E9]/50 text-[#0EA5E9]' : 'border-[#1f1f1f] text-[#555] hover:text-white',
+                  form.natureza === n ? 'border-[#0EA5E9]/50 text-[#0EA5E9]' : 'border-line text-[#555] hover:text-white',
                 ].join(' ')}
               >
                 {n === 'entrada' ? 'Entrada' : n === 'saida' ? 'Saída' : 'Diário'}
@@ -1433,7 +1433,7 @@ function AddPanel({
                 onClick={() => set('saida_tipo', t)}
                 className={[
                   'flex-1 py-1.5 text-xs rounded-lg border transition-colors',
-                  form.saida_tipo === t ? 'border-[#a78bfa]/50 text-[#a78bfa]' : 'border-[#1f1f1f] text-[#555] hover:text-white',
+                  form.saida_tipo === t ? 'border-[#a78bfa]/50 text-[#a78bfa]' : 'border-line text-[#555] hover:text-white',
                 ].join(' ')}
               >
                 {t === 'fixa' ? 'Fixa' : 'Cartão'}
@@ -1447,7 +1447,7 @@ function AddPanel({
           <select
             value={form.cartao_id}
             onChange={e => set('cartao_id', e.target.value)}
-            className="w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none mb-2"
+            className="w-full bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none mb-2"
           >
             <option value="">Selecione o cartão</option>
             {cartoes.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
@@ -1462,7 +1462,7 @@ function AddPanel({
             onChange={e => set('nome', e.target.value)}
             onKeyDown={e => e.key === 'Enter' && onAdd()}
             autoFocus
-            className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60"
+            className="flex-1 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60"
           />
           {!form.is_grupo && (
             <input
@@ -1470,7 +1470,7 @@ function AddPanel({
               value={form.valor}
               onChange={e => set('valor', e.target.value)}
               onKeyDown={e => e.key === 'Enter' && onAdd()}
-              className="w-28 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums"
+              className="w-28 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums"
             />
           )}
         </div>
@@ -1480,7 +1480,7 @@ function AddPanel({
           <select
             value={form.categoria_id}
             onChange={e => set('categoria_id', e.target.value)}
-            className="w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none mb-2"
+            className="w-full bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none mb-2"
           >
             <option value="">Sem categoria</option>
             {categorias.filter(c => c.natureza === form.natureza).map(c => (
@@ -1501,7 +1501,7 @@ function AddPanel({
         </label>
 
         {/* Recorrência */}
-        <div className="border-t border-[#1f1f1f] pt-3 mb-3">
+        <div className="border-t border-line pt-3 mb-3">
           <label className="flex items-center gap-2 text-xs text-[#555] cursor-pointer select-none">
             <input
               type="checkbox"
@@ -1523,7 +1523,7 @@ function AddPanel({
                       'flex-1 py-1.5 text-xs rounded-lg border transition-colors',
                       form.repeticao_freq === f
                         ? 'border-[#0EA5E9]/50 text-[#0EA5E9]'
-                        : 'border-[#1f1f1f] text-[#555] hover:text-white',
+                        : 'border-line text-[#555] hover:text-white',
                     ].join(' ')}
                   >
                     {f === 'mensal' ? 'Mensal' : f === 'quinzenal' ? 'Quinzenal' : 'Semanal'}
@@ -1538,7 +1538,7 @@ function AddPanel({
                   onChange={e => set('repeticao_ate', e.target.value)}
                   min={`${anoAno}-01-01`}
                   max={`${anoAno}-12-31`}
-                  className="w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60"
+                  className="w-full bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60"
                 />
               </div>
             </div>
@@ -1549,7 +1549,7 @@ function AddPanel({
         <div className="flex gap-2">
           <button
             onClick={onCancel}
-            className="px-4 py-1.5 text-sm text-[#555] border border-[#1f1f1f] rounded-lg hover:text-white transition-colors"
+            className="px-4 py-1.5 text-sm text-[#555] border border-line rounded-lg hover:text-white transition-colors"
           >
             Cancelar
           </button>

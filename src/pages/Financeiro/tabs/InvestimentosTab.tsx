@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+﻿import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
 import {
   Plus, RefreshCw, TrendingUp, TrendingDown,
@@ -160,7 +160,7 @@ function InvestimentoModal({
   const isVariavel = ['acoes', 'fiis', 'etfs'].includes(form.tipo ?? '')
 
   const inp =
-    'w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#0EA5E9]/60 transition-colors'
+    'w-full bg-bg border border-line rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#0EA5E9]/60 transition-colors'
   const lbl = 'block text-[11px] text-[#555] uppercase tracking-wider mb-1'
 
   function upd<K extends keyof Investimento>(k: K, v: Investimento[K]) {
@@ -180,11 +180,11 @@ function InvestimentoModal({
       onClick={onClose}
     >
       <div
-        className="bg-[#111111] border border-[#1f1f1f] rounded-t-2xl sm:rounded-2xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto flex flex-col"
+        className="bg-bg-2 border border-line rounded-t-2xl sm:rounded-2xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto flex flex-col"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#1f1f1f] sticky top-0 bg-[#111111]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-line sticky top-0 bg-bg-2">
           <span className="text-sm font-semibold font-[Sora] text-white">
             {isEdit ? 'Editar ativo' : 'Novo ativo'}
           </span>
@@ -288,7 +288,7 @@ function InvestimentoModal({
           {/* Renda Fixa */}
           {isRF && (
             <>
-              <div className="border-t border-[#1f1f1f] pt-3">
+              <div className="border-t border-line pt-3">
                 <div className="text-[11px] text-[#0EA5E9] uppercase tracking-wider mb-3">
                   Dados da aplicação
                 </div>
@@ -385,7 +385,7 @@ function InvestimentoModal({
 
           {/* Renda Variável */}
           {isVariavel && (
-            <div className="border-t border-[#1f1f1f] pt-3">
+            <div className="border-t border-line pt-3">
               <div className="text-[11px] text-[#0EA5E9] uppercase tracking-wider mb-3">
                 Posição atual
               </div>
@@ -450,7 +450,7 @@ function InvestimentoModal({
 
           {/* Cripto e Fundos */}
           {(form.tipo === 'cripto' || form.tipo === 'fundos' || form.tipo === 'outros') && (
-            <div className="border-t border-[#1f1f1f] pt-3">
+            <div className="border-t border-line pt-3">
               <div className="text-[11px] text-[#0EA5E9] uppercase tracking-wider mb-3">
                 Posição
               </div>
@@ -493,10 +493,10 @@ function InvestimentoModal({
         </div>
 
         {/* Footer */}
-        <div className="flex gap-2 px-5 py-4 border-t border-[#1f1f1f] sticky bottom-0 bg-[#111111]">
+        <div className="flex gap-2 px-5 py-4 border-t border-line sticky bottom-0 bg-bg-2">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-[#555] border border-[#1f1f1f] rounded-xl hover:text-white"
+            className="px-4 py-2 text-sm text-[#555] border border-line rounded-xl hover:text-white"
           >
             Cancelar
           </button>
@@ -526,7 +526,7 @@ function SimuladorTab({ taxas }: { taxas: Taxa[] }) {
   const [percentualCDI, setPercentualCDI] = useState('115')
 
   const inp =
-    'w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#0EA5E9]/60'
+    'w-full bg-bg border border-line rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#0EA5E9]/60'
 
   const resultado = useMemo(() => {
     const VI  = parseFloat(valorInicial) || 0
@@ -572,7 +572,7 @@ function SimuladorTab({ taxas }: { taxas: Taxa[] }) {
 
   return (
     <div className="space-y-5">
-      <div className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-5 space-y-4">
+      <div className="bg-bg-2 border border-line rounded-xl p-5 space-y-4">
         <div className="text-xs text-[#555] uppercase tracking-wider font-[Sora]">Parâmetros</div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -672,7 +672,7 @@ function SimuladorTab({ taxas }: { taxas: Taxa[] }) {
           { label: 'Total aportado',  value: BRL(resultado.totalAportado), color: 'var(--text2)' },
           { label: 'Rendimento',      value: BRL(resultado.rendimento),    color: '#22c55e' },
         ].map((c, i) => (
-          <div key={i} className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-4">
+          <div key={i} className="bg-bg-2 border border-line rounded-xl p-4">
             <div className="text-[11px] text-[#555] uppercase tracking-wider mb-1">{c.label}</div>
             <div
               className="text-xl font-bold tabular-nums"
@@ -684,7 +684,7 @@ function SimuladorTab({ taxas }: { taxas: Taxa[] }) {
         ))}
       </div>
 
-      <div className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-4 text-center text-xs text-[#555]">
+      <div className="bg-bg-2 border border-line rounded-xl p-4 text-center text-xs text-[#555]">
         Taxa efetiva:{' '}
         <span className="text-white font-medium">
           {resultado.taxaAnual.toFixed(2)}% a.a.
@@ -801,7 +801,7 @@ export function InvestimentosTab() {
   return (
     <div className="space-y-4 font-[Manrope]">
       {/* Sub-abas */}
-      <div className="flex gap-1 border-b border-[#1f1f1f] mb-4">
+      <div className="flex gap-1 border-b border-line mb-4">
         {([
           { id: 'carteira',  label: 'Carteira'  },
           { id: 'simulador', label: 'Simulador'  },
@@ -846,7 +846,7 @@ export function InvestimentosTab() {
                 sub: BRL(patrimonioTotal - totalAplicado) + ' em ganhos',
               },
             ].map((c, i) => (
-              <div key={i} className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-4">
+              <div key={i} className="bg-bg-2 border border-line rounded-xl p-4">
                 <div className="text-[11px] text-[#555] uppercase tracking-wider mb-1">{c.label}</div>
                 <div
                   className="text-xl font-bold tabular-nums"
@@ -861,7 +861,7 @@ export function InvestimentosTab() {
 
           {/* Gráfico de alocação */}
           {pieData.length > 0 && (
-            <div className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-4">
+            <div className="bg-bg-2 border border-line rounded-xl p-4">
               <div className="text-xs text-[#555] uppercase tracking-wider font-[Sora] mb-3">
                 Alocação por classe
               </div>
@@ -943,7 +943,7 @@ export function InvestimentosTab() {
               return (
                 <div
                   key={tipo}
-                  className="bg-[#111111] border border-[#1f1f1f] rounded-xl overflow-hidden"
+                  className="bg-bg-2 border border-line rounded-xl overflow-hidden"
                 >
                   <button
                     onClick={() => toggleCollapse(tipo)}
@@ -969,7 +969,7 @@ export function InvestimentosTab() {
                   </button>
 
                   {isOpen && (
-                    <div className="border-t border-[#1f1f1f]">
+                    <div className="border-t border-line">
                       {ativos.map(inv => {
                         const isRF =
                           inv.tipo === 'renda_fixa' || inv.tipo === 'previdencia'
@@ -984,7 +984,7 @@ export function InvestimentosTab() {
                         return (
                           <div
                             key={inv.id}
-                            className="group flex items-start gap-3 px-4 py-3 border-b border-[#1a1a1a] last:border-0 hover:bg-[#141414] transition-colors"
+                            className="group flex items-start gap-3 px-4 py-3 border-b border-line last:border-0 hover:bg-[#141414] transition-colors"
                           >
                             <div
                               className="w-1.5 h-8 rounded-full shrink-0 mt-0.5"
@@ -1141,7 +1141,7 @@ export function InvestimentosTab() {
             {taxas.map(t => (
               <div
                 key={t.indicador}
-                className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-4"
+                className="bg-bg-2 border border-line rounded-xl p-4"
               >
                 <div className="text-xs text-[#555] mb-1">{t.indicador}</div>
                 <div

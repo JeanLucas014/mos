@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Plus, Inbox, Sun, Calendar, FolderOpen, ChevronDown, ChevronRight, History, Settings } from 'lucide-react'
+import { Plus, Inbox, Sun, Calendar, CalendarDays, FolderOpen, ChevronDown, ChevronRight, History, Settings } from 'lucide-react'
 import type { Task, TaskProject, ViewId } from './types'
 import { TaskItem } from './components/TaskItem'
 import { TaskModal } from './components/TaskModal'
@@ -48,7 +48,10 @@ export default function TarefasPage() {
     })()
     const pendingTasks = tasks.filter(t => !t.parent_id && !t.completed_at)
     switch (view) {
-      case 'inbox':     return pendingTasks.filter(t => !t.project_id)
+      case 'inbox': {
+        const todayTasks = pendingTasks.filter(t => t.due_date === todayStr)
+        return todayTasks.length > 0 ? todayTasks : pendingTasks.filter(t => !t.due_date)
+      }
       case 'hoje':      return pendingTasks.filter(t => t.due_date != null && t.due_date <= todayStr)
       case 'proximos7': return pendingTasks.filter(t => t.due_date != null && t.due_date <= t7)
       case 'historico': return [...tasks.filter(t => !!t.completed_at && !t.parent_id)]
@@ -124,7 +127,7 @@ export default function TarefasPage() {
   }
 
   const viewLabel = (() => {
-    if (viewId === 'inbox')      return 'Inbox'
+    if (viewId === 'inbox')      return 'Hoje'
     if (viewId === 'hoje')       return 'Hoje'
     if (viewId === 'proximos7')  return 'Próximos 7 dias'
     if (viewId === 'historico')  return 'Histórico'
@@ -138,7 +141,7 @@ export default function TarefasPage() {
   const t7Str = (() => { const d = new Date(); d.setDate(d.getDate() + 7); return d.toISOString().slice(0, 10) })()
 
   const NAV_VIEWS: { id: ViewId; label: string; icon: React.ReactNode; count: number }[] = [
-    { id: 'inbox',     label: 'Inbox',          icon: <Inbox size={14} />,    count: tasks.filter(t => !t.parent_id && !t.completed_at && !t.project_id && !t.due_date).length },
+    { id: 'inbox',     label: 'Hoje',            icon: <CalendarDays size={14} />, count: tasks.filter(t => !t.parent_id && !t.completed_at && t.due_date === todayStr).length || tasks.filter(t => !t.parent_id && !t.completed_at && !t.due_date).length },
     { id: 'hoje',      label: 'Hoje',            icon: <Sun size={14} />,      count: tasks.filter(t => !t.parent_id && !t.completed_at && t.due_date != null && t.due_date <= todayStr).length },
     { id: 'proximos7', label: 'Próximos 7 dias', icon: <Calendar size={14} />, count: tasks.filter(t => !t.parent_id && !t.completed_at && t.due_date != null && t.due_date <= t7Str).length },
     { id: 'historico', label: 'Histórico',       icon: <History size={14} />,  count: tasks.filter(t => !!t.completed_at && !t.parent_id).length },
@@ -360,7 +363,7 @@ export default function TarefasPage() {
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#0a0a0a] border-t border-[#1f1f1f] flex"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
         {[
-          { id: 'inbox',     label: 'Inbox',  Icon: Inbox    },
+          { id: 'inbox',     label: 'Hoje',   Icon: CalendarDays },
           { id: 'hoje',      label: 'Hoje',   Icon: Sun      },
           { id: 'proximos7', label: '7 dias', Icon: Calendar },
           { id: 'projetos',  label: 'Projetos', Icon: FolderOpen },

@@ -14,12 +14,6 @@ export function NotesPage() {
   const selected = (notes ?? []).find((n) => n.id === selectedId)
 
   useEffect(() => {
-    if (notes?.length && !selectedId) {
-      setSelectedId(notes[0].id)
-    }
-  }, [notes, selectedId])
-
-  useEffect(() => {
     if (selected) {
       setBody(selected.body)
       setTitle(selected.title)
