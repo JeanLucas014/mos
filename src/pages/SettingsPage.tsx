@@ -698,15 +698,19 @@ export default function SettingsPage() {
       </div>
 
       {/* Tab bar */}
-      <div className="flex gap-1 border-b border-[#1f1f1f]">
+      <div className="flex w-full border-b border-line mb-6">
         {TABS.map(t => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className="px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors"
+            className="flex-1 py-2.5 text-xs font-semibold transition-colors border-b-2"
             style={{
-              color: tab === t.id ? '#0EA5E9' : 'var(--text3)',
-              borderColor: tab === t.id ? '#0EA5E9' : 'transparent',
+              borderColor: tab === t.id ? '#0ea5e9' : 'transparent',
+              color: tab === t.id ? '#0ea5e9' : 'var(--text3)',
+              background: 'none',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              marginBottom: -1,
             }}
           >
             {t.label}
@@ -770,10 +774,22 @@ export default function SettingsPage() {
         {isAdmin && <AdminSection />}
         <button
           onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 rounded-input border border-red-400/30 text-red-400 hover:bg-red-400/08 transition-colors text-sm font-semibold"
-          style={{ minHeight: 48 }}
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+            fontSize: 12,
+            color: '#ef4444',
+            padding: '0 12px',
+            height: 32,
+            borderRadius: 8,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+          }}
         >
-          <LogOut size={15} />
+          <LogOut size={13} />
           Sair da conta
         </button>
         </>
