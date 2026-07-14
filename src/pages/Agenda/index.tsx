@@ -140,7 +140,7 @@ export default function AgendaPage() {
       if (instanceDate) {
         // Add EXDATE to parent to skip this occurrence
         const { data: parent } = await (supabase as any)
-          .from('calendar_events').select('recurrence_rule').eq('id', originalId).single()
+          .from('calendar_events').select('recurrence_rule').eq('id', originalId).maybeSingle()
         if (parent) {
           const dateKey = instanceDate.replace(/-/g, '')
           const newRule = addExdate(parent.recurrence_rule, dateKey)
@@ -157,7 +157,7 @@ export default function AgendaPage() {
         until.setDate(until.getDate() - 1)
         const untilStr = until.toISOString().slice(0, 10).replace(/-/g, '') + 'T235959Z'
         const { data: parent } = await (supabase as any)
-          .from('calendar_events').select('recurrence_rule').eq('id', originalId).single()
+          .from('calendar_events').select('recurrence_rule').eq('id', originalId).maybeSingle()
         if (parent) {
           const rule = (parent.recurrence_rule ?? '')
             .split(';').filter((p: string) => !p.startsWith('UNTIL')).join(';')
@@ -204,7 +204,7 @@ export default function AgendaPage() {
       await (supabase as any).from('calendar_events').insert({ ...payload, recurrence_rule: null })
       if (originalId && instanceDate) {
         const { data: parent } = await (supabase as any)
-          .from('calendar_events').select('recurrence_rule').eq('id', originalId).single()
+          .from('calendar_events').select('recurrence_rule').eq('id', originalId).maybeSingle()
         if (parent) {
           const dateKey = instanceDate.replace(/-/g, '')
           const newRule = addExdate(parent.recurrence_rule, dateKey)
@@ -220,7 +220,7 @@ export default function AgendaPage() {
         until.setDate(until.getDate() - 1)
         const untilStr = until.toISOString().slice(0, 10).replace(/-/g, '') + 'T235959Z'
         const { data: parent } = await (supabase as any)
-          .from('calendar_events').select('recurrence_rule').eq('id', originalId).single()
+          .from('calendar_events').select('recurrence_rule').eq('id', originalId).maybeSingle()
         if (parent) {
           const rule = (parent.recurrence_rule ?? '')
             .split(';').filter((p: string) => !p.startsWith('UNTIL')).join(';')

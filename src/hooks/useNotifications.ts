@@ -43,7 +43,7 @@ export function useNotificationPrefs() {
         .from('user_settings') as any)
         .select('notification_prefs')
         .eq('user_id', user!.id)
-        .single()
+        .maybeSingle()
       if (error) throw error
       return (data?.notification_prefs as NotificationPrefs) ?? DEFAULT_PREFS
     },

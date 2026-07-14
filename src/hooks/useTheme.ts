@@ -17,7 +17,7 @@ export function useTheme() {
         .from('user_settings') as any)
         .select('theme')
         .eq('user_id', user.id)
-        .single()
+        .maybeSingle()
       return (data?.theme as ThemeOption) ?? 'system'
     },
     enabled: !!user,
