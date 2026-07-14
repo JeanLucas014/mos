@@ -2,7 +2,6 @@
 // v2 — editar lançamentos, subitens em grupos, clique por coluna, nova cat rápida, cards de resumo
 
 import { useState, useEffect } from 'react'
-import { createPortal } from 'react-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
@@ -16,6 +15,8 @@ import { MS_FULL, MS_OPT, BRL, daysInMonth, buildTree, sumLeaves } from './utils
 import { defaultForm, type AddForm } from './types'
 import { EditModal, type EditFormState } from './components/EditModal'
 import { AddPanel } from './components/AddPanel'
+import { ConfirmPagamentoPopup } from './components/ConfirmPagamentoPopup'
+import { useConfirmPopup } from './hooks/useConfirmPopup'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MesTab (main)
@@ -649,15 +650,7 @@ function ItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDelete, on
   const natColor   = node.natureza === 'entrada' ? '#22c55e' : node.natureza === 'saida' ? '#ef4444' : '#f97316'
   const pl         = 8 + depth * 20
   const isSaida    = node.natureza === 'saida'
-  const [showConfirm, setShowConfirm] = useState(false)
-  const [confirmPos, setConfirmPos]   = useState({ x: 0, y: 0 })
-
-  useEffect(() => {
-    if (!showConfirm) return
-    function handle() { setShowConfirm(false) }
-    document.addEventListener('click', handle)
-    return () => document.removeEventListener('click', handle)
-  }, [showConfirm])
+  const confirmPopup = useConfirmPopup()
 
   return (
     <>
@@ -677,7 +670,7 @@ function ItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDelete, on
         <td
           className="py-1.5 px-2 text-xs text-[#aaa]"
           colSpan={3}
-          onClick={isSaida ? (e) => { e.stopPropagation(); setConfirmPos({ x: e.clientX, y: e.clientY }); setShowConfirm(true) } : undefined}
+          onClick={isSaida ? (e) => { e.stopPropagation(); confirmPopup.open(e) } : undefined}
           style={isSaida ? { cursor: 'pointer' } : undefined}
         >
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
@@ -763,53 +756,13 @@ function ItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDelete, on
         </td>
       </tr>
 
-      {showConfirm && createPortal(
-        <div
-          style={{
-            position: 'fixed',
-            top: Math.max(10, confirmPos.y - 70),
-            left: Math.min(confirmPos.x - 20, window.innerWidth - 260),
-            background: '#1a1a1a',
-            border: '1px solid #1f1f1f',
-            borderRadius: 12,
-            padding: '14px 16px',
-            boxShadow: '0 8px 32px rgba(0,0,0,.5)',
-            zIndex: 200,
-            minWidth: 220,
-          }}
-          onClick={e => e.stopPropagation()}
-        >
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#e5e5e5', marginBottom: 10 }}>
-            {node.pago ? 'Marcar como pendente?' : 'Confirmar pagamento?'}
-          </div>
-          <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 12 }}>
-            {node.nome} — {BRL(node.valor ?? 0)}
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button
-              onClick={async () => { await onTogglePago(node.id, !node.pago); setShowConfirm(false) }}
-              style={{
-                flex: 1, padding: '7px 0', borderRadius: 8, border: 'none',
-                background: node.pago ? '#2a1210' : '#0d2818',
-                color: node.pago ? '#f87171' : '#4ade80',
-                fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-              }}
-            >
-              {node.pago ? 'Marcar pendente' : 'Confirmar pago'}
-            </button>
-            <button
-              onClick={() => setShowConfirm(false)}
-              style={{
-                padding: '7px 12px', borderRadius: 8,
-                border: '1px solid #262626', background: 'transparent',
-                color: '#4b5563', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
-              }}
-            >
-              Cancelar
-            </button>
-          </div>
-        </div>,
-        document.body
+      {confirmPopup.showConfirm && (
+        <ConfirmPagamentoPopup
+          node={node}
+          position={confirmPopup.confirmPos}
+          onConfirm={async () => { await onTogglePago(node.id, !node.pago); confirmPopup.close() }}
+          onClose={confirmPopup.close}
+        />
       )}
 
       {/* Children */}
@@ -861,15 +814,7 @@ function MobileItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDele
   const natColor   = node.natureza === 'entrada' ? '#22c55e' : node.natureza === 'saida' ? '#ef4444' : '#f97316'
   const pl         = depth * 14
   const isSaida    = node.natureza === 'saida'
-  const [showConfirm, setShowConfirm] = useState(false)
-  const [confirmPos, setConfirmPos]   = useState({ x: 0, y: 0 })
-
-  useEffect(() => {
-    if (!showConfirm) return
-    function handle() { setShowConfirm(false) }
-    document.addEventListener('click', handle)
-    return () => document.removeEventListener('click', handle)
-  }, [showConfirm])
+  const confirmPopup = useConfirmPopup()
 
   return (
     <>
@@ -883,7 +828,7 @@ function MobileItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDele
         )}
         <span
           className="flex-1 text-xs text-[#aaa] truncate"
-          onClick={isSaida ? (e) => { e.stopPropagation(); setConfirmPos({ x: e.clientX, y: e.clientY }); setShowConfirm(true) } : undefined}
+          onClick={isSaida ? (e) => { e.stopPropagation(); confirmPopup.open(e) } : undefined}
           style={isSaida ? { cursor: 'pointer' } : undefined}
         >
           {node.pago && (
@@ -935,53 +880,13 @@ function MobileItemRows({ node, depth, expandedItems, toggleItem, onEdit, onDele
         </div>
       </div>
 
-      {showConfirm && createPortal(
-        <div
-          style={{
-            position: 'fixed',
-            top: Math.max(10, confirmPos.y - 70),
-            left: Math.min(confirmPos.x - 20, window.innerWidth - 260),
-            background: '#1a1a1a',
-            border: '1px solid #1f1f1f',
-            borderRadius: 12,
-            padding: '14px 16px',
-            boxShadow: '0 8px 32px rgba(0,0,0,.5)',
-            zIndex: 200,
-            minWidth: 220,
-          }}
-          onClick={e => e.stopPropagation()}
-        >
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#e5e5e5', marginBottom: 10 }}>
-            {node.pago ? 'Marcar como pendente?' : 'Confirmar pagamento?'}
-          </div>
-          <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 12 }}>
-            {node.nome} — {BRL(node.valor ?? 0)}
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button
-              onClick={async () => { await onTogglePago(node.id, !node.pago); setShowConfirm(false) }}
-              style={{
-                flex: 1, padding: '7px 0', borderRadius: 8, border: 'none',
-                background: node.pago ? '#2a1210' : '#0d2818',
-                color: node.pago ? '#f87171' : '#4ade80',
-                fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-              }}
-            >
-              {node.pago ? 'Marcar pendente' : 'Confirmar pago'}
-            </button>
-            <button
-              onClick={() => setShowConfirm(false)}
-              style={{
-                padding: '7px 12px', borderRadius: 8,
-                border: '1px solid #262626', background: 'transparent',
-                color: '#4b5563', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
-              }}
-            >
-              Cancelar
-            </button>
-          </div>
-        </div>,
-        document.body
+      {confirmPopup.showConfirm && (
+        <ConfirmPagamentoPopup
+          node={node}
+          position={confirmPopup.confirmPos}
+          onConfirm={async () => { await onTogglePago(node.id, !node.pago); confirmPopup.close() }}
+          onClose={confirmPopup.close}
+        />
       )}
 
       {isExpanded && node.children.map(child => (
