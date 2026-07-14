@@ -1,4 +1,4 @@
-﻿// src/pages/Financeiro/tabs/MesTab.tsx
+// src/pages/Financeiro/tabs/MesTab/index.tsx
 // v2 — editar lançamentos, subitens em grupos, clique por coluna, nova cat rápida, cards de resumo
 
 import { useState, useEffect, useMemo } from 'react'
@@ -7,74 +7,13 @@ import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { Plus, ChevronDown, ChevronRight, Trash2, Pencil, X, CalendarDays, List } from 'lucide-react'
-import { ExtratoView } from './ExtratoView'
+import { ExtratoView } from '../ExtratoView'
 import type {
   FinAno, FinLancamento, FinLancamentoTree,
   FinCategoria, FinCartao, DiaTotais, Natureza, SaidaTipo,
-} from '../types'
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Utils
-// ─────────────────────────────────────────────────────────────────────────────
-
-const MS_FULL = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
-const MS_OPT  = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
-const BRL = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-
-function daysInMonth(year: number, month: number) {
-  return new Date(year, month, 0).getDate()
-}
-
-function buildTree(items: FinLancamento[]): FinLancamentoTree[] {
-  const map = new Map<string, FinLancamentoTree>()
-  for (const item of items) map.set(item.id, { ...item, children: [], valorTotal: 0 })
-  const roots: FinLancamentoTree[] = []
-  for (const node of map.values()) {
-    if (node.parent_id && map.has(node.parent_id)) {
-      map.get(node.parent_id)!.children.push(node)
-    } else {
-      roots.push(node)
-    }
-  }
-  function calc(node: FinLancamentoTree): number {
-    if (!node.is_grupo) { node.valorTotal = node.valor ?? 0; return node.valorTotal }
-    node.valorTotal = node.children.reduce((s, c) => s + calc(c), 0)
-    return node.valorTotal
-  }
-  roots.forEach(calc)
-  return roots
-}
-
-function sumLeaves(node: FinLancamentoTree): number {
-  if (!node.is_grupo) return node.valor ?? 0
-  return node.children.reduce((s, c) => s + sumLeaves(c), 0)
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// AddForm type
-// ─────────────────────────────────────────────────────────────────────────────
-
-interface AddForm {
-  natureza: Natureza
-  saida_tipo: SaidaTipo
-  nome: string
-  valor: string
-  categoria_id: string
-  cartao_id: string
-  is_grupo: boolean
-  parent_id: string | null
-  repetir: boolean
-  repeticao_freq: 'mensal' | 'quinzenal' | 'semanal'
-  repeticao_ate: string
-}
-
-function defaultForm(nat: Natureza = 'diario', parentId: string | null = null, st: SaidaTipo = 'fixa'): AddForm {
-  return {
-    natureza: nat, saida_tipo: st, nome: '', valor: '', categoria_id: '', cartao_id: '',
-    is_grupo: false, parent_id: parentId,
-    repetir: false, repeticao_freq: 'mensal', repeticao_ate: '',
-  }
-}
+} from '../../types'
+import { MS_FULL, MS_OPT, BRL, daysInMonth, buildTree, sumLeaves } from './utils'
+import { defaultForm, type AddForm } from './types'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MesTab (main)
