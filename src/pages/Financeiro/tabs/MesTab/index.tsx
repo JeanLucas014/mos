@@ -2,14 +2,9 @@
 // v2 — editar lançamentos, subitens em grupos, clique por coluna, nova cat rápida, cards de resumo
 
 import { useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
-import { supabase } from '@/lib/supabase'
 import { Plus, ChevronDown, ChevronRight, CalendarDays, List, X } from 'lucide-react'
 import { ExtratoView } from '../ExtratoView'
-import type {
-  FinAno, FinLancamento,
-  FinCategoria, Natureza, SaidaTipo,
-} from '../../types'
+import type { FinAno, FinLancamento, Natureza, SaidaTipo } from '../../types'
 import { MS_FULL, MS_OPT, BRL } from './utils'
 import { defaultForm, type AddForm } from './types'
 import { EditModal, type EditFormState } from './components/EditModal'
@@ -18,6 +13,7 @@ import { ItemRow } from './components/ItemRow'
 import { MobileItemRow } from './components/MobileItemRow'
 import { useDiarioInlineEdit } from './hooks/useDiarioInlineEdit'
 import { useMesData } from './hooks/useMesData'
+import { useMesActions } from './hooks/useMesActions'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MesTab (main)
@@ -35,15 +31,23 @@ export function MesTab({ ano, initialMonth }: Props) {
   const [addForm, setAddForm]           = useState<AddForm>(defaultForm())
   const [saving, setSaving]             = useState(false)
   const [mobileCol, setMobileCol]       = useState<Natureza>('diario')
-  const queryClient = useQueryClient()
   const {
     loading, categorias, cartoes, saldoAbertura,
     trees, byDay, days, totE, totS, totD, res, categoriasRapidas,
     reload: loadAll,
   } = useMesData(ano, month)
+  const {
+    addLancamento: addLancamentoAction,
+    saveEdit: saveEditAction,
+    deleteLancamento,
+    saveDiarioValue,
+    togglePago,
+    quickLaunch,
+    addQuickCat: addQuickCatAction,
+  } = useMesActions({ ano, month, reload: loadAll })
   const diarioEdit = useDiarioInlineEdit(saveDiarioValue)
 
-  // ── Actions ────────────────────────────────────────────────────────────────
+  // ── Actions (wrappers finos: ligam o estado de UI local às mutations) ──────
 
   function openAdd(dia: number, nat: Natureza = 'diario', parentId: string | null = null, st: SaidaTipo = 'fixa') {
     setAddForm(defaultForm(nat, parentId, st))
@@ -52,119 +56,22 @@ export function MesTab({ ano, initialMonth }: Props) {
   }
 
   async function addLancamento(dia: number) {
-    const nome = addForm.nome.trim()
-    if (!nome) return
     setSaving(true)
-
-    const baseDate = new Date(`${ano.ano}-${String(month).padStart(2,'0')}-${String(dia).padStart(2,'0')}`)
-    const datas: string[] = []
-
-    if (!addForm.repetir || !addForm.repeticao_ate) {
-      datas.push(baseDate.toISOString().slice(0, 10))
-    } else {
-      const ateDate = new Date(addForm.repeticao_ate)
-      let current = new Date(baseDate)
-      while (current <= ateDate) {
-        datas.push(current.toISOString().slice(0, 10))
-        if (addForm.repeticao_freq === 'mensal') {
-          current = new Date(current.getFullYear(), current.getMonth() + 1, current.getDate())
-        } else if (addForm.repeticao_freq === 'quinzenal') {
-          current = new Date(current.getTime() + 14 * 24 * 60 * 60 * 1000)
-        } else {
-          current = new Date(current.getTime() + 7 * 24 * 60 * 60 * 1000)
-        }
-      }
-    }
-
-    const inserts = datas.map(data => ({
-      ano_id:      ano.id,
-      parent_id:   addForm.parent_id || null,
-      data,
-      natureza:    addForm.natureza,
-      nome,
-      valor:       addForm.is_grupo ? null : (parseFloat(addForm.valor.replace(',', '.')) || 0),
-      is_grupo:    addForm.is_grupo,
-      is_previsao: false,
-      categoria_id: addForm.categoria_id || null,
-      cartao_id:   addForm.natureza === 'saida' && addForm.saida_tipo === 'cartao' ? addForm.cartao_id || null : null,
-      saida_tipo:  addForm.natureza === 'saida' ? addForm.saida_tipo : null,
-    }))
-
-    await (supabase.from('fin_lancamentos') as any).insert(inserts)
-
+    await addLancamentoAction(addForm, dia)
     setSaving(false)
     setAddingToDay(null)
     setAddForm(defaultForm())
-    loadAll()
   }
-
-
 
   async function saveEdit(form: EditFormState) {
     if (!editingItem) return
-    const update: Record<string, unknown> = {
-      nome:         form.nome.trim(),
-      data:         form.data,
-      categoria_id: form.categoria_id || null,
-      is_previsao:  false,
-    }
-    if (!editingItem.is_grupo) {
-      update.valor = parseFloat(form.valor.replace(',', '.')) || 0
-    }
-    if (!editingItem.parent_id) {
-      update.natureza = form.natureza
-    }
-    if (form.natureza === 'saida') {
-      update.saida_tipo = form.saida_tipo
-      update.cartao_id  = form.saida_tipo === 'cartao' ? form.cartao_id || null : null
-    } else {
-      update.saida_tipo = null
-      update.cartao_id  = null
-    }
-    await (supabase.from('fin_lancamentos') as any).update(update).eq('id', editingItem.id)
+    await saveEditAction(editingItem, form)
     setEditingItem(null)
-    loadAll()
-  }
-
-  async function deleteLancamento(id: string) {
-    if (!confirm('Excluir este lançamento e todos os seus subitens?')) return
-    await (supabase.from('fin_lancamentos') as any).delete().eq('id', id)
-    loadAll()
-  }
-
-  async function saveDiarioValue(id: string, valor: number) {
-    await (supabase.from('fin_lancamentos') as any).update({
-      valor,
-      is_previsao: false,
-      nome: 'Diário',
-    }).eq('id', id)
-    loadAll()
-  }
-
-  async function togglePago(id: string, pago: boolean) {
-    await (supabase.from('fin_lancamentos') as any).update({ pago }).eq('id', id)
-    loadAll()
-    queryClient.invalidateQueries({ queryKey: ['dash_recorrentes'] })
-  }
-
-  async function quickLaunch(dia: number, cat: FinCategoria, nome: string, valor: string) {
-    const v = parseFloat(valor.replace(',', '.'))
-    if (!v || !nome.trim()) return
-    const data = `${ano.ano}-${String(month).padStart(2,'0')}-${String(dia).padStart(2,'0')}`
-    await (supabase.from('fin_lancamentos') as any).insert({
-      ano_id: ano.id, data, natureza: 'diario', nome: nome.trim(),
-      valor: v, is_grupo: false, categoria_id: cat.id,
-    })
-    loadAll()
   }
 
   async function addQuickCat(nome: string, cor?: string) {
-    if (!nome.trim()) return
-    await (supabase.from('fin_categorias') as any).insert({
-      nome: nome.trim(), natureza: 'diario', cor: cor || null, rapida: true,
-      ordem: categorias.filter(c => c.rapida && c.natureza === 'diario').length,
-    })
-    loadAll()
+    const ordem = categorias.filter(c => c.rapida && c.natureza === 'diario').length
+    await addQuickCatAction(nome, cor, ordem)
   }
 
   function toggleDay(d: number) {
