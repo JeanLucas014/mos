@@ -360,7 +360,7 @@ export function useDashEstudos() {
     },
   })
   const books = useQuery({
-    queryKey: ['books'],
+    queryKey: ['books', 'dash-estudos'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('books').select('id, status, progress')
