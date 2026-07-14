@@ -15,8 +15,8 @@ export function NotesPage() {
 
   useEffect(() => {
     if (selected) {
-      setBody(selected.body)
-      setTitle(selected.title)
+      setBody(selected.body ?? '')
+      setTitle(selected.title ?? '')
     }
   }, [selected?.id])
 

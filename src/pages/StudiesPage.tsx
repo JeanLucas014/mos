@@ -151,7 +151,7 @@ function StudyRow({
           {showEdit ? (
             <select
               autoFocus
-              value={study.status}
+              value={study.status ?? 'ativo'}
               onChange={(e) => { onStatusChange(study.id, e.target.value as StudyStatus); setShowEdit(false) }}
               onBlur={() => setShowEdit(false)}
               className="text-ink text-xs rounded-input bg-bg border border-line focus:outline-none focus:border-brand"
@@ -163,7 +163,7 @@ function StudyRow({
             </select>
           ) : (
             <button onClick={() => setShowEdit(true)} title="Editar status">
-              <Pill status={study.status} />
+              <Pill status={study.status ?? 'ativo'} />
             </button>
           )}
           <button

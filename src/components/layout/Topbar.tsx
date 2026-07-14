@@ -77,7 +77,7 @@ export function Topbar() {
         {/* Botões direita mobile */}
         <div className="ml-auto flex items-center">
           <button
-            onClick={() => (window as Record<string, unknown>).openMOSChat?.()}
+            onClick={() => window.openMOSChat?.()}
             className="flex items-center justify-center w-10 h-10 rounded-input text-ink-2 hover:text-ink hover:bg-bg-3 transition-colors"
             aria-label="MOS Chat"
           >

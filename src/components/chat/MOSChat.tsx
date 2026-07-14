@@ -2,6 +2,12 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { MessageCircle, X, Send } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 
+declare global {
+  interface Window {
+    openMOSChat?: () => void
+  }
+}
+
 interface Message {
   role: 'user' | 'assistant'
   content: string
@@ -54,10 +60,10 @@ export function MOSChat() {
       }
     }
     window.addEventListener('keydown', handle)
-    ;(window as Record<string, unknown>).openMOSChat = () => setOpen(true)
+    window.openMOSChat = () => setOpen(true)
     return () => {
       window.removeEventListener('keydown', handle)
-      delete (window as Record<string, unknown>).openMOSChat
+      delete window.openMOSChat
     }
   }, [])
 
