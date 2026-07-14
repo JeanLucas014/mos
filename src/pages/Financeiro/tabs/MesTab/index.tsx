@@ -17,6 +17,7 @@ import { EditModal, type EditFormState } from './components/EditModal'
 import { AddPanel } from './components/AddPanel'
 import { ItemRow } from './components/ItemRow'
 import { MobileItemRow } from './components/MobileItemRow'
+import { useDiarioInlineEdit } from './hooks/useDiarioInlineEdit'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MesTab (main)
@@ -39,10 +40,9 @@ export function MesTab({ ano, initialMonth }: Props) {
   const [addForm, setAddForm]           = useState<AddForm>(defaultForm())
   const [saving, setSaving]             = useState(false)
   const [mobileCol, setMobileCol]       = useState<Natureza>('diario')
-  const [editingDiarioId, setEditingDiarioId] = useState<string | null>(null)
-  const [editingValue, setEditingValue]       = useState<string>('')
   const queryClient = useQueryClient()
   const { user } = useAuth()
+  const diarioEdit = useDiarioInlineEdit(saveDiarioValue)
 
   useEffect(() => { loadAll() }, [ano.id, month])
 
@@ -259,15 +259,12 @@ export function MesTab({ ano, initialMonth }: Props) {
     loadAll()
   }
 
-  async function saveDiario(id: string) {
-    const valor = parseFloat(editingValue.replace(',', '.'))
-    if (isNaN(valor) || valor < 0) { setEditingDiarioId(null); return }
+  async function saveDiarioValue(id: string, valor: number) {
     await (supabase.from('fin_lancamentos') as any).update({
       valor,
       is_previsao: false,
       nome: 'Diário',
     }).eq('id', id)
-    setEditingDiarioId(null)
     loadAll()
   }
 
@@ -491,11 +488,11 @@ export function MesTab({ ano, initialMonth }: Props) {
                       onDelete={deleteLancamento}
                       onAddChild={parent => openAdd(d.dia, parent.natureza, parent.id, (parent.saida_tipo as SaidaTipo) ?? 'fixa')}
                       onTogglePago={togglePago}
-                      editingDiarioId={editingDiarioId}
-                      editingValue={editingValue}
-                      onEditDiario={(id, val) => { setEditingDiarioId(id); setEditingValue(String(val)) }}
-                      onEditDiarioChange={setEditingValue}
-                      onSaveDiario={saveDiario}
+                      editingDiarioId={diarioEdit.editingDiarioId}
+                      editingValue={diarioEdit.editingValue}
+                      onEditDiario={diarioEdit.startEdit}
+                      onEditDiarioChange={diarioEdit.changeValue}
+                      onSaveDiario={diarioEdit.save}
                     />
                   ))}
 
@@ -559,11 +556,11 @@ export function MesTab({ ano, initialMonth }: Props) {
                   onDelete={deleteLancamento}
                   onAddChild={parent => openAdd(d.dia, parent.natureza, parent.id, (parent.saida_tipo as SaidaTipo) ?? 'fixa')}
                   onTogglePago={togglePago}
-                  editingDiarioId={editingDiarioId}
-                  editingValue={editingValue}
-                  onEditDiario={(id, val) => { setEditingDiarioId(id); setEditingValue(String(val)) }}
-                  onEditDiarioChange={setEditingValue}
-                  onSaveDiario={saveDiario}
+                  editingDiarioId={diarioEdit.editingDiarioId}
+                  editingValue={diarioEdit.editingValue}
+                  onEditDiario={diarioEdit.startEdit}
+                  onEditDiarioChange={diarioEdit.changeValue}
+                  onSaveDiario={diarioEdit.save}
                 />
               ))}
             </div>
