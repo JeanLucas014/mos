@@ -363,8 +363,7 @@ function useMotoRevenue(year: number, month: number) {
 
   const addRecord = useMutation({
     mutationFn: async (r: { revenue_date: string; kind: string; category: string; description: string; amount_cents: number; notes?: string }) => {
-      const { data, error } = await (supabase.from('moto_revenue') as any).insert(r).select().single()
-      console.log('[moto_insert]', data, error)
+      const { error } = await (supabase.from('moto_revenue') as any).insert(r).select().single()
       if (error) throw error
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),

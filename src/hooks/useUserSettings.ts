@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { MODULES } from '../lib/modules'
+import { useAuth } from '../contexts/AuthContext'
 
 interface UserSettings {
   user_id: string
@@ -10,7 +11,8 @@ interface UserSettings {
 
 export function useUserSettings() {
   const qc = useQueryClient()
-  const key = ['user_settings']
+  const { user } = useAuth()
+  const key = ['user_settings', user?.id]
 
   const query = useQuery({
     queryKey: key,

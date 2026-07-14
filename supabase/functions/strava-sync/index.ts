@@ -177,16 +177,6 @@ Deno.serve(async (req: Request) => {
     const activities = await fetchAllActivities(accessToken)
     console.log(`[strava-sync] total activities fetched: ${activities.length}`)
 
-    /* Log first 3 for debugging */
-    console.log('[strava-sync] first 3 activities:',
-      activities.slice(0, 3).map(a => ({
-        id: a.id, name: a.name, type: a.type,
-        date: a.start_date_local?.slice(0, 10),
-        dist: a.distance,
-        mapped: mapActivityType(a.type),
-      }))
-    )
-
     /* Get existing strava notes to avoid duplicates */
     const { data: existing } = await admin
       .from('sports').select('notes')
@@ -228,13 +218,6 @@ Deno.serve(async (req: Request) => {
         return json({ error: `DB insert failed: ${insertErr.message}` }, 500)
       }
     }
-
-    /* Sample for debug */
-    const { data: sample } = await admin
-      .from('sports').select('sport, kind, sport_date, distance_m, notes')
-      .eq('user_id', user.id).like('notes', 'strava:%')
-      .order('sport_date', { ascending: false }).limit(5)
-    console.log('[strava-sync] sample workouts after insert:', sample)
 
     return json({ imported: toInsert.length, total_fetched: activities.length })
   } catch (err) {

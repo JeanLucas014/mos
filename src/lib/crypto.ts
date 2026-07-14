@@ -4,7 +4,7 @@
  * Client-side AES-GCM encryption for the password vault.
  *
  * Flow:
- *   masterPassword + userSalt  →  PBKDF2 (100k rounds, SHA-256)  →  AES-GCM-256 CryptoKey
+ *   masterPassword + userSalt  →  PBKDF2 (600k rounds, SHA-256)  →  AES-GCM-256 CryptoKey
  *   CryptoKey + plaintext      →  encrypt()  →  { cipher: base64, iv: base64 }
  *   CryptoKey + cipher + iv    →  decrypt()  →  plaintext  (throws on wrong key)
  *
@@ -13,9 +13,19 @@
  *   - Only cipher + iv are stored in Supabase.
  *   - AES-GCM is authenticated: a wrong key throws a DOMException on decrypt.
  *   - Salt is derived from the user_id (unique per user, not secret).
+ *
+ * Iteration count history:
+ *   - Items encrypted before 2026-07-15 used LEGACY_ITERATIONS (100k).
+ *   - New encryptions use PBKDF2_ITERATIONS (600k, current OWASP guidance).
+ *   - There is no per-item stored iteration count — VaultPage detects which
+ *     one an existing vault uses by trial-decrypt, and transparently
+ *     re-encrypts legacy items to the new standard on unlock (see
+ *     VaultPage.tsx UnlockScreen). Never remove LEGACY_ITERATIONS — it's
+ *     what makes that migration possible.
  */
 
-const PBKDF2_ITERATIONS = 100_000
+export const PBKDF2_ITERATIONS = 600_000
+export const LEGACY_ITERATIONS = 100_000
 
 /* ── Helpers ─────────────────────────────────────────────────── */
 
@@ -41,11 +51,14 @@ export function makeUserSalt(userId: string): Uint8Array {
 
 /**
  * Derive an AES-GCM-256 CryptoKey from a master password using PBKDF2.
- * This is intentionally slow (100k iterations) to resist brute-force.
+ * This is intentionally slow (iterations) to resist brute-force.
+ * Defaults to the current standard (600k); pass LEGACY_ITERATIONS to
+ * derive the key a pre-migration vault item was originally encrypted with.
  */
 export async function deriveKey(
   masterPassword: string,
   salt: Uint8Array,
+  iterations: number = PBKDF2_ITERATIONS,
 ): Promise<CryptoKey> {
   const raw = new TextEncoder().encode(masterPassword)
 
@@ -61,7 +74,7 @@ export async function deriveKey(
     {
       name: 'PBKDF2',
       salt,
-      iterations: PBKDF2_ITERATIONS,
+      iterations,
       hash: 'SHA-256',
     },
     baseKey,

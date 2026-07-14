@@ -1,5 +1,6 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
+import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 
 interface AuthContextValue {
@@ -14,22 +15,33 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const qc = useQueryClient()
+  const lastUserId = useRef<string | null>(null)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
+      lastUserId.current = session?.user?.id ?? null
       setSession(session)
       setLoading(false)
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const nextUserId = session?.user?.id ?? null
+      // A different account signed in/out in this tab — drop all cached
+      // data so a stale user's info can never flash for the next account.
+      if (lastUserId.current !== null && nextUserId !== lastUserId.current) {
+        qc.clear()
+      }
+      lastUserId.current = nextUserId
       setSession(session)
     })
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [qc])
 
   async function signOut() {
     await supabase.auth.signOut()
+    qc.clear()
   }
 
   return (

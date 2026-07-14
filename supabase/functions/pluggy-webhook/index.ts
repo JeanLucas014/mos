@@ -108,7 +108,7 @@ async function processTransaction(
       saida_tipo:    'cartao',
       pluggy_tx_id:  tx.id,
     })
-    console.log('✓ Crédito:', descr, amount, '→ fatura', vencimento)
+    console.log('✓ Crédito registrado → fatura', vencimento)
 
   } else {
     // DÉBITO: entra no diário no dia da compra
@@ -127,7 +127,7 @@ async function processTransaction(
       saida_tipo:   null,
       pluggy_tx_id: tx.id,
     })
-    console.log('✓ Débito:', descr, amount, 'em', dateStr)
+    console.log('✓ Débito registrado em', dateStr)
   }
 }
 

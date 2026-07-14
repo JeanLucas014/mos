@@ -154,13 +154,33 @@ function useSystemFiles(systemId: string) {
 }
 
 /* ── Storage uploads ──────────────────────────────────────────────── */
+/* Bucket "systems" é privado — armazenamos o path e resolvemos uma
+   signed URL sob demanda (nas queries abaixo), nunca uma URL pública. */
+const SIGNED_URL_TTL = 60 * 60 // 1h
+
 async function uploadToStorage(file: File, folder: string): Promise<string> {
   const ext  = file.name.split('.').pop()
   const path = `${folder}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
   const { error } = await supabase.storage.from('systems').upload(path, file, { upsert: true })
   if (error) throw error
-  const { data } = supabase.storage.from('systems').getPublicUrl(path)
-  return data.publicUrl
+  return path
+}
+
+async function resolveSignedUrl(path: string | null): Promise<string | null> {
+  if (!path) return null
+  if (/^https?:\/\//.test(path)) return path // legado: já era URL completa
+  const { data, error } = await supabase.storage.from('systems').createSignedUrl(path, SIGNED_URL_TTL)
+  if (error) return null
+  return data.signedUrl
+}
+
+function useSignedUrl(path: string | null) {
+  return useQuery({
+    queryKey: ['signed-url', 'systems', path],
+    queryFn: () => resolveSignedUrl(path),
+    enabled: !!path,
+    staleTime: 1000 * 60 * 45, // re-assina antes do TTL de 1h expirar
+  })
 }
 
 /* ── Iframe Tool Modal (fullscreen) ─────────────────────────────── */
@@ -228,10 +248,11 @@ function SystemModal({
     if (Array.isArray(ts)) return ts.join(', ')
     return String(ts)
   })
-  const [thumbUrl,     setThumbUrl]     = useState(initial?.thumbnail_url ?? '')
+  const [thumbPath,    setThumbPath]    = useState(initial?.thumbnail_url ?? '')
   const [uploading,    setUploading]    = useState(false)
   const [err,          setErr]          = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const { data: thumbPreviewUrl } = useSignedUrl(thumbPath || null)
 
   const isPending = add.isPending || update.isPending
 
@@ -240,8 +261,8 @@ function SystemModal({
     if (!file) return
     setUploading(true)
     try {
-      const publicUrl = await uploadToStorage(file, 'thumbnails')
-      setThumbUrl(publicUrl)
+      const path = await uploadToStorage(file, 'thumbnails')
+      setThumbPath(path)
     } catch (ex) {
       setErr((ex as Error).message)
     } finally {
@@ -261,7 +282,7 @@ function SystemModal({
       status,
       url:           url.trim() || null,
       tech_stack:    tech_stack.length ? tech_stack : null,
-      thumbnail_url: thumbUrl || null,
+      thumbnail_url: thumbPath || null,
     }
     if (initial) {
       update.mutate({ id: initial.id, ...payload }, {
@@ -306,8 +327,8 @@ function SystemModal({
               overflow: 'hidden', flexShrink: 0, cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }} onClick={() => fileRef.current?.click()}>
-              {thumbUrl
-                ? <img src={thumbUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+              {thumbPreviewUrl
+                ? <img src={thumbPreviewUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
                 : <Upload size={22} color={C.dm} />}
             </div>
             <div>
@@ -316,8 +337,8 @@ function SystemModal({
                 style={{ fontSize: 11, color: C.b, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
                 {uploading ? 'Enviando…' : 'Escolher imagem'}
               </button>
-              {thumbUrl && (
-                <button type="button" onClick={() => setThumbUrl('')}
+              {thumbPath && (
+                <button type="button" onClick={() => setThumbPath('')}
                   style={{ fontSize: 11, color: C.r, background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 0 8px' }}>
                   Remover
                 </button>
@@ -388,6 +409,23 @@ function SystemModal({
   )
 }
 
+/* ── File link (resolves signed URL for storage paths) ───────────── */
+function FileLink({ path, name, isDownload }: { path: string; name: string; isDownload: boolean }) {
+  const { data: href } = useSignedUrl(path)
+  return (
+    <a href={href ?? '#'} target="_blank" rel="noopener noreferrer" download={isDownload ? name : undefined}
+      style={{
+        fontSize: 11, color: C.b, textDecoration: 'none',
+        display: 'flex', alignItems: 'center', gap: 3,
+        padding: '3px 8px', borderRadius: 5,
+        background: C.b + '18', border: '1px solid ' + C.b + '33',
+        opacity: href ? 1 : 0.5, pointerEvents: href ? 'auto' : 'none',
+      }}>
+      {isDownload ? <><Download size={10} /> Baixar</> : <><ExternalLink size={10} /> Abrir</>}
+    </a>
+  )
+}
+
 /* ── Files section (expandable) ──────────────────────────────────── */
 function FilesSection({ systemId }: { systemId: string }) {
   const { query, add, remove } = useSystemFiles(systemId)
@@ -408,9 +446,9 @@ function FilesSection({ systemId }: { systemId: string }) {
     setUploading(true)
     setErr(null)
     try {
-      const publicUrl = await uploadToStorage(file, 'files')
+      const path      = await uploadToStorage(file, 'files')
       const autoName  = name.trim() || file.name
-      add.mutate({ name: autoName, file_type: fileType, file_url: publicUrl, is_download: true }, {
+      add.mutate({ name: autoName, file_type: fileType, file_url: path, is_download: true }, {
         onSuccess: () => { setName(''); setFileUrl(''); if (uploadRef.current) uploadRef.current.value = '' },
         onError: (ex) => setErr((ex as Error).message),
       })
@@ -456,15 +494,7 @@ function FilesSection({ systemId }: { systemId: string }) {
                 <span style={{ fontSize: 12, color: C.ink2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
               </div>
               <div style={{ display: 'flex', gap: 6, flexShrink: 0, marginLeft: 8 }}>
-                <a href={f.file_url} target="_blank" rel="noopener noreferrer" download={f.is_download ? f.name : undefined}
-                  style={{
-                    fontSize: 11, color: C.b, textDecoration: 'none',
-                    display: 'flex', alignItems: 'center', gap: 3,
-                    padding: '3px 8px', borderRadius: 5,
-                    background: C.b + '18', border: '1px solid ' + C.b + '33',
-                  }}>
-                  {f.is_download ? <><Download size={10} /> Baixar</> : <><ExternalLink size={10} /> Abrir</>}
-                </a>
+                <FileLink path={f.file_url} name={f.name} isDownload={!!f.is_download} />
                 <button onClick={() => remove.mutate(f.id)}
                   style={{ background: 'none', border: 'none', color: C.dm2, cursor: 'pointer', padding: 4 }}>
                   <X size={12} />
@@ -542,6 +572,8 @@ function SystemCard({
       ? (sys.tech_stack as string).split(',').map((s: string) => s.trim()).filter(Boolean)
       : []
 
+  const { data: thumbSrc } = useSignedUrl(sys.thumbnail_url)
+
   return (
     <div style={{
       background: C.card, border: '1px solid ' + C.border,
@@ -549,9 +581,9 @@ function SystemCard({
       display: 'flex', flexDirection: 'column',
     }}>
       {/* Thumbnail */}
-      {sys.thumbnail_url && (
+      {thumbSrc && (
         <div style={{ width: '100%', height: 140, overflow: 'hidden', flexShrink: 0 }}>
-          <img src={sys.thumbnail_url} alt={sys.name}
+          <img src={thumbSrc} alt={sys.name}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
       )}

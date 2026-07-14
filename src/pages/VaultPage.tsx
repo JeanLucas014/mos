@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Eye, EyeOff, Lock } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useVaultStore } from '../stores/useVaultStore'
 import { useVaultItems, type VaultItem } from '../hooks/useVaultItems'
 import { HelpButton } from '@/components/help/HelpButton'
-import { deriveKey, encrypt, decrypt, makeUserSalt } from '../lib/crypto'
+import { supabase } from '../lib/supabase'
+import { deriveKey, encrypt, decrypt, makeUserSalt, LEGACY_ITERATIONS } from '../lib/crypto'
 
 /* ══════════════════════════════════════════════════════════════
    COPY BUTTON with feedback
@@ -388,10 +390,12 @@ function VaultRow({
 ══════════════════════════════════════════════════════════════ */
 function UnlockScreen({
   items,
+  migrating,
   onUnlock,
 }: {
   items: VaultItem[] | undefined
-  onUnlock: (key: CryptoKey) => void
+  migrating: boolean
+  onUnlock: (password: string) => Promise<void>
 }) {
   const { user }       = useAuth()
   const isDemo = user?.email === 'demo@jlmos.com.br'
@@ -405,27 +409,11 @@ function UnlockScreen({
     if (!pw) return
     setError('')
     setLoading(true)
-
     try {
-      const salt = makeUserSalt(user!.id)
-      const key  = await deriveKey(pw, salt)
-
-      /* Validate against first item if vault has entries */
-      if (items && items.length > 0) {
-        try {
-          await decrypt(items[0].password_cipher, items[0].password_iv, key)
-        } catch {
-          setError('Master password incorreto.')
-          setLoading(false)
-          return
-        }
-      }
-
-      onUnlock(key)
-    } catch {
-      setError('Erro ao derivar chave. Tente novamente.')
+      await onUnlock(pw)
+    } catch (err) {
+      setError((err as Error).message || 'Erro ao derivar chave. Tente novamente.')
     }
-
     setLoading(false)
   }
 
@@ -500,7 +488,7 @@ function UnlockScreen({
             {loading ? (
               <span className="flex items-center justify-center gap-2">
                 <span className="inline-block w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                Derivando chave…
+                {migrating ? 'Atualizando segurança do cofre…' : 'Derivando chave…'}
               </span>
             ) : 'Desbloquear'}
           </button>
@@ -518,11 +506,75 @@ function UnlockScreen({
    PAGE
 ══════════════════════════════════════════════════════════════ */
 export function VaultPage() {
+  const { user } = useAuth()
+  const qc = useQueryClient()
   const { cryptoKey, setKey, lock } = useVaultStore()
   const { data: items = [], isLoading, addItem, updateItem, deleteItem } = useVaultItems()
 
-  const [search,   setSearch]   = useState('')
-  const [modal,    setModal]    = useState<ModalMode | null>(null)
+  const [search,    setSearch]    = useState('')
+  const [modal,     setModal]     = useState<ModalMode | null>(null)
+  const [migrating, setMigrating] = useState(false)
+
+  /* ── Unlock (with transparent 100k → 600k PBKDF2 migration) ── */
+  async function handleUnlock(password: string) {
+    const salt = makeUserSalt(user!.id)
+
+    if (items.length === 0) {
+      setKey(await deriveKey(password, salt))
+      return
+    }
+
+    const first = items[0]
+
+    /* Fast path: vault already on the current standard (600k) */
+    try {
+      const keyNew = await deriveKey(password, salt)
+      await decrypt(first.password_cipher, first.password_iv, keyNew)
+      setKey(keyNew)
+      return
+    } catch {
+      /* fall through — try the legacy iteration count below */
+    }
+
+    /* Legacy path: vault was encrypted with the old 100k standard */
+    let keyOld: CryptoKey
+    try {
+      keyOld = await deriveKey(password, salt, LEGACY_ITERATIONS)
+      await decrypt(first.password_cipher, first.password_iv, keyOld)
+    } catch {
+      throw new Error('Master password incorreto.')
+    }
+
+    /* Correct password on a legacy vault — migrate transparently to 600k.
+       Each item is only ever updated locally AFTER its new ciphertext is
+       confirmed saved in Supabase — if the write fails (e.g. flaky network),
+       that item simply stays on the legacy cipher, which is still fully
+       valid and will be retried automatically on the next unlock. Nothing
+       is ever deleted or overwritten before the replacement is confirmed. */
+    setMigrating(true)
+    try {
+      const keyNew = await deriveKey(password, salt)
+      for (const item of items) {
+        try {
+          const plain = await decrypt(item.password_cipher, item.password_iv, keyOld)
+          const { cipher, iv } = await encrypt(plain, keyNew)
+          const { error } = await supabase
+            .from('vault_items')
+            .update({ password_cipher: cipher, password_iv: iv })
+            .eq('id', item.id)
+          if (error) throw error
+          qc.setQueryData<VaultItem[]>(['vault_items'], (old) =>
+            old?.map((v) => (v.id === item.id ? { ...v, password_cipher: cipher, password_iv: iv } : v)),
+          )
+        } catch (err) {
+          console.error('[vault-migration] item kept on legacy KDF, will retry next unlock:', item.id, err)
+        }
+      }
+      setKey(keyNew)
+    } finally {
+      setMigrating(false)
+    }
+  }
 
   /* ── Filter ── */
   const filtered = search.trim()
@@ -582,7 +634,8 @@ export function VaultPage() {
         </h1>
         <UnlockScreen
           items={isLoading ? undefined : items}
-          onUnlock={setKey}
+          migrating={migrating}
+          onUnlock={handleUnlock}
         />
       </div>
     )

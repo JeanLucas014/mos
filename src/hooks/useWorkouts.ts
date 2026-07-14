@@ -22,12 +22,10 @@ export function useWorkouts(sport: string) {
 
   const addWorkout = useMutation({
     mutationFn: async (w: Omit<Workout, 'id' | 'user_id' | 'created_at'>) => {
-      console.log('[sports_insert] payload:', w)
       const { data, error } = await (supabase.from('sports') as any)
         .insert(w)
         .select()
         .single()
-      console.log('[sports_insert] result:', data, error)
       if (error) throw error
       return data as Workout
     },
