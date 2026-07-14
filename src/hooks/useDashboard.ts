@@ -331,8 +331,10 @@ export function useDashFinancas() {
 
       return { receitas, despesas, saldo: receitas - despesas }
     },
-    staleTime: 0,
-    refetchInterval: 60_000,
+    // dados financeiros do mês mudam pouco — refetch ao voltar pra tela
+    // é suficiente, não precisa de polling a cada minuto
+    staleTime: 1000 * 60 * 2,
+    refetchOnWindowFocus: true,
   })
 }
 
@@ -429,7 +431,9 @@ export function useDashRecorrentes() {
 
       return { vencidas, venceHoje }
     },
-    staleTime: 0,
+    // alertas de vencimento mudam no máximo 1x/dia — refetch ao voltar
+    // pra tela (refetchOnWindowFocus) já cobre bem, sem precisar de staleTime 0
+    staleTime: 1000 * 60 * 2,
     refetchOnWindowFocus: true,
   })
 }

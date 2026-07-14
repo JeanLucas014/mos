@@ -220,7 +220,8 @@ export function useAppNotifications() {
       return notifications
     },
     enabled: !!user,
-    staleTime: 1000 * 60 * 5,
+    // refresh periódico é razoável para notificações, mas não agressivo
+    staleTime: 1000 * 60 * 3,
     refetchInterval: 1000 * 60 * 5,
   })
 }

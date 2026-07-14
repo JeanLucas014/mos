@@ -103,6 +103,11 @@ body {
   -webkit-backdrop-filter: blur(12px);
 }
 
+/* Spinner (route Suspense fallback, loading indicators) */
+@keyframes spin {
+  to { transform: rotate(360deg) }
+}
+
 /* Pulsing dot */
 @keyframes pulse-dot {
   0%, 100% {

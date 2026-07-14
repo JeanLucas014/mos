@@ -28,7 +28,9 @@ export function useUserSettings() {
         onboarding_completed: false,
       }
     },
-    staleTime: 0,
+    // configurações do usuário mudam raramente (só quando ele mexe em
+    // Configurações) — mutações já invalidam a query manualmente
+    staleTime: 1000 * 60 * 10,
   })
 
   const toggleModule = useMutation({
