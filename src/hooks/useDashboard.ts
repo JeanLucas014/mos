@@ -6,6 +6,7 @@
  */
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import { formatLocalDate, todayLocal } from '../lib/dates'
 import type { Database } from '../types/db'
 
 type Habit    = Database['public']['Tables']['habits']['Row']
@@ -25,12 +26,12 @@ function monthStart(): string {
 
 
 function today(): string {
-  return new Date().toISOString().slice(0, 10)
+  return todayLocal()
 }
 
 function calcStreak(logs: HabitLog[]): number {
   if (!logs.length) return 0
-  const fmt = (d: Date) => d.toISOString().slice(0, 10)
+  const fmt = formatLocalDate
   const dates = [...new Set(logs.map((l) => l.log_date))].sort().reverse()
   const now = new Date(); now.setHours(0, 0, 0, 0)
   const yest = new Date(now); yest.setDate(yest.getDate() - 1)
@@ -388,8 +389,8 @@ export function useDashRecorrentes() {
     queryFn: async () => {
       const now        = new Date()
       const todayDay   = now.getDate()
-      const monthStart = now.toISOString().slice(0, 7) + '-01'
-      const todayStr   = now.toISOString().slice(0, 10)
+      const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
+      const todayStr   = formatLocalDate(now)
 
       const [{ data: recorrentes, error }, { data: lancamentosPagos }] = await Promise.all([
         supabase

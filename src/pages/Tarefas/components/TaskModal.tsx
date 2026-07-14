@@ -4,6 +4,7 @@ import { X, Flag, Calendar, FolderOpen, RotateCcw, Plus, Trash2 } from 'lucide-r
 import type { Task, TaskProject, Priority, TaskComment } from '../types'
 import { PRIORITY_CFG } from '../types'
 import { DatePicker } from './DatePicker'
+import { todayLocal } from '@/lib/dates'
 
 const RECURRENCE_OPTIONS = [
   { id: '',         label: 'Não repete' },
@@ -85,7 +86,7 @@ export function TaskModal({ task, projects, onSave, onClose, onDelete }: Props) 
     if (task.id) {
       await (supabase as any).from('task_recurrence').delete().eq('task_id', task.id)
       if (recurrence) {
-        const nextDue = dueDate || new Date().toISOString().slice(0, 10)
+        const nextDue = dueDate || todayLocal()
         await (supabase as any).from('task_recurrence').insert({
           task_id:      task.id,
           freq:         recurrence,

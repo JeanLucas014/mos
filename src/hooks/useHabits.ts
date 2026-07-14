@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import { formatLocalDate } from '../lib/dates'
 import type { Database } from '../types/db'
 
 type Habit          = Database['public']['Tables']['habits']['Row']
@@ -23,7 +24,7 @@ function calcStreak(logs: HabitLog[], exceptions: HabitException[]): number {
   const yesterday = new Date(today)
   yesterday.setDate(yesterday.getDate() - 1)
 
-  const fmt = (d: Date) => d.toISOString().slice(0, 10)
+  const fmt = formatLocalDate
   const firstDate = uniqueDates[0]
   if (firstDate !== fmt(today) && firstDate !== fmt(yesterday)) return 0
 

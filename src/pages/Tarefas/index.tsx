@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { todayLocal, addDaysLocal } from '@/lib/dates'
 import { Plus, Sun, Calendar, CalendarDays, FolderOpen, ChevronDown, ChevronRight, History, Settings } from 'lucide-react'
 import type { Task, TaskProject, ViewId } from './types'
 import { TaskItem } from './components/TaskItem'
@@ -41,11 +42,8 @@ export default function TarefasPage() {
   }
 
   function getViewTasks(view: ViewId): Task[] {
-    const todayStr = new Date().toISOString().slice(0, 10)
-    const t7 = (() => {
-      const d = new Date(); d.setDate(d.getDate() + 7)
-      return d.toISOString().slice(0, 10)
-    })()
+    const todayStr = todayLocal()
+    const t7 = addDaysLocal(todayStr, 7)
     const pendingTasks = tasks.filter(t => !t.parent_id && !t.completed_at)
     switch (view) {
       case 'inbox': {
@@ -98,7 +96,7 @@ export default function TarefasPage() {
         priority:    payload.priority ?? 4,
         project_id:  payload.project_id !== undefined ? payload.project_id : (!SYSTEM_VIEWS.includes(viewId) ? viewId : null),
         parent_id:   payload.parent_id ?? null,
-        due_date:    payload.due_date ?? (viewId === 'hoje' ? new Date().toISOString().slice(0, 10) : null),
+        due_date:    payload.due_date ?? (viewId === 'hoje' ? todayLocal() : null),
         due_time:    payload.due_time ?? null,
         ordem:       tasks.length,
       }
@@ -114,7 +112,7 @@ export default function TarefasPage() {
       title:      quickTitle.trim(),
       priority:   4,
       project_id: !SYSTEM_VIEWS.includes(viewId) ? viewId : null,
-      due_date:   viewId === 'hoje' ? new Date().toISOString().slice(0, 10) : null,
+      due_date:   viewId === 'hoje' ? todayLocal() : null,
       ordem:      tasks.length,
     }
     const { data } = await (supabase as any).from('tasks').insert(insert).select().single()
@@ -137,8 +135,8 @@ export default function TarefasPage() {
   const shown = getViewTasks(viewId)
 
   // Counts for nav badges
-  const todayStr = new Date().toISOString().slice(0, 10)
-  const t7Str = (() => { const d = new Date(); d.setDate(d.getDate() + 7); return d.toISOString().slice(0, 10) })()
+  const todayStr = todayLocal()
+  const t7Str = addDaysLocal(todayStr, 7)
 
   const NAV_VIEWS: { id: ViewId; label: string; icon: React.ReactNode; count: number }[] = [
     { id: 'inbox',     label: 'Hoje',            icon: <CalendarDays size={14} />, count: tasks.filter(t => !t.parent_id && !t.completed_at && t.due_date === todayStr).length || tasks.filter(t => !t.parent_id && !t.completed_at && !t.due_date).length },

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useHabits } from '../hooks/useHabits'
 import { HelpButton } from '@/components/help/HelpButton'
+import { formatLocalDate } from '../lib/dates'
 
 /* ── Context menu ─────────────────────────────────────────────── */
 interface CtxMenuState { x: number; y: number; habitId: string; date: string }
@@ -48,7 +49,7 @@ function CtxMenu({
 
 /* ── date helpers ─────────────────────────────────────────────── */
 function toDateStr(d: Date) {
-  return d.toISOString().slice(0, 10)
+  return formatLocalDate(d)
 }
 function todayStr() {
   return toDateStr(new Date())

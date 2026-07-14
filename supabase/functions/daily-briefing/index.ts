@@ -6,6 +6,24 @@ const CORS = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const TZ = "America/Sao_Paulo";
+
+/** "Today" in the user's local calendar day, independent of the server's own timezone. */
+function todayLocal(): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(new Date());
+  const get = (t: string) => parts.find((p) => p.type === t)!.value;
+  return `${get("year")}-${get("month")}-${get("day")}`;
+}
+
+/** Pure calendar-day arithmetic on a "YYYY-MM-DD" string — no timezone conversion involved. */
+function addDays(dateStr: string, days: number): string {
+  const d = new Date(dateStr + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
 
@@ -33,9 +51,9 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayLocal();
     const monthStart = today.slice(0, 7) + "-01";
-    const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+    const sevenDaysAgo = addDays(today, -7);
 
     // Buscar dados em paralelo
     const [
@@ -103,7 +121,7 @@ serve(async (req) => {
 
     // Montar contexto para o Claude
     const context = `
-Hoje é ${new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}.
+Hoje é ${new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: TZ })}.
 
 TAREFAS:
 - Pendentes: ${(tasksPending ?? []).length} tarefas

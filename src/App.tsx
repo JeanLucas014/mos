@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useTheme } from './hooks/useTheme'
 import { AppShell } from './components/layout/AppShell'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { RequireAuth } from './components/auth/RequireAuth'
 import { LoginPage } from './components/auth/LoginPage'
 import { ForgotPasswordPage } from './components/auth/ForgotPasswordPage'
@@ -37,6 +38,7 @@ export default function App() {
   return (
     <>
     <ThemeApplier />
+    <ErrorBoundary>
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/recuperar-senha" element={<ForgotPasswordPage />} />
@@ -80,6 +82,7 @@ export default function App() {
         <Route path="admin" element={<AdminPage />} />
       </Route>
     </Routes>
+    </ErrorBoundary>
     </>
   )
 }

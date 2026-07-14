@@ -23,7 +23,7 @@ export function useUserSettings() {
       return (data as UserSettings) ?? {
         user_id: '',
         enabled_modules: MODULES.map(m => m.id),
-        onboarding_completed: true,
+        onboarding_completed: false,
       }
     },
     staleTime: 0,

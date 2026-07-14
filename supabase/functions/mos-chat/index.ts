@@ -6,6 +6,24 @@ const CORS = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const TZ = "America/Sao_Paulo";
+
+/** "Today" in the user's local calendar day, independent of the server's own timezone. */
+function todayLocalParts(): { date: string; day: number } {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(new Date());
+  const get = (t: string) => parts.find((p) => p.type === t)!.value;
+  return { date: `${get("year")}-${get("month")}-${get("day")}`, day: Number(get("day")) };
+}
+
+/** Pure calendar-day arithmetic on a "YYYY-MM-DD" string — no timezone conversion involved. */
+function addDays(dateStr: string, days: number): string {
+  const d = new Date(dateStr + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
 
@@ -32,9 +50,8 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const today = new Date().toISOString().slice(0, 10);
+    const { date: today, day: todayDay } = todayLocalParts();
     const monthStart = today.slice(0, 7) + "-01";
-    const todayDay = new Date().getDate();
 
     // Buscar dados em paralelo
     const [
@@ -56,7 +73,7 @@ serve(async (req) => {
       admin.from("fin_lancamentos").select("valor, natureza, is_grupo")
         .eq("user_id", user.id).gte("data", monthStart).lte("data", today),
       admin.from("sports").select("sport, distance_m, duration_s, sport_date")
-        .eq("user_id", user.id).gte("sport_date", new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10))
+        .eq("user_id", user.id).gte("sport_date", addDays(today, -7))
         .order("sport_date", { ascending: false }),
       admin.from("fin_recorrentes").select("nome, valor, dia_previsto")
         .eq("user_id", user.id).eq("ativo", true).eq("natureza", "saida"),
@@ -90,9 +107,9 @@ serve(async (req) => {
 Você é o assistente pessoal inteligente do MOS (My Operating System) do Jean Lucas.
 Você tem acesso em tempo real a todos os dados do Jean e pode responder perguntas e simular ações.
 
-DATA ATUAL: ${new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+DATA ATUAL: ${new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: TZ })}
 
-FINANCEIRO (${new Date().toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}):
+FINANCEIRO (${new Date().toLocaleDateString("pt-BR", { month: "long", year: "numeric", timeZone: TZ })}):
 - Receitas: R$ ${receitas.toFixed(2)}
 - Despesas: R$ ${despesas.toFixed(2)}
 - Saldo: R$ ${(receitas - despesas).toFixed(2)} (${receitas - despesas >= 0 ? "positivo" : "negativo"})

@@ -5,6 +5,7 @@ import {
   ChevronDown, ChevronRight, Trash2, Pencil, X,
 } from 'lucide-react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
+import { todayLocal } from '@/lib/dates'
 
 // ─── Formatters ──────────────────────────────────────────────────────────────
 
@@ -13,7 +14,7 @@ const BRL = (v: number) =>
 const PCT = (v: number) => (v >= 0 ? '+' : '') + v.toFixed(2).replace('.', ',') + '%'
 const fmtDate = (s: string) =>
   new Date(s + 'T12:00:00').toLocaleDateString('pt-BR')
-const today = () => new Date().toISOString().slice(0, 10)
+const today = () => todayLocal()
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

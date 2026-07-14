@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Plus, Trash2, Download, Upload, AlertTriangle } from 'lucide-react'
+import { todayLocal } from '@/lib/dates'
 import type { FinAno, FinCategoria, FinCartao } from '../types'
 
 
@@ -104,7 +105,7 @@ export function ConfigTab({ anos, onReload }: Props) {
   }
 
   async function updateFuturePrevisoes() {
-    const today = new Date().toISOString().slice(0, 10)
+    const today = todayLocal()
     const { data: configRaw } = await supabase.from('fin_previsao_config').select('valor')
     const total = ((configRaw ?? []) as { valor: number }[]).reduce((s, c) => s + Number(c.valor), 0)
     if (total <= 0) return

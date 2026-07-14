@@ -2,12 +2,12 @@ import { useState } from 'react'
 import { Trash2, Plus, ChevronRight, ChevronDown } from 'lucide-react'
 import type { Task, TaskProject } from '../types'
 import { PRIORITY_CFG } from '../types'
+import { todayLocal, addDaysLocal } from '@/lib/dates'
 
 function fmtDue(dateStr: string): string {
-  const t = new Date().toISOString().slice(0, 10)
+  const t = todayLocal()
   if (dateStr === t) return 'Hoje'
-  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1)
-  if (dateStr === tomorrow.toISOString().slice(0, 10)) return 'Amanhã'
+  if (dateStr === addDaysLocal(t, 1)) return 'Amanhã'
   return new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
 }
 
@@ -27,7 +27,7 @@ export function TaskItem({ task, subtasks, project, showProject, onComplete, onD
   const [hovering, setHovering] = useState(false)
   const cfg    = PRIORITY_CFG[task.priority]
   const isDone = !!task.completed_at
-  const isOverdue = !isDone && task.due_date && task.due_date < new Date().toISOString().slice(0, 10)
+  const isOverdue = !isDone && task.due_date && task.due_date < todayLocal()
 
   return (
     <div
@@ -76,7 +76,7 @@ export function TaskItem({ task, subtasks, project, showProject, onComplete, onD
             {task.due_date && (
               <span
                 className="text-[11px] font-medium"
-                style={{ color: isOverdue ? '#ef4444' : task.due_date === new Date().toISOString().slice(0, 10) ? '#22c55e' : 'var(--text2)' }}
+                style={{ color: isOverdue ? '#ef4444' : task.due_date === todayLocal() ? '#22c55e' : 'var(--text2)' }}
               >
                 {isOverdue ? '⚠ ' : ''}{fmtDue(task.due_date)}
               </span>

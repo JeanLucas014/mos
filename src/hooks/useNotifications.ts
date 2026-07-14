@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { todayLocal } from '../lib/dates'
 
 export interface NotificationPrefs {
   tarefas_vencidas: boolean
@@ -71,7 +72,7 @@ export function useAppNotifications() {
   return useQuery({
     queryKey: ['app_notifications', user?.id],
     queryFn: async () => {
-      const today = new Date().toISOString().slice(0, 10)
+      const today = todayLocal()
       const now = new Date()
       const notifications: AppNotification[] = []
 

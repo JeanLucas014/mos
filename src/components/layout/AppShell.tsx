@@ -1,9 +1,10 @@
-import { Outlet, Navigate } from 'react-router-dom'
+import { Outlet, Navigate, useLocation } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
 import { MobileScrim } from './MobileScrim'
 import { CommandPalette } from '../CommandPalette'
 import { MOSChat } from '../chat/MOSChat'
+import { ErrorBoundary } from '../ErrorBoundary'
 import { useUIStore } from '../../stores/useUIStore'
 import { useUserSettings } from '../../hooks/useUserSettings'
 
@@ -11,6 +12,7 @@ export function AppShell() {
   const sidebarOpen      = useUIStore((s) => s.sidebarOpen)
   const sidebarCollapsed = useUIStore((s) => s.sidebarCollapsed)
   const { data: settings, isLoading } = useUserSettings()
+  const location = useLocation()
 
   if (!isLoading && settings && settings.onboarding_completed === false) {
     return <Navigate to="/onboarding" replace />
@@ -41,7 +43,9 @@ export function AppShell() {
         <Topbar />
         <main className="flex-1 overflow-y-auto bg-bg">
           <div className="p-4 lg:px-7 lg:py-[30px]">
-            <Outlet />
+            <ErrorBoundary key={location.pathname}>
+              <Outlet />
+            </ErrorBoundary>
           </div>
         </main>
       </div>

@@ -22,6 +22,7 @@ import {
   useDashEstudos,
   useDashRecorrentes,
 } from '../hooks/useDashboard'
+import { formatLocalDate } from '../lib/dates'
 
 /* ══════════════════════════════════════════════════════════════════
    UTILS
@@ -442,10 +443,10 @@ function HabitsWidget() {
 function fmtEventTime(iso: string): string {
   const ev       = new Date(iso)
   const now      = new Date()
-  const todayStr = now.toISOString().slice(0, 10)
-  const evStr    = ev.toISOString().slice(0, 10)
+  const todayStr = formatLocalDate(now)
+  const evStr    = formatLocalDate(ev)
   const tmw      = new Date(now); tmw.setDate(now.getDate() + 1)
-  const tmwStr   = tmw.toISOString().slice(0, 10)
+  const tmwStr   = formatLocalDate(tmw)
   const hhmm     = `${String(ev.getHours()).padStart(2,'0')}:${String(ev.getMinutes()).padStart(2,'0')}`
   if (evStr === todayStr) return `Hoje, ${hhmm}`
   if (evStr === tmwStr)   return `Amanhã, ${hhmm}`

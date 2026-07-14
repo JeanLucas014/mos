@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Calendar, X } from 'lucide-react'
+import { formatLocalDate } from '@/lib/dates'
 
 const DAYS_PT   = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 const MONTHS_PT = [
@@ -11,7 +12,7 @@ function addDays(d: Date, n: number): Date {
   const r = new Date(d); r.setDate(r.getDate() + n); return r
 }
 
-function toISO(d: Date): string { return d.toISOString().slice(0, 10) }
+function toISO(d: Date): string { return formatLocalDate(d) }
 
 interface Props {
   value: string | null

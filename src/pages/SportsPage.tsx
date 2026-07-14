@@ -10,6 +10,7 @@ import { useSportGoals } from '../hooks/useSportGoals'
 import { useSportRaces } from '../hooks/useSportRaces'
 import { useSportShopping } from '../hooks/useSportShopping'
 import { supabase } from '../lib/supabase'
+import { todayLocal } from '../lib/dates'
 import type { Database } from '../types/db'
 
 type SportRace = Database['public']['Tables']['sport_races']['Row']
@@ -362,7 +363,7 @@ function WorkoutsSection({ sport }: { sport: string }) {
   const [modalityTab,  setModalityTab]  = useState<ModalityTab>('todos')
 
   const kinds = SPORT_KINDS[sport] ?? ['geral']
-  const [wDate,  setWDate]  = useState(new Date().toISOString().slice(0, 10))
+  const [wDate,  setWDate]  = useState(todayLocal())
   const [wKind,  setWKind]  = useState(kinds[0])
   const [wDist,  setWDist]  = useState('')
   const [wDur,   setWDur]   = useState('')
