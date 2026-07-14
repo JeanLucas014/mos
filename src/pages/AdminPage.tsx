@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useUserSettings } from '../hooks/useUserSettings'
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis,
   Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts'
 import { Users, TrendingUp, Activity, CheckCircle2, RefreshCw, AlertCircle } from 'lucide-react'
-
-const JEAN_ID = '64ab5956-18b1-432d-82f0-1ad8bc4761db'
 
 interface AdminStats {
   totalUsers: number
@@ -76,6 +75,7 @@ function timeAgo(iso: string | null) {
 
 export function AdminPage() {
   const { user } = useAuth()
+  const { data: settings, isLoading: settingsLoading } = useUserSettings()
   const navigate = useNavigate()
   const [stats, setStats] = useState<AdminStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -83,10 +83,10 @@ export function AdminPage() {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
 
   useEffect(() => {
-    if (user && user.id !== JEAN_ID) {
+    if (user && !settingsLoading && !settings?.is_admin) {
       navigate('/dashboard')
     }
-  }, [user, navigate])
+  }, [user, settingsLoading, settings, navigate])
 
   async function load() {
     setLoading(true)
@@ -107,10 +107,10 @@ export function AdminPage() {
   }
 
   useEffect(() => {
-    if (user?.id === JEAN_ID) load()
-  }, [user])
+    if (settings?.is_admin) load()
+  }, [settings])
 
-  if (user?.id !== JEAN_ID) return null
+  if (!settings?.is_admin) return null
 
   return (
     <div>

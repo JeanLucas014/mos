@@ -6,7 +6,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const JEAN_ID = "64ab5956-18b1-432d-82f0-1ad8bc4761db";
 const DEMO_ID = "5bb498d8-e717-4b61-8d14-143529b4c14f";
 
 serve(async (req) => {
@@ -15,14 +14,13 @@ serve(async (req) => {
   try {
     const authHeader = req.headers.get("Authorization") ?? "";
 
-    // Verificar que é o Jean
     const supabaseUser = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
       { global: { headers: { Authorization: authHeader } } }
     );
     const { data: { user }, error: authError } = await supabaseUser.auth.getUser();
-    if (authError || !user || user.id !== JEAN_ID) {
+    if (authError || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -34,6 +32,19 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
+
+    // Verificar is_admin (fonte única da verdade — user_settings.is_admin)
+    const { data: callerSettings } = await admin
+      .from("user_settings")
+      .select("is_admin")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (!callerSettings?.is_admin) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Buscar todos os usuários
     const { data: { users }, error: usersError } = await admin.auth.admin.listUsers({ perPage: 1000 });

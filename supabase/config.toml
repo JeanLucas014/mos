@@ -9,3 +9,21 @@ verify_jwt = false
 
 [functions.strava-sync]
 verify_jwt = false
+
+[functions.pluggy-webhook]
+verify_jwt = false
+
+[functions.pagespeed-proxy]
+verify_jwt = false
+
+[functions.admin-stats]
+verify_jwt = false
+
+[functions.daily-briefing]
+verify_jwt = false
+
+[functions.mos-chat]
+verify_jwt = false
+
+[functions.send-support]
+verify_jwt = false

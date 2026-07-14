@@ -7,6 +7,7 @@ interface UserSettings {
   user_id: string
   enabled_modules: string[]
   onboarding_completed: boolean
+  is_admin: boolean
 }
 
 export function useUserSettings() {
@@ -26,6 +27,7 @@ export function useUserSettings() {
         user_id: '',
         enabled_modules: MODULES.map(m => m.id),
         onboarding_completed: false,
+        is_admin: false,
       }
     },
     // configurações do usuário mudam raramente (só quando ele mexe em

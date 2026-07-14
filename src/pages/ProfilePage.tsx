@@ -3,9 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { CheckCircle, Eye, EyeOff, Shield } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useProfile, useAllProfiles } from '../hooks/useProfile'
+import { useUserSettings } from '../hooks/useUserSettings'
 import { supabase } from '../lib/supabase'
-
-const ADMIN_EMAIL = 'jl.jean13@gmail.com'
 
 /* ── helpers ──────────────────────────────────────────────────── */
 function initials(name: string | null | undefined, email: string | null | undefined): string {
@@ -297,6 +296,7 @@ function AdminSection() {
 export function ProfilePage() {
   const { user, signOut } = useAuth()
   const { data: profile, isLoading, updateProfile } = useProfile()
+  const { data: settings } = useUserSettings()
   const navigate = useNavigate()
 
   const [name,         setName]         = useState('')
@@ -308,7 +308,7 @@ export function ProfilePage() {
   /* Sync name from profile when loaded */
   const displayName = profile?.name ?? ''
   const email       = user?.email ?? ''
-  const isAdmin     = email === ADMIN_EMAIL
+  const isAdmin     = settings?.is_admin ?? false
 
   function startEditName() {
     setName(displayName)

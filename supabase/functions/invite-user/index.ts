@@ -1,7 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const ADMIN_EMAIL = 'jl.jean13@gmail.com'
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -39,8 +37,19 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    /* ── Admin gate ── */
-    if (user.email !== ADMIN_EMAIL) {
+    /* ── Admin client (service role) ── */
+    const adminClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    )
+
+    /* ── Admin gate — fonte única da verdade: user_settings.is_admin ── */
+    const { data: settings } = await adminClient
+      .from('user_settings')
+      .select('is_admin')
+      .eq('user_id', user.id)
+      .maybeSingle()
+    if (!settings?.is_admin) {
       return new Response(
         JSON.stringify({ error: 'Forbidden — admin only' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
@@ -57,11 +66,6 @@ Deno.serve(async (req: Request) => {
     }
 
     /* ── Invite via service role ── */
-    const adminClient = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    )
-
     const { data, error: inviteErr } = await adminClient.auth.admin.inviteUserByEmail(email.trim())
     if (inviteErr) throw inviteErr
 

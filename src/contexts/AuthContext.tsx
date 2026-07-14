@@ -19,11 +19,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const lastUserId = useRef<string | null>(null)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      lastUserId.current = session?.user?.id ?? null
-      setSession(session)
-      setLoading(false)
-    })
+    supabase.auth.getSession()
+      .then(({ data: { session }, error }) => {
+        if (error) {
+          console.error('[AuthContext] erro ao obter sessão:', error)
+        }
+        lastUserId.current = session?.user?.id ?? null
+        setSession(session)
+        setLoading(false)
+      })
+      .catch((err) => {
+        console.error('[AuthContext] falha crítica ao obter sessão:', err)
+        setLoading(false) // garantir que loading não fica preso
+      })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       const nextUserId = session?.user?.id ?? null

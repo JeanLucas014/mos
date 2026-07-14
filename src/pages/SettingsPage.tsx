@@ -11,8 +11,6 @@ import type { NotificationPrefs } from '@/hooks/useNotifications'
 import { useTheme } from '@/hooks/useTheme'
 import type { ThemeOption } from '@/hooks/useTheme'
 
-const ADMIN_EMAIL = 'jl.jean13@gmail.com'
-
 function Step({ n, text }: { n: number; text: string }) {
   return (
     <div className="flex gap-3">
@@ -651,7 +649,7 @@ export default function SettingsPage() {
 
   const displayName = profile?.name ?? ''
   const email       = user?.email ?? ''
-  const isAdmin     = email === ADMIN_EMAIL
+  const isAdmin     = settings?.is_admin ?? false
   const enabled     = settings?.enabled_modules ?? []
 
   const visibleModules = MODULES.filter(m => !m.hidden || enabled.includes(m.id))

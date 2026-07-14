@@ -221,7 +221,7 @@ const NAV_LINK_CLASS = (isActive: boolean, c: boolean) =>
   ].join(' ')
 
 export function Sidebar() {
-  const { signOut, user } = useAuth()
+  const { signOut } = useAuth()
   const setSidebarOpen         = useUIStore((s) => s.setSidebarOpen)
   const sidebarCollapsed       = useUIStore((s) => s.sidebarCollapsed)
   const toggleSidebarCollapsed = useUIStore((s) => s.toggleSidebarCollapsed)
@@ -287,7 +287,7 @@ export function Sidebar() {
           )
         })}
 
-        {user?.id === '64ab5956-18b1-432d-82f0-1ad8bc4761db' && (
+        {settings?.is_admin && (
           <div className="mb-4">
             {!c && (
               <h5
