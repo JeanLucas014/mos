@@ -22,3 +22,7 @@ export function addDaysLocal(dateStr: string, days: number): string {
   d.setDate(d.getDate() + days)
   return formatLocalDate(d)
 }
+
+export function daysAgoLocal(days: number): string {
+  return addDaysLocal(todayLocal(), -days)
+}

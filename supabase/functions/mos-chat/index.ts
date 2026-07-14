@@ -45,10 +45,48 @@ serve(async (req) => {
 
     const { messages } = await req.json();
 
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return json({ error: "messages inválido" }, 400);
+    }
+    if (messages.length > 20) {
+      return json({ error: "Histórico de conversa muito longo" }, 400);
+    }
+    const totalChars = messages.reduce((sum: number, m: any) =>
+      sum + (typeof m.content === "string" ? m.content.length : 0), 0);
+    if (totalChars > 8000) {
+      return json({ error: "Mensagem muito longa" }, 400);
+    }
+
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+
+    /* Rate limit: 30 mensagens por hora por usuário */
+    const RATE_LIMIT = 30;
+    const WINDOW_MS = 60 * 60 * 1000;
+
+    const { data: rateLimitRow } = await admin
+      .from("chat_rate_limits")
+      .select("count, window_start")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    const now = Date.now();
+    const windowStart = rateLimitRow ? new Date(rateLimitRow.window_start).getTime() : 0;
+    const windowExpired = now - windowStart > WINDOW_MS;
+
+    if (!rateLimitRow || windowExpired) {
+      await admin.from("chat_rate_limits").upsert({
+        user_id: user.id, count: 1, window_start: new Date().toISOString(),
+      });
+    } else if (rateLimitRow.count >= RATE_LIMIT) {
+      return json({ error: "Limite de mensagens atingido. Tente novamente em breve." }, 429);
+    } else {
+      await admin.from("chat_rate_limits")
+        .update({ count: rateLimitRow.count + 1 })
+        .eq("user_id", user.id);
+    }
 
     const { date: today, day: todayDay } = todayLocalParts();
     const monthStart = today.slice(0, 7) + "-01";

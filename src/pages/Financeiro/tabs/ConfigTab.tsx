@@ -107,7 +107,7 @@ export function ConfigTab({ anos, onReload }: Props) {
   async function updateFuturePrevisoes() {
     const today = todayLocal()
     const { data: configRaw } = await supabase.from('fin_previsao_config').select('valor')
-    const total = ((configRaw ?? []) as { valor: number }[]).reduce((s, c) => s + Number(c.valor), 0)
+    const total = ((configRaw ?? []) as { valor: number }[]).reduce((s, c) => s + (Number(c.valor) || 0), 0)
     if (total <= 0) return
 
     const { data: futureRaw } = await supabase
@@ -318,7 +318,7 @@ export function ConfigTab({ anos, onReload }: Props) {
           ))}
 
           {previsaoItems.length > 0 && (() => {
-            const total = previsaoItems.reduce((s, i) => s + Number(i.valor), 0)
+            const total = previsaoItems.reduce((s, i) => s + (Number(i.valor) || 0), 0)
             const daysThisMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate()
             const daily = Math.round((total / daysThisMonth) * 100) / 100
             return (

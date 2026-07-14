@@ -163,7 +163,7 @@ export function MesTab({ ano, initialMonth }: Props) {
 
     const { data: configRaw } = await supabase
       .from('fin_previsao_config').select('valor')
-    const total = ((configRaw ?? []) as { valor: number }[]).reduce((s, c) => s + Number(c.valor), 0)
+    const total = ((configRaw ?? []) as { valor: number }[]).reduce((s, c) => s + (Number(c.valor) || 0), 0)
     if (total <= 0) return
 
     const days = daysInMonth(ano.ano, month)

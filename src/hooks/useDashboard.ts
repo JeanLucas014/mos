@@ -6,7 +6,8 @@
  */
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
-import { formatLocalDate, todayLocal } from '../lib/dates'
+import { useAuth } from '../contexts/AuthContext'
+import { formatLocalDate, todayLocal, daysAgoLocal } from '../lib/dates'
 import type { Database } from '../types/db'
 
 type Habit    = Database['public']['Tables']['habits']['Row']
@@ -74,6 +75,8 @@ export function useDashTasks() {
 
 /* ── Habits ───────────────────────────────────────────────────── */
 export function useDashHabits() {
+  const { user } = useAuth()
+
   const habits = useQuery({
     queryKey: ['habits'],
     queryFn: async () => {
@@ -85,12 +88,18 @@ export function useDashHabits() {
   })
 
   const logs = useQuery({
-    queryKey: ['habit_logs'],
+    queryKey: ['habit_logs', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from('habit_logs').select('*')
+      const ninetyDaysAgo = daysAgoLocal(90)
+      const { data, error } = await supabase
+        .from('habit_logs')
+        .select('*')
+        .eq('user_id', user!.id)
+        .gte('log_date', ninetyDaysAgo)
       if (error) throw error
       return data as HabitLog[]
     },
+    enabled: !!user,
   })
 
   const todayStr = today()

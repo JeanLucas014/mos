@@ -87,12 +87,18 @@ async function fetchAllActivities(accessToken: string): Promise<Array<{
     distance: number; moving_time: number; start_date_local: string
   }> = []
 
-  const MAX_PAGES   = 3
-  const PER_PAGE    = 200
+  const SAFETY_MAX_PAGES = 20  // teto de segurança generoso (4000 atividades)
+  const PER_PAGE         = 200
 
-  for (let page = 1; page <= MAX_PAGES; page++) {
+  for (let page = 1; page <= SAFETY_MAX_PAGES; page++) {
     const url = `https://www.strava.com/api/v3/athlete/activities?per_page=${PER_PAGE}&page=${page}`
     const resp = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } })
+
+    if (resp.status === 429) {
+      console.error('[strava-sync] rate limited na página', page)
+      break  // retorna o que já foi buscado até agora
+    }
+
     if (!resp.ok) {
       console.error('[strava-sync] activities fetch error page', page, await resp.text())
       break
