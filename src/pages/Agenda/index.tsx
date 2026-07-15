@@ -90,7 +90,7 @@ export default function AgendaPage() {
     const from = new Date(); from.setDate(from.getDate() - 7)
     const to   = new Date(); to.setDate(to.getDate() + 90)
 
-    const { data: normalEvents } = await (supabase as any)
+    const { data: normalEvents } = await supabase
       .from('calendar_events')
       .select('*')
       .gte('start_at', from.toISOString())
@@ -98,7 +98,7 @@ export default function AgendaPage() {
       .is('recurrence_rule', null)
       .order('start_at')
 
-    const { data: recurringEvents } = await (supabase as any)
+    const { data: recurringEvents } = await supabase
       .from('calendar_events')
       .select('*')
       .not('recurrence_rule', 'is', null)
@@ -111,7 +111,7 @@ export default function AgendaPage() {
   }, [])
 
   const loadRotinas = useCallback(async () => {
-    const { data } = await (supabase as any)
+    const { data } = await supabase
       .from('calendar_rotinas')
       .select('*')
       .order('ordem')
@@ -139,35 +139,35 @@ export default function AgendaPage() {
     if (!scope || scope === 'this') {
       if (instanceDate) {
         // Add EXDATE to parent to skip this occurrence
-        const { data: parent } = await (supabase as any)
+        const { data: parent } = await supabase
           .from('calendar_events').select('recurrence_rule').eq('id', originalId).maybeSingle()
         if (parent) {
           const dateKey = instanceDate.replace(/-/g, '')
           const newRule = addExdate(parent.recurrence_rule, dateKey)
-          await (supabase as any).from('calendar_events').update({
+          await supabase.from('calendar_events').update({
             recurrence_rule: newRule,
           }).eq('id', originalId)
         }
       } else {
-        await (supabase as any).from('calendar_events').delete().eq('id', originalId)
+        await supabase.from('calendar_events').delete().eq('id', originalId)
       }
     } else if (scope === 'this_and_following') {
       if (instanceDate) {
         const until = new Date(instanceDate)
         until.setDate(until.getDate() - 1)
         const untilStr = until.toISOString().slice(0, 10).replace(/-/g, '') + 'T235959Z'
-        const { data: parent } = await (supabase as any)
+        const { data: parent } = await supabase
           .from('calendar_events').select('recurrence_rule').eq('id', originalId).maybeSingle()
         if (parent) {
           const rule = (parent.recurrence_rule ?? '')
             .split(';').filter((p: string) => !p.startsWith('UNTIL')).join(';')
-          await (supabase as any).from('calendar_events').update({
+          await supabase.from('calendar_events').update({
             recurrence_rule: rule + `;UNTIL=${untilStr}`,
           }).eq('id', originalId)
         }
       }
     } else if (scope === 'all') {
-      await (supabase as any).from('calendar_events').delete().eq('id', originalId)
+      await supabase.from('calendar_events').delete().eq('id', originalId)
     }
 
     setModal(null)
@@ -177,6 +177,8 @@ export default function AgendaPage() {
 
   /* ── Save ───────────────────────────────────────────────────── */
   async function saveEvent(ev: Partial<CalendarEvent>, scope?: RecurrenceScope) {
+    if (!ev.title || !ev.start_at || !ev.end_at) return
+
     const originalId   = ev.id ? getOriginalId(ev.id) : null
     const instanceDate = ev.id ? getInstanceDate(ev.id) : null
     const isNew        = !ev.id || (!originalId && !instanceDate)
@@ -194,21 +196,21 @@ export default function AgendaPage() {
     }
 
     if (isNew) {
-      await (supabase as any).from('calendar_events').insert(payload)
+      await supabase.from('calendar_events').insert(payload)
     } else if (!instanceDate || !scope || scope === 'all') {
       // Edit the master event
-      await (supabase as any).from('calendar_events')
-        .update(payload).eq('id', originalId)
+      await supabase.from('calendar_events')
+        .update(payload).eq('id', originalId!)
     } else if (scope === 'this') {
       // Create a standalone event for this date, exclude from parent
-      await (supabase as any).from('calendar_events').insert({ ...payload, recurrence_rule: null })
+      await supabase.from('calendar_events').insert({ ...payload, recurrence_rule: null })
       if (originalId && instanceDate) {
-        const { data: parent } = await (supabase as any)
+        const { data: parent } = await supabase
           .from('calendar_events').select('recurrence_rule').eq('id', originalId).maybeSingle()
         if (parent) {
           const dateKey = instanceDate.replace(/-/g, '')
           const newRule = addExdate(parent.recurrence_rule, dateKey)
-          await (supabase as any).from('calendar_events').update({
+          await supabase.from('calendar_events').update({
             recurrence_rule: newRule,
           }).eq('id', originalId)
         }
@@ -219,17 +221,17 @@ export default function AgendaPage() {
         const until    = new Date(instanceDate)
         until.setDate(until.getDate() - 1)
         const untilStr = until.toISOString().slice(0, 10).replace(/-/g, '') + 'T235959Z'
-        const { data: parent } = await (supabase as any)
+        const { data: parent } = await supabase
           .from('calendar_events').select('recurrence_rule').eq('id', originalId).maybeSingle()
         if (parent) {
           const rule = (parent.recurrence_rule ?? '')
             .split(';').filter((p: string) => !p.startsWith('UNTIL')).join(';')
-          await (supabase as any).from('calendar_events').update({
+          await supabase.from('calendar_events').update({
             recurrence_rule: rule + `;UNTIL=${untilStr}`,
           }).eq('id', originalId)
         }
         // Create new series from this date
-        await (supabase as any).from('calendar_events').insert(payload)
+        await supabase.from('calendar_events').insert(payload)
       }
     }
 
