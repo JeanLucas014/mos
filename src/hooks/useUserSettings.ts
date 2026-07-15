@@ -44,7 +44,7 @@ export function useUserSettings() {
         : [...current.enabled_modules, moduleId]
       const { error } = await (supabase as any)
         .from('user_settings')
-        .upsert({ enabled_modules: enabled }, { onConflict: 'user_id' })
+        .upsert({ user_id: user!.id, enabled_modules: enabled }, { onConflict: 'user_id' })
       if (error) throw error
       return enabled
     },
@@ -61,7 +61,7 @@ export function useUserSettings() {
       const { error } = await (supabase as any)
         .from('user_settings')
         .upsert(
-          { enabled_modules: selectedModules, onboarding_completed: true },
+          { user_id: user!.id, enabled_modules: selectedModules, onboarding_completed: true },
           { onConflict: 'user_id' },
         )
       if (error) throw error
