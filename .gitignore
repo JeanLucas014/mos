@@ -28,3 +28,4 @@ dist-ssr
 
 .vercel
 .env*
+vercel_env_vars.md
