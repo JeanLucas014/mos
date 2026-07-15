@@ -1,10 +1,10 @@
-﻿import { useState, useEffect, useMemo } from 'react'
+﻿import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import {
   Plus, RefreshCw,
   ChevronDown, ChevronRight,
 } from 'lucide-react'
-import type { TipoInv, Investimento, Taxa, MainTab } from './types'
+import type { TipoInv, Investimento, MainTab } from './types'
 import { TIPO_CFG } from './types'
 import {
   BRL, PCT, fmtDate, today,
@@ -14,48 +14,20 @@ import { InvestimentoModal } from './components/InvestimentoModal'
 import { SimuladorTab } from './components/SimuladorTab'
 import { AtivoRow } from './components/AtivoRow'
 import { AlocacaoChart } from './components/AlocacaoChart'
+import { useInvestimentosData } from './hooks/useInvestimentosData'
 
 // ─── InvestimentosTab ─────────────────────────────────────────────────────────
 
 export function InvestimentosTab() {
-  const [items, setItems]                     = useState<Investimento[]>([])
-  const [taxas, setTaxas]                     = useState<Taxa[]>([])
-  const [loading, setLoading]                 = useState(true)
+  const {
+    items, taxas, loading,
+    porTipo, patrimonioTotal, totalAplicado, rentTotal,
+    reload: load,
+  } = useInvestimentosData()
   const [atualizandoTaxas, setAtualizandoTaxas] = useState(false)
   const [activeTab, setActiveTab]             = useState<MainTab>('carteira')
   const [editando, setEditando]               = useState<Partial<Investimento> | null>(null)
   const [collapsed, setCollapsed]             = useState<Set<string>>(new Set())
-
-  useEffect(() => { load() }, [])
-
-  async function load() {
-    setLoading(true)
-    const [{ data: inv }, { data: tax }] = await Promise.all([
-      (supabase.from('fin_investimentos') as any)
-        .select('*')
-        .eq('ativo', true)
-        .order('criado_em'),
-      (supabase.from('fin_taxas_economicas') as any).select('*'),
-    ])
-    setItems((inv ?? []) as Investimento[])
-    setTaxas((tax ?? []) as Taxa[])
-    setLoading(false)
-  }
-
-  const porTipo = useMemo(() => {
-    const m: Record<string, number> = {}
-    for (const inv of items) {
-      const isRF = inv.tipo === 'renda_fixa' || inv.tipo === 'previdencia'
-      const val = isRF ? valorEstimadoRF(inv, taxas) : valorPosicao(inv)
-      m[inv.tipo] = (m[inv.tipo] ?? 0) + val
-    }
-    return m
-  }, [items, taxas])
-
-  const patrimonioTotal = Object.values(porTipo).reduce((a, b) => a + b, 0)
-  const totalAplicado   = items.reduce((a, i) => a + (i.valor_aplicado ?? 0), 0)
-  const rentTotal       =
-    totalAplicado > 0 ? ((patrimonioTotal - totalAplicado) / totalAplicado) * 100 : 0
 
   async function atualizarTaxas() {
     setAtualizandoTaxas(true)
