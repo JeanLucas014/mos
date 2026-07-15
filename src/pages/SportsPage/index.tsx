@@ -5,119 +5,19 @@ import {
 } from 'lucide-react'
 import { HelpButton } from '@/components/help/HelpButton'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
-import { useWorkouts } from '../hooks/useWorkouts'
-import { useSportGoals } from '../hooks/useSportGoals'
-import { useSportRaces } from '../hooks/useSportRaces'
-import { useSportShopping } from '../hooks/useSportShopping'
-import { supabase } from '../lib/supabase'
-import { todayLocal } from '../lib/dates'
-import type { Database } from '../types/db'
-
-type SportRace = Database['public']['Tables']['sport_races']['Row']
-type Sport = Database['public']['Tables']['sports']['Row']
-
-/* ── Sport catalog ─────────────────────────────────────────────── */
-const SPORT_CATALOG: { key: string; label: string }[] = [
-  { key: 'corrida',    label: 'Corrida' },
-  { key: 'triathlon',  label: 'Triathlon' },
-  { key: 'musculacao', label: 'Musculação' },
-  { key: 'natacao',    label: 'Natação' },
-  { key: 'ciclismo',   label: 'Ciclismo' },
-  { key: 'yoga',       label: 'Yoga' },
-  { key: 'crossfit',   label: 'Crossfit' },
-  { key: 'futebol',    label: 'Futebol' },
-  { key: 'tenis',      label: 'Tênis' },
-  { key: 'volei',      label: 'Vôlei' },
-  { key: 'caminhada',  label: 'Caminhada' },
-  { key: 'escalada',   label: 'Escalada' },
-]
-
-/* ── Sport config ──────────────────────────────────────────────── */
-const SPORT_KINDS: Record<string, string[]> = {
-  corrida:    ['easy', 'long', 'tempo', 'interval'],
-  triathlon:  ['natação', 'bike', 'corrida', 'tijolo'],
-  musculacao: ['superior', 'inferior', 'full_body', 'cardio', 'alongamento'],
-}
-const KIND_LABELS: Record<string, string> = {
-  easy: 'Fácil', long: 'Longo', tempo: 'Tempo', interval: 'Intervalo',
-  natação: 'Natação', bike: 'Bike', corrida: 'Corrida', tijolo: 'Tijolo',
-  superior: 'Superior', inferior: 'Inferior', full_body: 'Full Body',
-  cardio: 'Cardio', alongamento: 'Alongamento', geral: 'Geral',
-}
-
-/* ── Helpers ───────────────────────────────────────────────────── */
-function fmtDuration(s: number): string {
-  const h = Math.floor(s / 3600)
-  const m = Math.floor((s % 3600) / 60)
-  const sec = s % 60
-  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
-  return `${m}:${String(sec).padStart(2, '0')}`
-}
-
-function parseDuration(str: string): number {
-  const parts = str.split(':').map(Number)
-  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2]
-  if (parts.length === 2) return parts[0] * 60 + parts[1]
-  return 0
-}
-
-function calcPace(distance_m: number, duration_s: number): string {
-  if (!distance_m || !duration_s) return '—'
-  const secPerKm = duration_s / (distance_m / 1000)
-  return `${Math.floor(secPerKm / 60)}:${String(Math.round(secPerKm % 60)).padStart(2, '0')}/km`
-}
-
-function fmtDate(d: string): string {
-  return new Date(d + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
-}
-
-function daysUntil(dateStr: string): number {
-  const today = new Date(); today.setHours(0, 0, 0, 0)
-  const target = new Date(dateStr + 'T12:00:00')
-  return Math.ceil((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-}
-
-
-function fmtDurationShort(s: number): string {
-  const h = Math.floor(s / 3600)
-  const m = Math.floor((s % 3600) / 60)
-  return h > 0 ? `${h}h${String(m).padStart(2, '0')}` : `${m}min`
-}
-
-function fmtKm(m: number | null): string | null {
-  if (!m) return null
-  return m >= 1000 ? `${(m / 1000).toFixed(1)} km` : `${m} m`
-}
-
-function fmtMonthLabel(dateStr: string): string {
-  const d = new Date(dateStr + 'T12:00:00')
-  return d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
-}
-
-function fmtDayLabel(dateStr: string): string {
-  const d = new Date(dateStr + 'T12:00:00')
-  const wd = d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '')
-  return `${wd}, ${d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}`
-}
-
-function calcAvgPace(workouts: Sport[]): string | null {
-  const runs = workouts.filter(w => w.sport !== 'musculacao' && w.distance_m && w.duration_s)
-  if (!runs.length) return null
-  const totalDist = runs.reduce((s, w) => s + (w.distance_m ?? 0), 0)
-  const totalTime = runs.reduce((s, w) => s + (w.duration_s ?? 0), 0)
-  const secPerKm = totalTime / (totalDist / 1000)
-  return `${Math.floor(secPerKm / 60)}:${String(Math.round(secPerKm % 60)).padStart(2, '0')}/km`
-}
-
-function groupByMonth(workouts: Sport[]): [string, Sport[]][] {
-  const groups: Record<string, Sport[]> = {}
-  workouts.forEach(w => {
-    const key = w.sport_date.slice(0, 7)
-    if (!groups[key]) groups[key] = []
-    groups[key].push(w)
-  })
-  return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]))
-}
+import { useWorkouts } from '../../hooks/useWorkouts'
+import { useSportGoals } from '../../hooks/useSportGoals'
+import { useSportRaces } from '../../hooks/useSportRaces'
+import { useSportShopping } from '../../hooks/useSportShopping'
+import { supabase } from '../../lib/supabase'
+import { todayLocal } from '../../lib/dates'
+import type { SportRace, Sport, UserSport } from './types'
+import { SPORT_CATALOG, SPORT_KINDS, KIND_LABELS, MODALITY_TABS, type ModalityTab } from './constants'
+import {
+  fmtDuration, parseDuration, calcPace, fmtDate, daysUntil,
+  fmtDurationShort, fmtKm, fmtMonthLabel, fmtDayLabel, calcAvgPace, groupByMonth,
+  paceToSec, secToPace,
+} from './utils'
 
 /* ── Section card ──────────────────────────────────────────────── */
 function Section({
@@ -323,14 +223,6 @@ function MonthGroup({ monthKey, workouts, onDelete }: { monthKey: string; workou
 /* ══════════════════════════════════════════════════════════════════
    SECTION 1 — TREINOS
 ══════════════════════════════════════════════════════════════════ */
-const MODALITY_TABS = [
-  { key: 'todos',      label: 'Todos' },
-  { key: 'corrida',    label: 'Corrida' },
-  { key: 'musculacao', label: 'Musculação' },
-  { key: 'triathlon',  label: 'Triathlon' },
-] as const
-type ModalityTab = typeof MODALITY_TABS[number]['key']
-
 function WorkoutsSection({ sport }: { sport: string }) {
   const { addWorkout } = useWorkouts(sport as any)
   const qc = useQueryClient()
@@ -509,15 +401,6 @@ function WorkoutsSection({ sport }: { sport: string }) {
 /* ══════════════════════════════════════════════════════════════════
    SECTION 2 — METAS
 ══════════════════════════════════════════════════════════════════ */
-function paceToSec(pace: string): number {
-  const m = pace.match(/^(\d+):(\d{2})/)
-  if (!m) return 0
-  return parseInt(m[1]) * 60 + parseInt(m[2])
-}
-function secToPace(s: number): string {
-  return `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}/km`
-}
-
 function GoalsSection({ sport }: { sport: string }) {
   const { data: goals = [], isLoading, addGoal, toggleGoal, deleteGoal } = useSportGoals(sport as any)
   const { data: races = [] } = useSportRaces(sport as any)
@@ -792,8 +675,6 @@ function SportShoppingSection({ sport }: { sport: string }) {
 /* ══════════════════════════════════════════════════════════════════
    PAGE
 ══════════════════════════════════════════════════════════════════ */
-type UserSport = { id: string; key: string; label: string }
-
 export function SportsPage() {
   const [userSports,   setUserSports]   = useState<UserSport[]>([])
   const [sport,        setSport]        = useState<string>('')
