@@ -1,47 +1,26 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { HelpButton } from '@/components/help/HelpButton'
-import { supabase } from '../../lib/supabase'
-import type { UserSport } from './types'
 import { SPORT_CATALOG } from './constants'
 import { WorkoutsSection } from './components/WorkoutsSection'
 import { GoalsSection } from './components/GoalsSection'
 import { RacesSection } from './components/RacesSection'
 import { SportShoppingSection } from './components/SportShoppingSection'
+import { useUserSports } from './hooks/useUserSports'
 
 /* ══════════════════════════════════════════════════════════════════
    PAGE
 ══════════════════════════════════════════════════════════════════ */
 export function SportsPage() {
-  const [userSports,   setUserSports]   = useState<UserSport[]>([])
-  const [sport,        setSport]        = useState<string>('')
-  const [loadingSports, setLoadingSports] = useState(true)
+  const {
+    userSports, sport, setSport, loadingSports,
+    addSport: addSportAction, removeSport,
+  } = useUserSports()
   const [showAddSport, setShowAddSport] = useState(false)
 
-  useEffect(() => { loadUserSports() }, [])
-
-  async function loadUserSports() {
-    const { data } = await (supabase as any).from('user_sports').select('*').order('ordem')
-    const sports = data ?? []
-    setUserSports(sports)
-    if (sports.length > 0 && !sport) setSport(sports[0].key)
-    setLoadingSports(false)
-  }
-
   async function addSport(key: string, label: string) {
-    await (supabase as any).from('user_sports').insert({ key, label, ordem: userSports.length })
+    await addSportAction(key, label)
     setShowAddSport(false)
-    await loadUserSports()
-    setSport(key)
-  }
-
-  async function removeSport(id: string, key: string) {
-    if (!window.confirm('Remover este esporte? Os treinos registrados não serão apagados.')) return
-    await (supabase as any).from('user_sports').delete().eq('id', id)
-    const remaining = userSports.filter(s => s.id !== id)
-    setUserSports(remaining)
-    if (sport === key) setSport(remaining[0]?.key ?? '')
-    await loadUserSports()
   }
 
   return (
