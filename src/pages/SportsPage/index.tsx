@@ -1,6 +1,6 @@
 import { useState, useEffect, type FormEvent } from 'react'
 import {
-  ChevronDown, ChevronUp, Activity, Dumbbell, Bike,
+  Activity,
   Target, Trophy, ShoppingBag, Calendar, MapPin, Check, Circle, RefreshCw, Plus,
 } from 'lucide-react'
 import { HelpButton } from '@/components/help/HelpButton'
@@ -15,151 +15,16 @@ import type { SportRace, Sport, UserSport } from './types'
 import { SPORT_CATALOG, SPORT_KINDS, KIND_LABELS, MODALITY_TABS, type ModalityTab } from './constants'
 import {
   fmtDuration, parseDuration, calcPace, fmtDate, daysUntil,
-  fmtDurationShort, fmtKm, fmtMonthLabel, fmtDayLabel, calcAvgPace, groupByMonth,
+  groupByMonth,
   paceToSec, secToPace,
 } from './utils'
 import { Section } from './components/Section'
 import { Modal } from './components/Modal'
 import { Field } from './components/Field'
 import { inputCls, inputH } from './components/shared'
-
-/* ── Strava sync hook ──────────────────────────────────────────── */
-function useStravaConnected() {
-  return useQuery({
-    queryKey: ['integration', 'strava'],
-    queryFn: async () => {
-      const { data } = await (supabase.from('integrations') as any)
-        .select('connected').eq('provider', 'strava').eq('connected', true).maybeSingle()
-      return !!data
-    },
-  })
-}
-
-/* ── YearStats ─────────────────────────────────────────────────── */
-function YearStats({ workouts, year }: { workouts: Sport[]; year: string }) {
-  const totalKm   = workouts.reduce((s, w) => s + (w.distance_m ?? 0), 0)
-  const totalTime = workouts.reduce((s, w) => s + (w.duration_s ?? 0), 0)
-  const totalCount = workouts.length
-  const avgPerWeek = (totalCount / 26).toFixed(1)
-  const bestPace   = calcAvgPace(workouts)
-  const withDist   = workouts.filter(w => w.distance_m)
-  const longestRun = withDist.length ? Math.max(...withDist.map(w => w.distance_m!)) : 0
-
-  const modalityCounts = [
-    { key: 'corrida',    label: 'Corrida',    count: workouts.filter(w => w.sport === 'corrida').length },
-    { key: 'musculacao', label: 'Musculação', count: workouts.filter(w => w.sport === 'musculacao').length },
-    { key: 'triathlon',  label: 'Triathlon',  count: workouts.filter(w => w.sport === 'triathlon').length },
-  ].filter(m => m.count > 0)
-
-  const stats = [
-    { label: 'Distância total', value: `${(totalKm / 1000).toFixed(0)} km` },
-    { label: 'Tempo total',     value: `${Math.floor(totalTime / 3600)}h ${Math.floor((totalTime % 3600) / 60)}min` },
-    { label: 'Atividades',      value: String(totalCount) },
-    { label: 'Média/semana',    value: `${avgPerWeek} treinos` },
-    { label: 'Pace médio',      value: bestPace ?? '—' },
-    { label: 'Maior corrida',   value: longestRun ? `${(longestRun / 1000).toFixed(1)} km` : '—' },
-  ]
-
-  return (
-    <div className="border border-[#1f1f1f] rounded-2xl p-5 mb-5" style={{ background: 'var(--bg)' }}>
-      <div className="flex items-start justify-between mb-5">
-        <div>
-          <div className="text-[10px] uppercase tracking-widest font-bold text-[#444] mb-1">Resumo anual</div>
-          <div className="font-bold text-xl text-white" style={{ fontFamily: 'Sora, sans-serif' }}>{year}</div>
-        </div>
-        {modalityCounts.length > 0 && (
-          <div className="flex gap-5">
-            {modalityCounts.map(m => (
-              <div key={m.key} className="text-center">
-                <div className="text-lg font-bold text-white" style={{ fontFamily: 'Sora, sans-serif' }}>{m.count}</div>
-                <div className="text-xs text-[#555]">{m.label}</div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-        {stats.map(s => (
-          <div key={s.label} className="border border-[#1f1f1f] rounded-xl p-3" style={{ background: 'var(--bg2)' }}>
-            <div className="text-[9px] sm:text-[10px] uppercase tracking-widest font-bold text-[#444] mb-1.5">{s.label}</div>
-            <div className="text-xl sm:text-2xl font-bold" style={{ fontFamily: 'Sora, sans-serif', color: '#0EA5E9', wordBreak: 'break-word' }}>{s.value}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-/* ── WorkoutRow ─────────────────────────────────────────────────── */
-function WorkoutRow({ w, onDelete }: { w: Sport; onDelete: (id: string) => void }) {
-  const icon = w.sport === 'musculacao'
-    ? <Dumbbell size={14} color="var(--text2)" />
-    : w.sport === 'triathlon'
-    ? <Bike size={14} color="var(--text2)" />
-    : <Activity size={14} color="var(--text2)" />
-
-  const label = w.sport === 'corrida' ? 'Corrida'
-    : w.sport === 'musculacao' ? 'Musculação'
-    : w.sport === 'triathlon'  ? 'Triathlon'
-    : w.sport
-
-  const km = fmtKm(w.distance_m)
-
-  return (
-    <div className="group flex items-center gap-3 py-2.5 px-4 border-b border-[#171717] last:border-b-0 hover:bg-[#111111] transition-colors">
-      <div className="flex-shrink-0">{icon}</div>
-      <div className="flex-1 flex items-center gap-2 min-w-0 overflow-hidden">
-        <span className="text-sm font-semibold text-white flex-shrink-0">{label}</span>
-        {km && <span className="text-sm text-[#555] flex-shrink-0">{km}</span>}
-        {km && <span className="text-[#333] flex-shrink-0">·</span>}
-        <span className="text-sm text-[#555] flex-shrink-0">{fmtDurationShort(w.duration_s)}</span>
-      </div>
-      <div className="flex items-center gap-3 flex-shrink-0">
-        {w.pace_label && (
-          <span className="text-sm font-bold" style={{ fontFamily: 'Sora, sans-serif', color: '#0EA5E9' }}>{w.pace_label}</span>
-        )}
-        <span className="text-xs text-[#555]">{fmtDayLabel(w.sport_date)}</span>
-        <button
-          onClick={() => onDelete(w.id)}
-          className="opacity-0 group-hover:opacity-100 text-[#444] hover:text-red-400 transition-opacity w-6 h-6 flex items-center justify-center text-sm"
-        >×</button>
-      </div>
-    </div>
-  )
-}
-
-/* ── MonthGroup ─────────────────────────────────────────────────── */
-function MonthGroup({ monthKey, workouts, onDelete }: { monthKey: string; workouts: Sport[]; onDelete: (id: string) => void }) {
-  const [open, setOpen] = useState(true)
-  const totalKm   = workouts.reduce((s, w) => s + (w.distance_m ?? 0), 0)
-  const totalTime = workouts.reduce((s, w) => s + (w.duration_s ?? 0), 0)
-  const pace  = calcAvgPace(workouts)
-  const label = fmtMonthLabel(monthKey + '-01')
-
-  return (
-    <div className="border border-[#1f1f1f] rounded-2xl overflow-hidden mb-2" style={{ background: 'var(--bg)' }}>
-      <button onClick={() => setOpen(!open)} className="w-full p-4 text-left hover:bg-[#0d0d0d] transition-colors">
-        <div className="flex items-center gap-3">
-          <div className="flex-1">
-            <div className="text-sm font-bold text-white capitalize mb-1" style={{ fontFamily: 'Sora, sans-serif' }}>{label}</div>
-            <div className="flex gap-3 flex-wrap">
-              <span className="text-xs text-[#555]">{workouts.length} atividade{workouts.length !== 1 ? 's' : ''}</span>
-              {totalKm > 0 && <span className="text-xs text-[#555]">{(totalKm / 1000).toFixed(1)} km</span>}
-              <span className="text-xs text-[#555]">{fmtDurationShort(totalTime)}</span>
-              {pace && <span className="text-xs text-[#555]">Pace med. {pace}</span>}
-            </div>
-          </div>
-          {open ? <ChevronUp size={14} color="var(--text2)" /> : <ChevronDown size={14} color="var(--text2)" />}
-        </div>
-      </button>
-      {open && (
-        <div className="border-t border-[#1a1a1a]">
-          {workouts.map(w => <WorkoutRow key={w.id} w={w} onDelete={onDelete} />)}
-        </div>
-      )}
-    </div>
-  )
-}
+import { useStravaConnected } from './hooks/useStravaConnected'
+import { YearStats } from './components/YearStats'
+import { MonthGroup } from './components/MonthGroup'
 
 /* ══════════════════════════════════════════════════════════════════
    SECTION 1 — TREINOS
