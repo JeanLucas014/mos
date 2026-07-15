@@ -1,141 +1,43 @@
-﻿import { useState, useEffect, useRef } from 'react'
+﻿import { useState, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Plus, Trash2, Download, Upload, AlertTriangle } from 'lucide-react'
-import { todayLocal } from '@/lib/dates'
-import type { FinAno, FinCategoria, FinCartao } from '../types'
-
-
-interface FinPrevisaoConfig { id: string; nome: string; valor: number; ordem: number }
+import type { FinAno } from '../../types'
+import { useConfigData } from './hooks/useConfigData'
 
 interface Props { anos: FinAno[]; onReload: () => void }
 
 export function ConfigTab({ anos, onReload }: Props) {
   const [tab, setTab] = useState<'categorias' | 'cartoes' | 'anos' | 'backup' | 'previsao'>('categorias')
-  const [categorias, setCategorias] = useState<FinCategoria[]>([])
-  const [cartoes, setCartoes] = useState<FinCartao[]>([])
-  const [loading, setLoading] = useState(true)
-  const [previsaoItems, setPrevisaoItems] = useState<FinPrevisaoConfig[]>([])
-  const [prevForm, setPrevForm] = useState({ nome: '', valor: '' })
+  const {
+    categorias, cartoes, previsaoItems, loading,
+    addCategoria, delCat, addCartao, delCartao,
+    addAno, updateSaldoInicial,
+    addPrevisaoItem, delPrevisaoItem, updatePrevisaoValor,
+  } = useConfigData(onReload)
 
+  const [prevForm, setPrevForm] = useState({ nome: '', valor: '' })
   const [catForm, setCatForm] = useState({ nome: '', natureza: 'diario', cor: '', rapida: false })
   const [cardForm, setCardForm] = useState({ nome: '', cor: '' })
   const [anoForm, setAnoForm] = useState({ ano: String(new Date().getFullYear() + 1), saldo_inicial: '0' })
 
-  useEffect(() => { loadAll() }, [])
-
-  async function loadAll() {
-    setLoading(true)
-    const [{ data: c }, { data: cr }] = await Promise.all([
-      supabase.from('fin_categorias').select('*').order('ordem'),
-      supabase.from('fin_cartoes').select('*').order('nome'),
-    ])
-    setCategorias((c ?? []) as FinCategoria[])
-    setCartoes((cr ?? []) as FinCartao[])
-    const { data: prev } = await supabase
-      .from('fin_previsao_config').select('*').order('ordem')
-    setPrevisaoItems((prev ?? []) as FinPrevisaoConfig[])
-    setLoading(false)
-  }
-
-  async function addCategoria() {
-    if (!catForm.nome.trim()) return
-    await (supabase.from('fin_categorias') as any).insert({
-      nome: catForm.nome.trim(), natureza: catForm.natureza,
-      cor: catForm.cor || null, rapida: catForm.rapida,
-      ordem: categorias.filter(c => c.natureza === catForm.natureza).length,
-    })
+  async function handleAddCategoria() {
+    await addCategoria(catForm.nome, catForm.natureza, catForm.cor, catForm.rapida)
     setCatForm({ nome: '', natureza: 'diario', cor: '', rapida: false })
-    loadAll()
   }
 
-  async function delCat(id: string) {
-    await (supabase.from('fin_categorias') as any).delete().eq('id', id)
-    loadAll()
-  }
-
-  async function addCartao() {
-    if (!cardForm.nome.trim()) return
-    await (supabase.from('fin_cartoes') as any).insert({ nome: cardForm.nome.trim(), cor: cardForm.cor || null })
+  async function handleAddCartao() {
+    await addCartao(cardForm.nome, cardForm.cor)
     setCardForm({ nome: '', cor: '' })
-    loadAll()
   }
 
-  async function delCartao(id: string) {
-    await (supabase.from('fin_cartoes') as any).delete().eq('id', id)
-    loadAll()
+  async function handleAddAno() {
+    await addAno(anoForm.ano, anoForm.saldo_inicial)
+    setAnoForm({ ano: String(parseInt(anoForm.ano) + 1), saldo_inicial: '0' })
   }
 
-  async function addAno() {
-    const a = parseInt(anoForm.ano)
-    const s = parseFloat(anoForm.saldo_inicial.replace(',', '.')) || 0
-    if (!a || a < 2020 || a > 2100) return alert('Ano inválido.')
-    await (supabase.from('fin_anos') as any).insert({ ano: a, saldo_inicial: s })
-    setAnoForm({ ano: String(a + 1), saldo_inicial: '0' })
-    onReload()
-    loadAll()
-  }
-
-  async function updateSaldoInicial(id: string, v: number) {
-    await (supabase.from('fin_anos') as any).update({ saldo_inicial: v }).eq('id', id)
-    onReload()
-  }
-
-  async function addPrevisaoItem() {
-    const v = parseFloat(prevForm.valor.replace(',', '.')) || 0
-    if (!prevForm.nome.trim() || !v) return
-    await (supabase.from('fin_previsao_config') as any).insert({
-      nome: prevForm.nome.trim(), valor: v,
-      ordem: previsaoItems.length,
-    })
+  async function handleAddPrevisaoItem() {
+    await addPrevisaoItem(prevForm.nome, prevForm.valor)
     setPrevForm({ nome: '', valor: '' })
-    loadAll()
-    await updateFuturePrevisoes()
-  }
-
-  async function delPrevisaoItem(id: string) {
-    await (supabase.from('fin_previsao_config') as any).delete().eq('id', id)
-    loadAll()
-    await updateFuturePrevisoes()
-  }
-
-  async function updatePrevisaoValor(id: string, valor: number) {
-    await (supabase.from('fin_previsao_config') as any).update({ valor }).eq('id', id)
-    loadAll()
-    await updateFuturePrevisoes()
-  }
-
-  async function updateFuturePrevisoes() {
-    const today = todayLocal()
-    const { data: configRaw } = await supabase.from('fin_previsao_config').select('valor')
-    const total = ((configRaw ?? []) as { valor: number }[]).reduce((s, c) => s + (Number(c.valor) || 0), 0)
-    if (total <= 0) return
-
-    const { data: futureRaw } = await supabase
-      .from('fin_lancamentos')
-      .select('id, data')
-      .eq('is_previsao', true)
-      .gte('data', today)
-    const future = (futureRaw ?? []) as { id: string; data: string }[]
-
-    if (!future.length) return
-
-    const byMonth: Record<string, { ids: string[]; days: number }> = {}
-    for (const entry of future) {
-      const [y, m] = entry.data.split('-').map(Number)
-      const key = `${y}-${m}`
-      if (!byMonth[key]) {
-        const days = new Date(y, m, 0).getDate()
-        byMonth[key] = { ids: [], days }
-      }
-      byMonth[key].ids.push(entry.id)
-    }
-
-    for (const { ids, days } of Object.values(byMonth)) {
-      const dailyValue = Math.round((total / days) * 100) / 100
-      await (supabase.from('fin_lancamentos') as any)
-        .update({ valor: dailyValue })
-        .in('id', ids)
-    }
   }
 
   const subtabs = [
@@ -184,7 +86,7 @@ export function ConfigTab({ anos, onReload }: Props) {
                 <input type="checkbox" checked={catForm.rapida} onChange={e => setCatForm({ ...catForm, rapida: e.target.checked })} className="accent-[#0EA5E9]" />
                 Rápida
               </label>
-              <button onClick={addCategoria} className="px-4 py-1.5 text-sm font-medium bg-[#0EA5E9] text-black rounded-lg hover:bg-[#38bdf8]">
+              <button onClick={handleAddCategoria} className="px-4 py-1.5 text-sm font-medium bg-[#0EA5E9] text-black rounded-lg hover:bg-[#38bdf8]">
                 <Plus size={14} />
               </button>
             </div>
@@ -225,7 +127,7 @@ export function ConfigTab({ anos, onReload }: Props) {
                 className="flex-1 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60" />
               <input type="color" value={cardForm.cor || 'var(--text3)'} onChange={e => setCardForm({ ...cardForm, cor: e.target.value })}
                 className="w-10 h-9 bg-bg border border-line rounded-lg cursor-pointer" />
-              <button onClick={addCartao} className="px-4 py-1.5 text-sm font-medium bg-[#0EA5E9] text-black rounded-lg hover:bg-[#38bdf8]">
+              <button onClick={handleAddCartao} className="px-4 py-1.5 text-sm font-medium bg-[#0EA5E9] text-black rounded-lg hover:bg-[#38bdf8]">
                 <Plus size={14} />
               </button>
             </div>
@@ -252,7 +154,7 @@ export function ConfigTab({ anos, onReload }: Props) {
                 className="w-24 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums" />
               <input placeholder="Saldo inicial" value={anoForm.saldo_inicial} onChange={e => setAnoForm({ ...anoForm, saldo_inicial: e.target.value })}
                 className="flex-1 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums" />
-              <button onClick={addAno} className="px-4 py-1.5 text-sm font-medium bg-[#0EA5E9] text-black rounded-lg hover:bg-[#38bdf8]">
+              <button onClick={handleAddAno} className="px-4 py-1.5 text-sm font-medium bg-[#0EA5E9] text-black rounded-lg hover:bg-[#38bdf8]">
                 Criar
               </button>
             </div>
@@ -291,10 +193,10 @@ export function ConfigTab({ anos, onReload }: Props) {
                 placeholder="R$ 0"
                 value={prevForm.valor}
                 onChange={e => setPrevForm({ ...prevForm, valor: e.target.value })}
-                onKeyDown={e => e.key === 'Enter' && addPrevisaoItem()}
+                onKeyDown={e => e.key === 'Enter' && handleAddPrevisaoItem()}
                 className="w-28 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums"
               />
-              <button onClick={addPrevisaoItem}
+              <button onClick={handleAddPrevisaoItem}
                 className="px-4 py-1.5 text-sm font-medium bg-[#0EA5E9] text-black rounded-lg hover:bg-[#38bdf8]">
                 <Plus size={14} />
               </button>
