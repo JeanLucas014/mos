@@ -1,67 +1,11 @@
 import { useState, type FormEvent, type ChangeEvent } from 'react'
-import { BookOpen, Heart, Star, Camera } from 'lucide-react'
+import { BookOpen, Heart, Camera } from 'lucide-react'
 import { useBooks, type AddBookInput } from '../../hooks/useBooks'
 import type { Book, BookStatus } from './types'
 import { STATUS_CFG, SECTIONS, FORMAT_OPTIONS, CATEGORY_OPTIONS, SORT_OPTIONS } from './constants'
 import { hashGradient } from './utils'
-
-/* ── Star rating display ────────────────────────────────────────────── */
-function Stars({ value }: { value: number | null }) {
-  if (!value) return null
-  return (
-    <div style={{ display: 'flex', gap: 1, lineHeight: 1 }}>
-      {[1, 2, 3, 4, 5].map((i) => (
-        <Star key={i} size={9} fill={i <= value ? '#fbbf24' : 'transparent'} color={i <= value ? '#fbbf24' : 'var(--text3)'} />
-      ))}
-    </div>
-  )
-}
-
-/* ── Star rating interactive ────────────────────────────────────────── */
-function StarPicker({ value, onChange }: { value: number; onChange: (v: number) => void }) {
-  return (
-    <div style={{ display: 'flex', gap: 4 }}>
-      {[1, 2, 3, 4, 5].map((i) => (
-        <button
-          key={i}
-          type="button"
-          onClick={() => onChange(value === i ? 0 : i)}
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: '2px',
-            lineHeight: 1,
-            minWidth: 30,
-            minHeight: 30,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Star size={22} fill={i <= value ? '#fbbf24' : 'transparent'} color={i <= value ? '#fbbf24' : 'var(--text3)'} />
-        </button>
-      ))}
-    </div>
-  )
-}
-
-/* ── Skeleton ──────────────────────────────────────────────────────── */
-function Skeleton() {
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mt-3">
-      {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="rounded-xl overflow-hidden bg-bg-3 animate-pulse">
-          <div style={{ aspectRatio: '2/3' }} />
-          <div className="p-3 space-y-2">
-            <div className="h-3 bg-bg rounded w-3/4" />
-            <div className="h-2 bg-bg rounded w-1/2" />
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
+import { Stars, StarPicker } from './components/Stars'
+import { Skeleton } from './components/Skeleton'
 
 /* ── BookCard ──────────────────────────────────────────────────────── */
 function BookCard({
