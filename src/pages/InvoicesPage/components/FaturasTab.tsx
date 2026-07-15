@@ -1,23 +1,25 @@
 import { useState, useMemo } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus } from 'lucide-react'
-import { supabase } from '../../lib/supabase'
-import type { Invoice, Status } from './types'
-import { C, STATUS_CFG } from './constants'
-import { fmt } from './utils'
-import { Tile } from './components/Tile'
-import { InvoiceCard } from './components/InvoiceCard'
-import { useInvoices } from './hooks/useInvoices'
-import { InvoiceModal } from './components/InvoiceModal'
-import { MotoTab } from './components/MotoTab'
-/* ── Main page ───────────────────────────────────────────────────── */
-export function InvoicesPage() {
+import { supabase } from '../../../lib/supabase'
+import type { Invoice, Status } from '../types'
+import { C, STATUS_CFG } from '../constants'
+import { fmt } from '../utils'
+import { useInvoices } from '../hooks/useInvoices'
+import { Tile } from './Tile'
+import { InvoiceCard } from './InvoiceCard'
+import { InvoiceModal } from './InvoiceModal'
+
+interface FaturasTabProps {
+  modal: Partial<Invoice> | null | false
+  setModal: (m: Partial<Invoice> | null | false) => void
+}
+
+/** Aba Faturas: tiles de resumo, filtro por status, lista e modal de criar/editar. */
+export function FaturasTab({ modal, setModal }: FaturasTabProps) {
   const qc = useQueryClient()
   const { data: invoices = [], isLoading } = useInvoices()
 
   const [filterStatus, setFilterStatus] = useState<Status | 'todos'>('todos')
-  const [modal, setModal] = useState<Partial<Invoice> | null | false>(false)
-  // false = closed, null = new invoice, Invoice partial = editing
 
   /* ── Stats ── */
   const totalReceivable = invoices
@@ -70,55 +72,8 @@ export function InvoicesPage() {
     { id: 'pago',       label: 'Pago'       },
   ]
 
-  const [tab, setTab] = useState<'faturas' | 'moto'>('faturas')
-
   return (
-    <div style={{ fontFamily: 'Manrope, sans-serif' }}>
-
-      {/* ── Header ── */}
-      <div style={{
-        display: 'flex', alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: 16, flexWrap: 'wrap', gap: 12,
-      }}>
-        <h1 style={{
-          fontFamily: 'Sora, sans-serif', fontWeight: 800,
-          fontSize: 26, letterSpacing: '-0.03em', margin: 0,
-        }}>
-          Faturamento
-        </h1>
-        {tab === 'faturas' && (
-          <button
-            onClick={() => setModal(null)}
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 7,
-              padding: '9px 16px',
-              background: 'linear-gradient(135deg, #0EA5E9, #0284c7)',
-              border: 'none', borderRadius: 10,
-              color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer',
-            }}
-          >
-            <Plus size={15} />
-            Nova fatura
-          </button>
-        )}
-      </div>
-
-      {/* ── Tab switcher ── */}
-      <div style={{ display:'flex', gap:2, marginBottom:22, background:C.card, borderRadius:10, border:'1px solid '+C.border, padding:4, width:'fit-content' }}>
-        {(['faturas','moto'] as const).map(t => (
-          <button key={t} onClick={() => setTab(t)} style={{ padding:'7px 18px', borderRadius:8, cursor:'pointer', fontSize:12, fontWeight:500, background: tab===t ? C.card2 : 'transparent', border: tab===t ? '1px solid rgba(255,255,255,.08)' : '1px solid transparent', color: tab===t ? C.tx : C.dm, transition:'all .15s' }}>
-            {t === 'faturas' ? 'Faturas' : 'Moto'}
-          </button>
-        ))}
-      </div>
-
-      {/* ── Moto tab ── */}
-      {tab === 'moto' && <MotoTab />}
-
-      {/* ── Faturas content ── */}
-      {tab === 'faturas' && <>
-
+    <>
       {/* ── Tiles ── */}
       <div style={{
         display: 'grid',
@@ -215,8 +170,6 @@ export function InvoicesPage() {
         </div>
       )}
 
-      </>}
-
       {/* ── Modal ── */}
       {modal !== false && (
         <InvoiceModal
@@ -224,7 +177,6 @@ export function InvoicesPage() {
           onClose={() => setModal(false)}
         />
       )}
-    </div>
+    </>
   )
 }
-
