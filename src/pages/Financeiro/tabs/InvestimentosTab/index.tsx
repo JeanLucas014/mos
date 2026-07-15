@@ -5,137 +5,12 @@ import {
   ChevronDown, ChevronRight, Trash2, Pencil, X,
 } from 'lucide-react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
-import { todayLocal } from '@/lib/dates'
-
-// ─── Formatters ──────────────────────────────────────────────────────────────
-
-const BRL = (v: number) =>
-  v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-const PCT = (v: number) => (v >= 0 ? '+' : '') + v.toFixed(2).replace('.', ',') + '%'
-const fmtDate = (s: string) =>
-  new Date(s + 'T12:00:00').toLocaleDateString('pt-BR')
-const today = () => todayLocal()
-
-// ─── Types ───────────────────────────────────────────────────────────────────
-
-type TipoInv =
-  | 'renda_fixa'
-  | 'acoes'
-  | 'fiis'
-  | 'etfs'
-  | 'fundos'
-  | 'cripto'
-  | 'previdencia'
-  | 'outros'
-
-const TIPO_CFG: Record<TipoInv, { label: string; color: string }> = {
-  renda_fixa:  { label: 'Renda Fixa',   color: '#22c55e' },
-  acoes:       { label: 'Ações',        color: '#0EA5E9' },
-  fiis:        { label: 'FIIs',         color: '#f97316' },
-  etfs:        { label: 'ETFs',         color: '#a78bfa' },
-  fundos:      { label: 'Fundos',       color: '#f59e0b' },
-  cripto:      { label: 'Criptomoedas', color: '#ec4899' },
-  previdencia: { label: 'Previdência',  color: '#14b8a6' },
-  outros:      { label: 'Outros',       color: 'var(--text3)' },
-}
-
-const CORES = [
-  '#22c55e', '#0EA5E9', '#f97316', '#a78bfa',
-  '#f59e0b', '#ec4899', '#14b8a6', 'var(--text3)',
-  '#ef4444', '#64748b',
-]
-
-const INDEXADORES = ['CDI', 'SELIC', 'IPCA', 'IGPM', 'PREFIXADO', 'OUTRO']
-
-const SUBTIPOS: Record<string, string[]> = {
-  renda_fixa:  ['Tesouro Selic', 'Tesouro IPCA+', 'Tesouro Prefixado', 'CDB', 'LCI', 'LCA', 'LC', 'CRI', 'CRA', 'Debênture', 'Poupança'],
-  acoes:       ['Ação Ordinária (ON)', 'Ação Preferencial (PN)', 'BDR'],
-  fiis:        ['FII Tijolo', 'FII Papel', 'FII Híbrido', 'FOF (Fundo de Fundos)'],
-  etfs:        ['ETF Renda Variável', 'ETF Renda Fixa', 'ETF Internacional', 'ETF Cripto'],
-  fundos:      ['Fundo de Ações', 'Fundo Multimercado', 'Fundo Renda Fixa', 'Fundo Cambial', 'Fundo Internacional'],
-  cripto:      ['Bitcoin (BTC)', 'Ethereum (ETH)', 'Stablecoin', 'Altcoin'],
-  previdencia: ['PGBL', 'VGBL'],
-  outros:      ['Ouro', 'Dólar', 'Prata', 'Imóvel', 'Outro'],
-}
-
-interface Investimento {
-  id: string
-  user_id: string
-  nome: string
-  tipo: TipoInv
-  subtipo?: string
-  ticker?: string
-  instituicao?: string
-  cor: string
-  quantidade?: number
-  preco_medio?: number
-  valor_atual?: number
-  valor_aplicado?: number
-  data_atualizacao?: string
-  indexador?: string
-  taxa_adicional?: number
-  data_compra?: string
-  data_vencimento?: string
-  liquidez?: string
-  ativo: boolean
-  notas?: string
-  criado_em: string
-}
-
-interface Taxa {
-  indicador: string
-  valor_anual: number
-  valor_mensal: number
-  data_referencia: string
-  atualizado_em: string
-}
-
-// ─── Cálculos ────────────────────────────────────────────────────────────────
-
-function calcRentabilidadeRF(inv: Investimento, taxas: Taxa[]): number | null {
-  if (!inv.data_compra || !inv.valor_aplicado) return null
-  const dias = Math.max(
-    0,
-    (Date.now() - new Date(inv.data_compra + 'T12:00:00').getTime()) / 86400000,
-  )
-  const anos = dias / 365
-
-  let taxaAnual = 0
-  if (inv.indexador === 'PREFIXADO') {
-    taxaAnual = (inv.taxa_adicional ?? 0) / 100
-  } else if (inv.indexador === 'CDI') {
-    const cdi = taxas.find(t => t.indicador === 'CDI')?.valor_anual ?? 13.65
-    taxaAnual = (cdi * (inv.taxa_adicional ?? 100)) / 10000
-  } else if (inv.indexador === 'SELIC') {
-    const selic = taxas.find(t => t.indicador === 'SELIC')?.valor_anual ?? 13.75
-    taxaAnual = (selic + (inv.taxa_adicional ?? 0)) / 100
-  } else if (inv.indexador === 'IPCA') {
-    const ipca = taxas.find(t => t.indicador === 'IPCA')?.valor_anual ?? 4.83
-    taxaAnual = (1 + ipca / 100) * (1 + (inv.taxa_adicional ?? 0) / 100) - 1
-  }
-
-  const valorCalculado = inv.valor_aplicado * Math.pow(1 + taxaAnual, anos)
-  return ((valorCalculado - inv.valor_aplicado) / inv.valor_aplicado) * 100
-}
-
-function valorEstimadoRF(inv: Investimento, taxas: Taxa[]): number {
-  if (!inv.valor_aplicado) return 0
-  if (!inv.data_compra) return inv.valor_aplicado
-  const pct = calcRentabilidadeRF(inv, taxas) ?? 0
-  return inv.valor_aplicado * (1 + pct / 100)
-}
-
-function rentabilidadeVariavel(inv: Investimento): number | null {
-  if (!inv.valor_atual || !inv.valor_aplicado || inv.valor_aplicado === 0) return null
-  return ((inv.valor_atual - inv.valor_aplicado) / inv.valor_aplicado) * 100
-}
-
-function valorPosicao(inv: Investimento): number {
-  if (inv.tipo === 'renda_fixa' || inv.tipo === 'previdencia') return 0
-  if (inv.valor_atual) return inv.valor_atual
-  if (inv.quantidade && inv.preco_medio) return inv.quantidade * inv.preco_medio
-  return inv.valor_aplicado ?? 0
-}
+import type { TipoInv, Investimento, Taxa, MainTab } from './types'
+import { TIPO_CFG, CORES, INDEXADORES, SUBTIPOS } from './types'
+import {
+  BRL, PCT, fmtDate, today,
+  calcRentabilidadeRF, valorEstimadoRF, rentabilidadeVariavel, valorPosicao,
+} from './utils'
 
 // ─── InvestimentoModal ────────────────────────────────────────────────────────
 
@@ -701,8 +576,6 @@ function SimuladorTab({ taxas }: { taxas: Taxa[] }) {
 }
 
 // ─── InvestimentosTab ─────────────────────────────────────────────────────────
-
-type MainTab = 'carteira' | 'simulador' | 'taxas'
 
 export function InvestimentosTab() {
   const [items, setItems]                     = useState<Investimento[]>([])
