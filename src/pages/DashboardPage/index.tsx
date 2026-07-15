@@ -24,99 +24,11 @@ import {
 } from '../../hooks/useDashboard'
 import { greeting, longDate, daysUntil, fmtEventTime } from './utils'
 import { Sk, Bar, Widget, BigStat } from './components/shared'
-
-/* ══════════════════════════════════════════════════════════════════
-   SCORE HELPERS
-══════════════════════════════════════════════════════════════════ */
-function calcFinancasScore(receitas: number, despesas: number): number {
-  if (receitas === 0) return 50
-  const saldo = receitas - despesas
-  if (saldo >= 0) return Math.min(95, 70 + Math.round((saldo / receitas) * 30))
-  return Math.max(15, 60 - Math.round((Math.abs(saldo) / receitas) * 60))
-}
-function calcSaudeScore(
-  countWeek: number,
-  weekGoal: number,
-  lastWorkoutDate: string | null,
-): number {
-  const weekScore = Math.min(70, Math.round((countWeek / weekGoal) * 70))
-
-  let consistencyScore = 0
-  if (lastWorkoutDate) {
-    const daysSince = Math.floor(
-      (Date.now() - new Date(lastWorkoutDate).getTime()) / 86400000,
-    )
-    if (daysSince <= 2)      consistencyScore = 30
-    else if (daysSince <= 4) consistencyScore = 15
-    else if (daysSince <= 6) consistencyScore = 5
-  }
-
-  return Math.max(10, weekScore + consistencyScore)
-}
-function calcTarefasScore(total: number, overdue: number): number {
-  if (total === 0) return 85
-  if (overdue === 0) return 90
-  return Math.max(30, 90 - Math.round((overdue / total) * 80))
-}
-function calcHabitosScore(doneToday: number, total: number): number {
-  if (total === 0) return 50
-  return Math.round((doneToday / total) * 100)
-}
-function calcEstudosScore(activeStudies: number, readingBooks: number, avgProgress: number): number {
-  if (activeStudies === 0 && readingBooks === 0) return 20
-  return Math.min(95, Math.min(70, (activeStudies + readingBooks) * 20) + Math.round(avgProgress * 0.25))
-}
-function calcMetasScore(goals: { progress: number }[]): number {
-  if (!goals.length) return 50
-  return Math.round(goals.reduce((s, g) => s + g.progress, 0) / goals.length)
-}
-function scoreColor(s: number): string {
-  if (s >= 80) return '#22c55e'
-  if (s >= 60) return '#f59e0b'
-  return '#ef4444'
-}
-function scoreLabel(s: number): string {
-  if (s >= 80) return 'Excelente'
-  if (s >= 60) return 'Bom'
-  if (s >= 40) return 'Atencao'
-  return 'Critico'
-}
-
-/* ── Score Gauge SVG ────────────────────────────────────────────── */
-function ScoreGauge({ score, size = 176 }: { score: number; size?: number }) {
-  const cx = size / 2
-  const cy = size / 2
-  const r = size * 0.36
-  const sw = 4
-  const color = scoreColor(score)
-  const toRad = (deg: number) => (deg * Math.PI) / 180
-  const pt = (deg: number) => ({
-    x: cx + r * Math.cos(toRad(deg)),
-    y: cy + r * Math.sin(toRad(deg)),
-  })
-  const arc = (from: number, to: number) => {
-    const s = pt(from); const e = pt(to)
-    const la = to - from > 180 ? 1 : 0
-    return `M${s.x.toFixed(1)},${s.y.toFixed(1)} A${r},${r} 0 ${la} 1 ${e.x.toFixed(1)},${e.y.toFixed(1)}`
-  }
-  const end = 135 + Math.min((score / 100) * 270, 270)
-
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <path d={arc(135, 405)} fill="none" stroke="var(--bg3)" strokeWidth={sw} strokeLinecap="round" />
-      {score > 0 && (
-        <path d={arc(135, end)} fill="none" stroke={color} strokeWidth={sw} strokeLinecap="round" />
-      )}
-      <text x={cx} y={cy - 10} textAnchor="middle" dominantBaseline="middle"
-        fill={color} fontSize={size * 0.273} fontWeight="700"
-        fontFamily="Sora, sans-serif">{score}</text>
-      <text x={cx} y={cy + 18} textAnchor="middle"
-        fill="var(--text3)" fontSize={13} fontFamily="Manrope, sans-serif">
-        {scoreLabel(score)}
-      </text>
-    </svg>
-  )
-}
+import {
+  calcFinancasScore, calcSaudeScore, calcTarefasScore,
+  calcHabitosScore, calcEstudosScore, calcMetasScore, scoreColor,
+} from './scoreUtils'
+import { ScoreGauge } from './components/ScoreGauge'
 
 /* ── Life Score Section ─────────────────────────────────────────── */
 function LifeScoreSection() {
