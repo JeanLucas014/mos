@@ -3,6 +3,8 @@ import { supabase } from '@/lib/supabase'
 import { Plus, Trash2, Download, Upload, AlertTriangle } from 'lucide-react'
 import type { FinAno } from '../../types'
 import { useConfigData } from './hooks/useConfigData'
+import { CategoriasTab } from './components/CategoriasTab'
+import { CartoesTab } from './components/CartoesTab'
 
 interface Props { anos: FinAno[]; onReload: () => void }
 
@@ -16,19 +18,7 @@ export function ConfigTab({ anos, onReload }: Props) {
   } = useConfigData(onReload)
 
   const [prevForm, setPrevForm] = useState({ nome: '', valor: '' })
-  const [catForm, setCatForm] = useState({ nome: '', natureza: 'diario', cor: '', rapida: false })
-  const [cardForm, setCardForm] = useState({ nome: '', cor: '' })
   const [anoForm, setAnoForm] = useState({ ano: String(new Date().getFullYear() + 1), saldo_inicial: '0' })
-
-  async function handleAddCategoria() {
-    await addCategoria(catForm.nome, catForm.natureza, catForm.cor, catForm.rapida)
-    setCatForm({ nome: '', natureza: 'diario', cor: '', rapida: false })
-  }
-
-  async function handleAddCartao() {
-    await addCartao(cardForm.nome, cardForm.cor)
-    setCardForm({ nome: '', cor: '' })
-  }
 
   async function handleAddAno() {
     await addAno(anoForm.ano, anoForm.saldo_inicial)
@@ -68,80 +58,12 @@ export function ConfigTab({ anos, onReload }: Props) {
 
       {/* Categorias */}
       {tab === 'categorias' && (
-        <div className="space-y-4">
-          <div className="bg-bg-2 border border-line rounded-xl p-4 space-y-3">
-            <div className="text-xs text-[#555] font-[Sora] uppercase tracking-wider">Nova categoria</div>
-            <div className="flex gap-2 flex-wrap">
-              <input placeholder="Nome" value={catForm.nome} onChange={e => setCatForm({ ...catForm, nome: e.target.value })}
-                className="flex-1 min-w-32 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60" />
-              <select value={catForm.natureza} onChange={e => setCatForm({ ...catForm, natureza: e.target.value })}
-                className="bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none">
-                <option value="entrada">Entrada</option>
-                <option value="saida">Saída</option>
-                <option value="diario">Diário</option>
-              </select>
-              <input type="color" value={catForm.cor || 'var(--text3)'} onChange={e => setCatForm({ ...catForm, cor: e.target.value })}
-                className="w-10 h-9 bg-bg border border-line rounded-lg cursor-pointer" />
-              <label className="flex items-center gap-1.5 text-xs text-[#555] cursor-pointer">
-                <input type="checkbox" checked={catForm.rapida} onChange={e => setCatForm({ ...catForm, rapida: e.target.checked })} className="accent-[#0EA5E9]" />
-                Rápida
-              </label>
-              <button onClick={handleAddCategoria} className="px-4 py-1.5 text-sm font-medium bg-[#0EA5E9] text-black rounded-lg hover:bg-[#38bdf8]">
-                <Plus size={14} />
-              </button>
-            </div>
-          </div>
-
-          {(['entrada','saida','diario'] as const).map(nat => {
-            const cats = categorias.filter(c => c.natureza === nat)
-            if (!cats.length) return null
-            const cor = nat === 'entrada' ? '#22c55e' : nat === 'saida' ? '#ef4444' : '#f97316'
-            return (
-              <div key={nat}>
-                <div className="text-[10px] uppercase tracking-wider mb-2" style={{ color: cor }}>
-                  {nat === 'entrada' ? 'Entrada' : nat === 'saida' ? 'Saída' : 'Diário'}
-                </div>
-                {cats.map(c => (
-                  <div key={c.id} className="group flex items-center gap-2 py-2 border-b border-line">
-                    {c.cor && <span className="w-2 h-2 rounded-full shrink-0" style={{ background: c.cor }} />}
-                    <span className="flex-1 text-sm text-[#aaa]">{c.nome}</span>
-                    {c.rapida && <span className="text-[10px] text-[#0EA5E9] border border-[#0EA5E9]/30 rounded px-1.5">rápida</span>}
-                    <button onClick={() => delCat(c.id)} className="opacity-0 group-hover:opacity-100 text-[#555] hover:text-[#ef4444] transition-all">
-                      <Trash2 size={12} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )
-          })}
-        </div>
+        <CategoriasTab categorias={categorias} onAdd={addCategoria} onDelete={delCat} />
       )}
 
       {/* Cartões */}
       {tab === 'cartoes' && (
-        <div className="space-y-4">
-          <div className="bg-bg-2 border border-line rounded-xl p-4 space-y-3">
-            <div className="text-xs text-[#555] font-[Sora] uppercase tracking-wider">Novo cartão</div>
-            <div className="flex gap-2">
-              <input placeholder="Nome" value={cardForm.nome} onChange={e => setCardForm({ ...cardForm, nome: e.target.value })}
-                className="flex-1 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60" />
-              <input type="color" value={cardForm.cor || 'var(--text3)'} onChange={e => setCardForm({ ...cardForm, cor: e.target.value })}
-                className="w-10 h-9 bg-bg border border-line rounded-lg cursor-pointer" />
-              <button onClick={handleAddCartao} className="px-4 py-1.5 text-sm font-medium bg-[#0EA5E9] text-black rounded-lg hover:bg-[#38bdf8]">
-                <Plus size={14} />
-              </button>
-            </div>
-          </div>
-          {cartoes.map(c => (
-            <div key={c.id} className="group flex items-center gap-3 py-2.5 border-b border-line">
-              {c.cor && <span className="w-3 h-3 rounded-full shrink-0" style={{ background: c.cor }} />}
-              <span className="flex-1 text-sm text-white">{c.nome}</span>
-              <button onClick={() => delCartao(c.id)} className="opacity-0 group-hover:opacity-100 text-[#555] hover:text-[#ef4444] transition-all">
-                <Trash2 size={12} />
-              </button>
-            </div>
-          ))}
-        </div>
+        <CartoesTab cartoes={cartoes} onAdd={addCartao} onDelete={delCartao} />
       )}
 
       {/* Anos */}
