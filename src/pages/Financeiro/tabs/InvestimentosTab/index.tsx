@@ -1,8 +1,8 @@
 ﻿import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
 import {
-  Plus, RefreshCw, TrendingUp, TrendingDown,
-  ChevronDown, ChevronRight, Trash2, Pencil,
+  Plus, RefreshCw,
+  ChevronDown, ChevronRight,
 } from 'lucide-react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import type { TipoInv, Investimento, Taxa, MainTab } from './types'
@@ -13,6 +13,7 @@ import {
 } from './utils'
 import { InvestimentoModal } from './components/InvestimentoModal'
 import { SimuladorTab } from './components/SimuladorTab'
+import { AtivoRow } from './components/AtivoRow'
 
 // ─── InvestimentosTab ─────────────────────────────────────────────────────────
 
@@ -88,6 +89,14 @@ export function InvestimentosTab() {
       alert('Erro ao buscar taxas do Banco Central. Verifique sua conexão.')
     }
     setAtualizandoTaxas(false)
+  }
+
+  async function archiveInvestimento(inv: Investimento) {
+    if (!confirm(`Arquivar "${inv.nome}"?`)) return
+    await (supabase.from('fin_investimentos') as any)
+      .update({ ativo: false })
+      .eq('id', inv.id)
+    load()
   }
 
   function toggleCollapse(tipo: string) {
@@ -292,110 +301,17 @@ export function InvestimentosTab() {
                         const rent = isRF
                           ? (calcRentabilidadeRF(inv, taxas) ?? 0)
                           : (rentabilidadeVariavel(inv) ?? 0)
-                        const rentPos = rent >= 0
 
                         return (
-                          <div
+                          <AtivoRow
                             key={inv.id}
-                            className="group flex items-start gap-3 px-4 py-3 border-b border-line last:border-0 hover:bg-[#141414] transition-colors"
-                          >
-                            <div
-                              className="w-1.5 h-8 rounded-full shrink-0 mt-0.5"
-                              style={{ background: inv.cor ?? cfg.color }}
-                            />
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-sm font-semibold text-white truncate">
-                                  {inv.nome}
-                                </span>
-                                {inv.ticker && (
-                                  <span
-                                    className="text-[10px] font-bold px-1.5 py-0.5 rounded"
-                                    style={{
-                                      background: (inv.cor ?? cfg.color) + '22',
-                                      color: inv.cor ?? cfg.color,
-                                    }}
-                                  >
-                                    {inv.ticker}
-                                  </span>
-                                )}
-                                {inv.subtipo && (
-                                  <span className="text-[10px] text-[#555]">
-                                    {inv.subtipo}
-                                  </span>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-3 mt-0.5 flex-wrap">
-                                {inv.instituicao && (
-                                  <span className="text-[11px] text-[#666]">
-                                    {inv.instituicao}
-                                  </span>
-                                )}
-                                {inv.indexador && (
-                                  <span className="text-[11px] text-[#666]">
-                                    {inv.indexador === 'PREFIXADO'
-                                      ? `${inv.taxa_adicional?.toFixed(2)}% a.a.`
-                                      : inv.indexador === 'CDI'
-                                      ? `${inv.taxa_adicional ?? 100}% do CDI`
-                                      : `${inv.indexador}+${inv.taxa_adicional?.toFixed(2)}%`}
-                                  </span>
-                                )}
-                                {inv.data_vencimento && (
-                                  <span className="text-[11px] text-[#666]">
-                                    Vence {fmtDate(inv.data_vencimento)}
-                                  </span>
-                                )}
-                                {inv.quantidade && (
-                                  <span className="text-[11px] text-[#666]">
-                                    {inv.quantidade.toLocaleString('pt-BR')} cotas
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="text-right shrink-0">
-                              <div
-                                className="text-sm font-bold tabular-nums text-white"
-                                style={{ fontFamily: 'JetBrains Mono, monospace' }}
-                              >
-                                {BRL(valorPos)}
-                              </div>
-                              {inv.valor_aplicado && inv.valor_aplicado > 0 && (
-                                <div
-                                  className="text-[11px] tabular-nums flex items-center gap-1 justify-end"
-                                  style={{ color: rentPos ? '#22c55e' : '#ef4444' }}
-                                >
-                                  {rentPos ? (
-                                    <TrendingUp size={10} />
-                                  ) : (
-                                    <TrendingDown size={10} />
-                                  )}
-                                  {PCT(rent)}
-                                </div>
-                              )}
-                            </div>
-
-                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button
-                                onClick={() => setEditando(inv)}
-                                className="text-[#555] hover:text-[#0EA5E9] p-1"
-                              >
-                                <Pencil size={12} />
-                              </button>
-                              <button
-                                onClick={async () => {
-                                  if (!confirm(`Arquivar "${inv.nome}"?`)) return
-                                  await (supabase.from('fin_investimentos') as any)
-                                    .update({ ativo: false })
-                                    .eq('id', inv.id)
-                                  load()
-                                }}
-                                className="text-[#555] hover:text-[#ef4444] p-1"
-                              >
-                                <Trash2 size={12} />
-                              </button>
-                            </div>
-                          </div>
+                            inv={inv}
+                            cfg={cfg}
+                            valorPos={valorPos}
+                            rent={rent}
+                            onEdit={setEditando}
+                            onArchive={archiveInvestimento}
+                          />
                         )
                       })}
                     </div>
