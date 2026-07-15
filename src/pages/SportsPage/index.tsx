@@ -18,69 +18,10 @@ import {
   fmtDurationShort, fmtKm, fmtMonthLabel, fmtDayLabel, calcAvgPace, groupByMonth,
   paceToSec, secToPace,
 } from './utils'
-
-/* ── Section card ──────────────────────────────────────────────── */
-function Section({
-  title, icon, count, children, defaultOpen = true, extra,
-}: {
-  title: string; icon: React.ReactNode; count?: number | string
-  children: React.ReactNode; defaultOpen?: boolean; extra?: React.ReactNode
-}) {
-  const [open, setOpen] = useState(defaultOpen)
-  return (
-    <div className="bg-bg-2 border border-line rounded-card overflow-hidden">
-      <div className="flex items-center pr-4" style={{ minHeight: 56 }}>
-        <button
-          onClick={() => setOpen(!open)}
-          className="flex-1 flex items-center justify-between px-5 py-4 hover:bg-bg-3 transition-colors"
-        >
-          <div className="flex items-center gap-2.5">
-            <span className="text-ink-2">{icon}</span>
-            <span style={{ fontFamily: 'Sora, sans-serif', fontWeight: 700, fontSize: 14 }}>{title}</span>
-            {count !== undefined && (
-              <span className="text-ink-3" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11 }}>{count}</span>
-            )}
-          </div>
-          <ChevronDown size={16} className={`text-ink-3 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
-        </button>
-        {extra && <div style={{ flexShrink: 0 }}>{extra}</div>}
-      </div>
-      {open && <div className="px-5 pb-5">{children}</div>}
-    </div>
-  )
-}
-
-
-/* ── Small modal ───────────────────────────────────────────────── */
-function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,.8)' }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
-    >
-      <div className="w-full max-w-md rounded-2xl border border-line p-6 space-y-4" style={{ background: 'var(--bg2)', maxHeight: '90vh', overflowY: 'auto' }}>
-        <div className="flex items-center justify-between">
-          <h3 style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 17 }}>{title}</h3>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-ink-3 hover:text-ink rounded-input hover:bg-bg-3 transition-colors text-lg">×</button>
-        </div>
-        {children}
-      </div>
-    </div>
-  )
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <label className="block text-ink-2 mb-1.5" style={{ fontSize: 12, fontWeight: 600 }}>{label}</label>
-      {children}
-    </div>
-  )
-}
-
-const inputCls = 'w-full bg-bg border border-line rounded-input px-3 text-ink text-sm placeholder:text-ink-3 focus:outline-none focus:border-brand transition-colors'
-const inputH = { minHeight: 44 }
+import { Section } from './components/Section'
+import { Modal } from './components/Modal'
+import { Field } from './components/Field'
+import { inputCls, inputH } from './components/shared'
 
 /* ── Strava sync hook ──────────────────────────────────────────── */
 function useStravaConnected() {
