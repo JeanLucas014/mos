@@ -1,57 +1,10 @@
 import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, Pencil, Trash2, X, Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
-import { supabase } from '../lib/supabase'
-import type { Database } from '../types/db'
-
-type Invoice = Database['public']['Tables']['invoices']['Row']
-type InvoiceInsert = Database['public']['Tables']['invoices']['Insert']
-type MotoRecord = Database['public']['Tables']['moto_revenue']['Row']
-
-/* ── Palette ─────────────────────────────────────────────────────── */
-const C = {
-  bg:     'var(--bg)',
-  card:   'var(--bg2)',
-  card2:  'var(--bg3)',
-  border: 'var(--border)',
-  tx:     'var(--text)',
-  dm:     'var(--text2)',
-  dm2:    'var(--text3)',
-  b:      '#0EA5E9',
-  g:      '#34d399',
-  r:      '#f87171',
-  a:      '#fbbf24',
-  p:      '#a78bfa',
-}
-
-/* ── Status config ───────────────────────────────────────────────── */
-type Status = 'enviado' | 'em dev' | 'aprovado' | 'recorrente' | 'pago'
-
-const STATUS_CFG: Record<Status, { label: string; color: string; bg: string }> = {
-  'enviado':    { label: 'Enviado',    color: '#7dd3fc', bg: '#0c1e2b' },
-  'em dev':     { label: 'Em dev',     color: '#fcd34d', bg: '#1f1508' },
-  'aprovado':   { label: 'Aprovado',   color: '#6ee7b7', bg: '#0a1f14' },
-  'recorrente': { label: 'Recorrente', color: '#c4b5fd', bg: '#14112a' },
-  'pago':       { label: 'Pago',       color: 'var(--text2)', bg: 'var(--bg3)' },
-}
-
-const ALL_STATUSES: Status[] = ['enviado', 'em dev', 'aprovado', 'recorrente', 'pago']
-
-/* ── Helpers ─────────────────────────────────────────────────────── */
-function fmt(cents: number): string {
-  const v = cents / 100
-  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-}
-
-function fmtDate(d: string | null): string | null {
-  if (!d) return null
-  const [y, m, day] = d.split('-')
-  return `${day}/${m}/${y}`
-}
-
-function isPaid(inv: Invoice) {
-  return inv.status === 'pago'
-}
+import { supabase } from '../../lib/supabase'
+import type { Invoice, InvoiceInsert, MotoRecord, Status } from './types'
+import { C, STATUS_CFG, ALL_STATUSES, ENTRADA_CATS, GASTO_CATS, MONTH_NAMES } from './constants'
+import { fmt, fmtDate, isPaid } from './utils'
 
 /* ── useInvoices ─────────────────────────────────────────────────── */
 function useInvoices() {
@@ -335,10 +288,6 @@ function InvoiceCard({
 /* ══════════════════════════════════════════════════════════════════
    MOTO TAB
 ══════════════════════════════════════════════════════════════════ */
-const ENTRADA_CATS = ['Corrida', 'Entrega', 'Outros']
-const GASTO_CATS   = ['Gasolina', 'Manutenção', 'Alimentação', 'Multa', 'Outros']
-const MONTH_NAMES  = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
-
 function useMotoRevenue(year: number, month: number) {
   const qc  = useQueryClient()
   const pad = (n: number) => String(n).padStart(2, '0')
