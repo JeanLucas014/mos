@@ -6,8 +6,8 @@ import {
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar } from 'recharts'
-import { useAuth } from '../contexts/AuthContext'
-import { useProfile } from '../hooks/useProfile'
+import { useAuth } from '../../contexts/AuthContext'
+import { useProfile } from '../../hooks/useProfile'
 import {
   useDashTasks,
   useDashHabits,
@@ -21,32 +21,9 @@ import {
   useDashTasksScore,
   useDashEstudos,
   useDashRecorrentes,
-} from '../hooks/useDashboard'
-import { formatLocalDate } from '../lib/dates'
-
-/* ══════════════════════════════════════════════════════════════════
-   UTILS
-══════════════════════════════════════════════════════════════════ */
-function greeting(): string {
-  const h = new Date().getHours()
-  if (h < 12) return 'Bom dia'
-  if (h < 18) return 'Boa tarde'
-  return 'Boa noite'
-}
-
-function longDate(): string {
-  const s = new Date().toLocaleDateString('pt-BR', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-  })
-  return s.charAt(0).toUpperCase() + s.slice(1)
-}
-
-
-function daysUntil(dateStr: string): number {
-  const t = new Date(); t.setHours(0, 0, 0, 0)
-  const d = new Date(dateStr + 'T12:00:00')
-  return Math.ceil((d.getTime() - t.getTime()) / 86_400_000)
-}
+} from '../../hooks/useDashboard'
+import { greeting, longDate, daysUntil, fmtEventTime } from './utils'
+import { Sk, Bar, Widget, BigStat } from './components/shared'
 
 /* ══════════════════════════════════════════════════════════════════
    SCORE HELPERS
@@ -298,72 +275,6 @@ function LifeScoreSection() {
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   SHARED PRIMITIVES
-══════════════════════════════════════════════════════════════════ */
-
-function Sk({ w = 'w-full', h = 'h-3' }: { w?: string; h?: string }) {
-  return <div className={`${w} ${h} bg-bg-3 rounded animate-pulse`} />
-}
-
-function Bar({ pct, color = '#0EA5E9' }: { pct: number; color?: string }) {
-  return (
-    <div className="w-full rounded-full overflow-hidden" style={{ height: 4, background: 'var(--border)' }}>
-      <div
-        className="h-full rounded-full transition-all duration-500"
-        style={{ width: `${Math.min(100, Math.max(0, pct))}%`, background: color }}
-      />
-    </div>
-  )
-}
-
-function Widget({
-  icon,
-  title,
-  to,
-  children,
-  className = '',
-}: {
-  icon: React.ReactNode
-  title: string
-  to: string
-  children: React.ReactNode
-  className?: string
-}) {
-  return (
-    <Link
-      to={to}
-      className={`block rounded-2xl border border-line bg-bg-2 p-5 hover:border-white/12 hover:bg-bg-3 transition-all group ${className}`}
-      style={{ textDecoration: 'none' }}
-    >
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <span className="text-ink-2">{icon}</span>
-          <span
-            className="text-ink-2 group-hover:text-ink transition-colors"
-            style={{ fontFamily: 'Manrope, sans-serif', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em' }}
-          >
-            {title}
-          </span>
-        </div>
-        <ArrowRight size={12} className="text-ink-3 group-hover:text-ink-2 transition-colors" />
-      </div>
-      {children}
-    </Link>
-  )
-}
-
-function BigStat({ value, label, color = 'var(--text)' }: { value: string | number; label?: string; color?: string }) {
-  return (
-    <div className="mb-1">
-      <div style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 800, fontSize: 26, color, lineHeight: 1 }}>
-        {value}
-      </div>
-      {label && <div className="text-ink-3 mt-0.5" style={{ fontSize: 11 }}>{label}</div>}
-    </div>
-  )
-}
-
-/* ══════════════════════════════════════════════════════════════════
    WIDGET 1 — TAREFAS
 ══════════════════════════════════════════════════════════════════ */
 function TasksWidget() {
@@ -439,23 +350,6 @@ function HabitsWidget() {
 /* ══════════════════════════════════════════════════════════════════
    WIDGET — AGENDA (próximos eventos)
 ══════════════════════════════════════════════════════════════════ */
-
-function fmtEventTime(iso: string): string {
-  const ev       = new Date(iso)
-  const now      = new Date()
-  const todayStr = formatLocalDate(now)
-  const evStr    = formatLocalDate(ev)
-  const tmw      = new Date(now); tmw.setDate(now.getDate() + 1)
-  const tmwStr   = formatLocalDate(tmw)
-  const hhmm     = `${String(ev.getHours()).padStart(2,'0')}:${String(ev.getMinutes()).padStart(2,'0')}`
-  if (evStr === todayStr) return `Hoje, ${hhmm}`
-  if (evStr === tmwStr)   return `Amanhã, ${hhmm}`
-  const weekday = ev.toLocaleDateString('pt-BR', { weekday: 'short' })
-    .replace('.', '').replace(/^\w/, c => c.toUpperCase())
-  const day   = String(ev.getDate()).padStart(2, '0')
-  const month = String(ev.getMonth() + 1).padStart(2, '0')
-  return `${weekday}, ${day}/${month}, ${hhmm}`
-}
 
 function AgendaWidget() {
   const { data, isLoading } = useDashEvents()
