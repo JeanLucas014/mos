@@ -53,7 +53,10 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
 
     const { error: updateErr } = await supabase.auth.updateUser({ password: next })
     setLoading(false)
-    if (updateErr) setError(updateErr.message)
+    if (updateErr) {
+      console.error('[ChangePasswordModal]', updateErr)
+      setError('Não foi possível alterar sua senha. Tente novamente.')
+    }
     else setSuccess(true)
   }
 
@@ -205,7 +208,8 @@ function AdminSection() {
       setInviteMsg({ type: 'ok', text: `Convite enviado para ${inviteEmail}` })
       setInviteEmail('')
     } catch (err: unknown) {
-      setInviteMsg({ type: 'err', text: (err as Error).message })
+      console.error('[AdminSection]', err)
+      setInviteMsg({ type: 'err', text: 'Não foi possível enviar o convite. Tente novamente.' })
     }
     setInviting(false)
   }

@@ -264,7 +264,8 @@ function SystemModal({
       const path = await uploadToStorage(file, 'thumbnails')
       setThumbPath(path)
     } catch (ex) {
-      setErr((ex as Error).message)
+      console.error('[SystemModal]', ex)
+      setErr('Não foi possível enviar a imagem. Tente novamente.')
     } finally {
       setUploading(false)
     }
@@ -287,12 +288,18 @@ function SystemModal({
     if (initial) {
       update.mutate({ id: initial.id, ...payload }, {
         onSuccess: onClose,
-        onError: (ex) => setErr((ex as Error).message),
+        onError: (ex) => {
+          console.error('[SystemModal]', ex)
+          setErr('Não foi possível salvar o sistema. Tente novamente.')
+        },
       })
     } else {
       add.mutate(payload, {
         onSuccess: onClose,
-        onError: (ex) => setErr((ex as Error).message),
+        onError: (ex) => {
+          console.error('[SystemModal]', ex)
+          setErr('Não foi possível salvar o sistema. Tente novamente.')
+        },
       })
     }
   }
@@ -450,10 +457,14 @@ function FilesSection({ systemId }: { systemId: string }) {
       const autoName  = name.trim() || file.name
       add.mutate({ name: autoName, file_type: fileType, file_url: path, is_download: true }, {
         onSuccess: () => { setName(''); setFileUrl(''); if (uploadRef.current) uploadRef.current.value = '' },
-        onError: (ex) => setErr((ex as Error).message),
+        onError: (ex) => {
+          console.error('[FilesSection]', ex)
+          setErr('Não foi possível adicionar o arquivo. Tente novamente.')
+        },
       })
     } catch (ex) {
-      setErr((ex as Error).message)
+      console.error('[FilesSection]', ex)
+      setErr('Não foi possível enviar o arquivo. Tente novamente.')
     } finally {
       setUploading(false)
     }
@@ -465,7 +476,10 @@ function FilesSection({ systemId }: { systemId: string }) {
     setErr(null)
     add.mutate({ name: name.trim(), file_url: fileUrl.trim(), file_type: fileType, is_download: false }, {
       onSuccess: () => { setName(''); setFileUrl('') },
-      onError: (ex) => setErr((ex as Error).message),
+      onError: (ex) => {
+        console.error('[FilesSection]', ex)
+        setErr('Não foi possível adicionar o link. Tente novamente.')
+      },
     })
   }
 
@@ -757,7 +771,7 @@ export default function SistemasPage() {
       )}
       {query.isError && (
         <div style={{ textAlign: 'center', color: C.r, fontSize: 13, padding: '48px 0' }}>
-          Erro: {(query.error as Error).message}
+          Não foi possível carregar os sistemas. Tente novamente.
         </div>
       )}
       {!query.isLoading && !query.isError && systems.length === 0 && (

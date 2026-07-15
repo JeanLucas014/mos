@@ -26,7 +26,10 @@ export function LoginPage() {
 
     if (mode === 'login') {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) setError(error.message)
+      if (error) {
+        console.error('[LoginPage]', error)
+        setError('E-mail ou senha incorretos.')
+      }
     } else {
       const { error } = await supabase.auth.signUp({
         email,
@@ -34,7 +37,8 @@ export function LoginPage() {
         options: { data: { full_name: name } },
       })
       if (error) {
-        setError(error.message)
+        console.error('[LoginPage]', error)
+        setError('Não foi possível criar sua conta. Tente novamente.')
       } else {
         setSuccess('Conta criada! Verifique seu email para confirmar.')
         setMode('login')

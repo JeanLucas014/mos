@@ -115,7 +115,8 @@ function VaultModal({
       )
       onClose()
     } catch (err) {
-      setError((err as Error).message)
+      console.error('[VaultModal]', err)
+      setError('Não foi possível salvar a credencial. Tente novamente.')
     }
     setLoading(false)
   }

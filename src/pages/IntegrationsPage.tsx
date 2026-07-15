@@ -159,7 +159,8 @@ function StravaCard() {
       setToast({ msg: `${n} treino${n !== 1 ? 's' : ''} importado${n !== 1 ? 's' : ''}!`, ok: true })
       qc.invalidateQueries({ queryKey: ['workouts', 'corrida'] })
     } catch (e: unknown) {
-      setSyncError(e instanceof Error ? e.message : 'Erro ao sincronizar')
+      console.error('[IntegrationsPage]', e)
+      setSyncError('Erro ao sincronizar')
       setToast({ msg: 'Erro ao sincronizar com Strava.', ok: false })
     }
     setSyncing(false)

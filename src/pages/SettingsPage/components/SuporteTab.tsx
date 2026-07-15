@@ -25,7 +25,8 @@ export function SuporteTab() {
       setAssunto('')
       setMensagem('')
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Erro ao enviar')
+      console.error('[SuporteTab]', e)
+      setError('Não foi possível enviar sua mensagem. Tente novamente.')
     }
     setLoading(false)
   }

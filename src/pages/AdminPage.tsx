@@ -100,7 +100,8 @@ export function AdminPage() {
       setStats(data as AdminStats)
       setLastUpdate(new Date())
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Erro desconhecido')
+      console.error('[AdminPage]', e)
+      setError('Não foi possível carregar as estatísticas. Tente novamente.')
     } finally {
       setLoading(false)
     }

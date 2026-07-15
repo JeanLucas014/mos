@@ -30,7 +30,12 @@ export function TwoFactorSection() {
     setSuccess(null)
     setEnrolling('totp')
     const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' })
-    if (error || !data) { setError(error?.message ?? 'Erro ao iniciar configuração'); setEnrolling(null); return }
+    if (error || !data) {
+      if (error) console.error('[TwoFactorSection]', error)
+      setError('Não foi possível iniciar a configuração. Tente novamente.')
+      setEnrolling(null)
+      return
+    }
     setQrCode(data.totp.qr_code)
     setSecret(data.totp.secret)
     setFactorId(data.id)
@@ -40,7 +45,11 @@ export function TwoFactorSection() {
     if (!factorId || verifyCode.length !== 6) return
     setError(null)
     const { data: challengeData, error: challengeErr } = await supabase.auth.mfa.challenge({ factorId })
-    if (challengeErr || !challengeData) { setError(challengeErr?.message ?? 'Erro'); return }
+    if (challengeErr || !challengeData) {
+      if (challengeErr) console.error('[TwoFactorSection]', challengeErr)
+      setError('Não foi possível verificar o código. Tente novamente.')
+      return
+    }
 
     const { error: verifyErr } = await supabase.auth.mfa.verify({
       factorId,
@@ -60,7 +69,11 @@ export function TwoFactorSection() {
     setError(null)
     setSuccess(null)
     const { error } = await supabase.auth.mfa.unenroll({ factorId: id })
-    if (error) { setError(error.message); return }
+    if (error) {
+      console.error('[TwoFactorSection]', error)
+      setError('Não foi possível remover o autenticador. Tente novamente.')
+      return
+    }
     setSuccess('Autenticador removido.')
     loadFactors()
   }

@@ -19,7 +19,10 @@ export function ForgotPasswordPage() {
       redirectTo: REDIRECT_URL,
     })
     setLoading(false)
-    if (error) setError(error.message)
+    if (error) {
+      console.error('[ForgotPasswordPage]', error)
+      setError('Não foi possível enviar o e-mail de recuperação. Tente novamente.')
+    }
     else setSent(true)
   }
 

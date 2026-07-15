@@ -49,7 +49,10 @@ export function InvoiceModal({ initial, onClose }: ModalProps) {
       qc.invalidateQueries({ queryKey: ['invoices'] })
       onClose()
     },
-    onError: (e: Error) => setErr(e.message),
+    onError: (e: Error) => {
+      console.error('[InvoiceModal]', e)
+      setErr('Não foi possível salvar a fatura. Tente novamente.')
+    },
   })
 
   async function handleSave() {

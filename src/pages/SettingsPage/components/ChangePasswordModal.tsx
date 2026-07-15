@@ -27,7 +27,10 @@ export function ChangePasswordModal({ onClose }: { onClose: () => void }) {
     if (signInErr) { setLoading(false); setError('Senha atual incorreta.'); return }
     const { error: updateErr } = await supabase.auth.updateUser({ password: next })
     setLoading(false)
-    if (updateErr) setError(updateErr.message)
+    if (updateErr) {
+      console.error('[ChangePasswordModal]', updateErr)
+      setError('Não foi possível alterar sua senha. Tente novamente.')
+    }
     else setSuccess(true)
   }
 

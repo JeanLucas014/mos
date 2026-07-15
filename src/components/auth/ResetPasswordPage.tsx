@@ -42,7 +42,10 @@ export function ResetPasswordPage() {
     setLoading(true)
     const { error } = await supabase.auth.updateUser({ password })
     setLoading(false)
-    if (error) setError(error.message)
+    if (error) {
+      console.error('[ResetPasswordPage]', error)
+      setError('Não foi possível alterar sua senha. Tente novamente.')
+    }
     else {
       setSuccess(true)
       setTimeout(() => navigate('/'), 2500)
