@@ -1,7 +1,8 @@
+import { lazy, Suspense } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useProfile } from '../../hooks/useProfile'
 import { greeting, longDate } from './utils'
-import { LifeScoreSection } from './components/LifeScoreSection'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { TasksWidget } from './components/TasksWidget'
 import { HabitsWidget } from './components/HabitsWidget'
 import { AgendaWidget } from './components/AgendaWidget'
@@ -12,6 +13,11 @@ import { NotesWidget } from './components/NotesWidget'
 import { LibraryWidget } from './components/LibraryWidget'
 import { StreakWidget } from './components/StreakWidget'
 import { FinanceiroWidget } from './components/FinanceiroWidget'
+
+/* LifeScoreSection puxa recharts (biblioteca pesada) — Suspense próprio
+   pra não atrasar o resto do dashboard (saudação + grid de widgets). */
+const LifeScoreSection = lazy(() => import('./components/LifeScoreSection').then(m => ({ default: m.LifeScoreSection })))
+
 /* ══════════════════════════════════════════════════════════════════
    PAGE
 ══════════════════════════════════════════════════════════════════ */
@@ -42,7 +48,9 @@ export function DashboardPage() {
         </p>
       </div>
 
-      <LifeScoreSection />
+      <Suspense fallback={<Skeleton className="h-40 rounded-card" />}>
+        <LifeScoreSection />
+      </Suspense>
 
       {/* Widget grid */}
       <div

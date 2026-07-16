@@ -1,10 +1,14 @@
-import { useState } from 'react'
+import { useState, lazy, Suspense } from 'react'
 import { Plus, ChevronDown, ChevronRight } from 'lucide-react'
 import type { TipoInv, Investimento, Taxa } from '../types'
 import { TIPO_CFG } from '../types'
 import { BRL, PCT, calcRentabilidadeRF, valorEstimadoRF, rentabilidadeVariavel, valorPosicao } from '../utils'
-import { AlocacaoChart } from './AlocacaoChart'
 import { AtivoRow } from './AtivoRow'
+import { Skeleton } from '@/components/ui/Skeleton'
+
+/* AlocacaoChart puxa recharts (biblioteca pesada) — Suspense próprio pra
+   não atrasar o resumo/lista de ativos, que já têm os dados prontos. */
+const AlocacaoChart = lazy(() => import('./AlocacaoChart').then(m => ({ default: m.AlocacaoChart })))
 
 interface CarteiraTabProps {
   items: Investimento[]
@@ -71,7 +75,9 @@ export function CarteiraTab({
       </div>
 
       {/* Gráfico de alocação */}
-      <AlocacaoChart porTipo={porTipo} patrimonioTotal={patrimonioTotal} />
+      <Suspense fallback={<Skeleton className="h-48 rounded-xl" />}>
+        <AlocacaoChart porTipo={porTipo} patrimonioTotal={patrimonioTotal} />
+      </Suspense>
 
       {/* Header da lista */}
       <div className="flex items-center justify-between">

@@ -34,3 +34,27 @@ concatenar sufixo hex numa referência `var()`). Se for retomar, vale
 separar em duas frentes: (1) classes Tailwind arbitrary-value simples
 (substituição direta, como feito aqui) e (2) paletas locais com alpha
 (precisam de CSS vars dedicadas por opacidade, ou `color-mix()`).
+
+## B15 — Virtualização de listas longas (não implementado)
+
+O item B15 do audit pedia virtualização do Extrato (MesTab) e da
+Biblioteca com `react-window` ou `@tanstack/react-virtual`. Não
+implementado nesta rodada por dois motivos:
+
+1. **Extrato**: os blocos têm altura variável (item avulso vs. grupo
+   com N filhos expandidos), o que exige o modo de tamanho variável do
+   virtualizador — mais complexo de acertar sem quebrar o agrupamento
+   visual, e a lista é escopada por mês (dezenas de itens, não
+   milhares), então o ganho real de performance é baixo.
+2. **Biblioteca**: usa um grid responsivo (colunas variam por
+   viewport) com seções agrupadas por status E dois modos de
+   visualização (grid/lista) — virtualizar grid responsivo é um dos
+   padrões mais complexos de acertar, e este projeto tem uso pessoal
+   (1 usuário), improvável de chegar a milhares de livros.
+
+Se o volume de dados crescer a ponto de a performance de render virar
+problema real (não é o caso hoje), vale revisitar com
+`@tanstack/react-virtual` (suporta tamanho variável e é o mais
+flexível para grid), testando visualmente em navegador antes de
+mesclar — este item precisa de QA visual que não foi possível fazer
+nesta sessão.
