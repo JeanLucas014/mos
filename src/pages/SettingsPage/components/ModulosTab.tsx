@@ -1,6 +1,6 @@
 import { useUserSettings } from '@/hooks/useUserSettings'
 import { MODULES } from '@/lib/modules'
-import { Toggle } from './shared'
+import { Toggle } from '@/components/ui/Toggle'
 
 /* ══════════════════════════════════════════════════════════════════
    MÓDULOS TAB

@@ -22,26 +22,4 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   )
 }
 
-/* ── Toggle switch ────────────────────────────────────────────── */
-function Toggle({ on, disabled, onClick }: { on: boolean; disabled?: boolean; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className="relative shrink-0 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-      style={{
-        width: 44, height: 26, borderRadius: 999,
-        background: on ? '#0EA5E9' : '#222222',
-        border: '1px solid',
-        borderColor: on ? '#0EA5E9' : '#2a2a2a',
-      }}
-    >
-      <span
-        className="absolute top-1/2 rounded-full bg-white shadow-md transition-all duration-200"
-        style={{ width: 18, height: 18, left: on ? 22 : 4, transform: 'translateY(-50%)' }}
-      />
-    </button>
-  )
-}
-
-export { Step, SectionLabel, Toggle }
+export { Step, SectionLabel }

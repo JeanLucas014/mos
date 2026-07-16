@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNotificationPrefs } from '@/hooks/useNotifications'
 import type { NotificationPrefs } from '@/hooks/useNotifications'
+import { Toggle } from '@/components/ui/Toggle'
 
 /* ══════════════════════════════════════════════════════════════════
    NOTIFICAÇÕES TAB
@@ -42,22 +43,7 @@ export function NotificacoesTab() {
             </div>
             <div style={{ fontSize: 12, color: 'var(--text3)' }}>{item.desc}</div>
           </div>
-          <button
-            onClick={() => toggle(item.key)}
-            style={{
-              width: 40, height: 22, borderRadius: 11,
-              background: local[item.key] ? '#0ea5e9' : 'var(--border)',
-              border: 'none', cursor: 'pointer', position: 'relative',
-              transition: 'background 0.2s', flexShrink: 0,
-            }}
-          >
-            <div style={{
-              position: 'absolute', top: 3,
-              left: local[item.key] ? 21 : 3,
-              width: 16, height: 16, borderRadius: '50%',
-              background: '#fff', transition: 'left 0.2s',
-            }} />
-          </button>
+          <Toggle on={local[item.key]} onClick={() => toggle(item.key)} />
         </div>
       ))}
     </div>
