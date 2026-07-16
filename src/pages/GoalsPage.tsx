@@ -4,6 +4,8 @@ import { useGoals } from '../hooks/useGoals'
 import { useGoalItems } from '../hooks/useGoalItems'
 import type { Database } from '../types/db'
 import { HelpButton } from '@/components/help/HelpButton'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { ErrorState } from '@/components/ui/ErrorState'
 
 type Goal     = Database['public']['Tables']['goals']['Row']
 type GoalItem = Database['public']['Tables']['goal_items']['Row']
@@ -356,7 +358,7 @@ function AddModal({
 
 /* ── Page ──────────────────────────────────────────────────────── */
 export function GoalsPage() {
-  const { data: goals, isLoading, isError, error, addGoal, updateGoal, deleteGoal } = useGoals()
+  const { data: goals, isLoading, isError, addGoal, updateGoal, deleteGoal } = useGoals()
   const [showModal,    setShowModal]    = useState(false)
   const [editingGoal,  setEditingGoal]  = useState<Goal | null>(null)
   const [areaFilter,   setAreaFilter]   = useState<string>('todas')
@@ -448,24 +450,24 @@ export function GoalsPage() {
       )}
 
       {isError && (
-        <p className="text-red-400 text-sm mt-3">Erro: {(error as Error).message}</p>
+        <ErrorState message="Não foi possível carregar suas metas. Tente novamente." />
       )}
 
       {isLoading && <Skeleton />}
 
       {/* Empty state */}
       {!isLoading && total === 0 && (
-        <div className="mt-10 flex flex-col items-center gap-3 text-ink-3 py-10">
-          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" opacity={0.35}>
-            <circle cx="20" cy="20" r="14" stroke="currentColor" strokeWidth="1.8" />
-            <circle cx="20" cy="20" r="7" stroke="currentColor" strokeWidth="1.8" />
-            <circle cx="20" cy="20" r="1.5" fill="currentColor" />
-          </svg>
-          <p className="text-sm text-center">Nenhuma meta ainda.</p>
-          <button onClick={() => setShowModal(true)} className="text-brand text-sm font-medium hover:brightness-110 transition-all">
-            + Criar meta
-          </button>
-        </div>
+        <EmptyState
+          icon={
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" opacity={0.35}>
+              <circle cx="20" cy="20" r="14" stroke="currentColor" strokeWidth="1.8" />
+              <circle cx="20" cy="20" r="7" stroke="currentColor" strokeWidth="1.8" />
+              <circle cx="20" cy="20" r="1.5" fill="currentColor" />
+            </svg>
+          }
+          title="Nenhuma meta ainda."
+          action={{ label: '+ Criar meta', onClick: () => setShowModal(true) }}
+        />
       )}
 
       {/* Goals grouped by area */}

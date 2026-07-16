@@ -3,6 +3,8 @@ import { useProjects } from '../hooks/useProjects'
 import { useProjectChecklist } from '../hooks/useProjectChecklist'
 import type { Database } from '../types/db'
 import { HelpButton } from '@/components/help/HelpButton'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { ErrorState } from '@/components/ui/ErrorState'
 
 type Project = Database['public']['Tables']['projects']['Row']
 
@@ -455,7 +457,7 @@ function AddModal({
 
 /* ── Page ──────────────────────────────────────────────────────── */
 export function ProjectsPage() {
-  const { data: projects, isLoading, isError, error, addProject, updateProject, deleteProject } =
+  const { data: projects, isLoading, isError, addProject, updateProject, deleteProject } =
     useProjects()
   const [showModal, setShowModal] = useState(false)
 
@@ -504,25 +506,22 @@ export function ProjectsPage() {
       </div>
 
       {isError && (
-        <p className="text-red-400 text-sm mt-3">Erro: {(error as Error).message}</p>
+        <ErrorState message="Não foi possível carregar seus projetos. Tente novamente." />
       )}
 
       {isLoading && <Skeleton />}
 
       {/* Empty state */}
       {!isLoading && (projects ?? []).length === 0 && (
-        <div className="mt-10 flex flex-col items-center gap-3 text-ink-3 py-10">
-          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" opacity={0.35}>
-            <path d="M6 10C6 8.3 7.3 7 9 7H16L19 10H31C32.7 10 34 11.3 34 13V30C34 31.7 32.7 33 31 33H9C7.3 33 6 31.7 6 30V10Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
-          </svg>
-          <p className="text-sm text-center">Nenhum projeto ainda.</p>
-          <button
-            onClick={() => setShowModal(true)}
-            className="text-brand text-sm font-medium hover:brightness-110 transition-all"
-          >
-            + Criar projeto
-          </button>
-        </div>
+        <EmptyState
+          icon={
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" opacity={0.35}>
+              <path d="M6 10C6 8.3 7.3 7 9 7H16L19 10H31C32.7 10 34 11.3 34 13V30C34 31.7 32.7 33 31 33H9C7.3 33 6 31.7 6 30V10Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+            </svg>
+          }
+          title="Nenhum projeto ainda."
+          action={{ label: '+ Criar projeto', onClick: () => setShowModal(true) }}
+        />
       )}
 
       {/* Em andamento */}

@@ -7,6 +7,7 @@ import { TaskItem } from './components/TaskItem'
 import { TaskModal } from './components/TaskModal'
 import { ProjectModal } from './components/ProjectModal'
 import { HelpButton } from '@/components/help/HelpButton'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 type ModalState = { task: Partial<Task> } | null
 
@@ -283,17 +284,11 @@ export default function TarefasPage() {
           {loading ? (
             <div className="text-ink-3 text-sm text-center py-12">Carregando...</div>
           ) : shown.length === 0 ? (
-            <div className="text-center py-16">
-              <FolderOpen size={32} className="text-[#333] mx-auto mb-3" />
-              <p className="text-ink-3 text-sm">
-                {viewId === 'historico' ? 'Nenhuma tarefa concluída.' : 'Nenhuma tarefa aqui.'}
-              </p>
-              {viewId !== 'historico' && (
-                <button onClick={() => setModal({ task: {} })} className="mt-3 text-brand text-sm hover:underline">
-                  Adicionar tarefa
-                </button>
-              )}
-            </div>
+            <EmptyState
+              icon={<FolderOpen size={32} className="text-[#333]" />}
+              title={viewId === 'historico' ? 'Nenhuma tarefa concluída.' : 'Nenhuma tarefa aqui.'}
+              action={viewId !== 'historico' ? { label: 'Adicionar tarefa', onClick: () => setModal({ task: {} }) } : undefined}
+            />
           ) : viewId === 'historico' ? (
             <div className="max-w-2xl mx-auto">
               {historyGroups.map(group => (

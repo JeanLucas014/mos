@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNotes } from '../hooks/useNotes'
 import { HelpButton } from '@/components/help/HelpButton'
+import { ErrorState } from '@/components/ui/ErrorState'
 
 export function NotesPage() {
-  const { data: notes, isLoading, isError, error, addNote, updateNote, deleteNote } = useNotes()
+  const { data: notes, isLoading, isError, addNote, updateNote, deleteNote } = useNotes()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [body, setBody] = useState('')
   const [title, setTitle] = useState('')
@@ -86,7 +87,7 @@ export function NotesPage() {
       </p>
 
       {isError && (
-        <p className="text-red-400 text-sm mt-3">Erro: {(error as Error).message}</p>
+        <ErrorState message="Não foi possível carregar suas notas. Tente novamente." />
       )}
 
       <div

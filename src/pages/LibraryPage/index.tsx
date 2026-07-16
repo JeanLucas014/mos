@@ -10,10 +10,12 @@ import { BookCard } from './components/BookCard'
 import { BookRow } from './components/BookRow'
 import { FiltersBar } from './components/FiltersBar'
 import { useLibraryFilters } from './hooks/useLibraryFilters'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { ErrorState } from '@/components/ui/ErrorState'
 
 /* ── Page ──────────────────────────────────────────────────────────── */
 export function LibraryPage() {
-  const { data: books, isLoading, isError, error, addBook, updateBook, deleteBook } = useBooks()
+  const { data: books, isLoading, isError, addBook, updateBook, deleteBook } = useBooks()
   const [showAdd, setShowAdd]     = useState(false)
   const [editBook, setEditBook]   = useState<Book | null>(null)
   const [viewMode, setViewMode]   = useState<'grid' | 'list'>('grid')
@@ -102,29 +104,18 @@ export function LibraryPage() {
       />
 
       {isError && (
-        <p className="text-red-400 text-sm mt-3">Erro: {(error as Error).message}</p>
+        <ErrorState message="Não foi possível carregar sua biblioteca. Tente novamente." />
       )}
 
       {isLoading && <Skeleton />}
 
       {/* Empty state */}
       {!isLoading && filtered.length === 0 && (
-        <div className="mt-8 flex flex-col items-center gap-3 text-ink-3 py-12">
-          <BookOpen size={40} className="text-ink-3" />
-          <p className="text-sm text-center">
-            {total === 0
-              ? 'Nenhum livro ainda.\nAdicione o primeiro à sua estante.'
-              : 'Nenhum livro encontrado com esses filtros.'}
-          </p>
-          {total === 0 && (
-            <button
-              onClick={() => setShowAdd(true)}
-              className="text-brand text-sm font-medium hover:brightness-110 transition-all mt-1"
-            >
-              + Adicionar livro
-            </button>
-          )}
-        </div>
+        <EmptyState
+          icon={<BookOpen size={40} className="text-ink-3" />}
+          title={total === 0 ? 'Nenhum livro ainda.\nAdicione o primeiro à sua estante.' : 'Nenhum livro encontrado com esses filtros.'}
+          action={total === 0 ? { label: '+ Adicionar livro', onClick: () => setShowAdd(true) } : undefined}
+        />
       )}
 
       {/* Grid or sectioned */}

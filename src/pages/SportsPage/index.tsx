@@ -7,6 +7,7 @@ import { GoalsSection } from './components/GoalsSection'
 import { RacesSection } from './components/RacesSection'
 import { SportShoppingSection } from './components/SportShoppingSection'
 import { useUserSports } from './hooks/useUserSports'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 /* ══════════════════════════════════════════════════════════════════
    PAGE
@@ -68,13 +69,11 @@ export function SportsPage() {
 
       {/* Empty state */}
       {!loadingSports && userSports.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <p className="text-[#888] text-sm mb-1">Nenhum esporte adicionado ainda.</p>
-          <p className="text-[#555] text-xs mb-4">Adicione os esportes que você pratica para começar a registrar treinos.</p>
-          <button onClick={() => setShowAddSport(true)} className="flex items-center gap-2 bg-[#0EA5E9] text-black px-4 py-2 rounded-xl text-sm font-semibold">
-            <Plus size={14} /> Adicionar esporte
-          </button>
-        </div>
+        <EmptyState
+          title="Nenhum esporte adicionado ainda."
+          description="Adicione os esportes que você pratica para começar a registrar treinos."
+          action={{ label: '+ Adicionar esporte', onClick: () => setShowAddSport(true) }}
+        />
       )}
 
       {/* Sections */}
