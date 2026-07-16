@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useProfile, useAllProfiles } from '../hooks/useProfile'
 import { useUserSettings } from '../hooks/useUserSettings'
 import { supabase } from '../lib/supabase'
+import { formatDateBR } from '../lib/dates'
 
 /* ── helpers ──────────────────────────────────────────────────── */
 function initials(name: string | null | undefined, email: string | null | undefined): string {
@@ -252,7 +253,7 @@ function AdminSection() {
                 </div>
                 <span className="text-ink text-sm flex-1 truncate">{p.name || '—'}</span>
                 <span className="text-ink-3" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9 }}>
-                  {new Date(p.created_at).toLocaleDateString('pt-BR')}
+                  {formatDateBR(p.created_at)}
                 </span>
               </div>
             ))}

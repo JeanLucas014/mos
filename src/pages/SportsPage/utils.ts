@@ -1,4 +1,5 @@
 import type { Sport } from './types'
+import { formatMonthYearBR } from '@/lib/dates'
 
 /* ── Helpers ───────────────────────────────────────────────────── */
 export function fmtDuration(s: number): string {
@@ -45,8 +46,7 @@ export function fmtKm(m: number | null): string | null {
 }
 
 export function fmtMonthLabel(dateStr: string): string {
-  const d = new Date(dateStr + 'T12:00:00')
-  return d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+  return formatMonthYearBR(dateStr)
 }
 
 export function fmtDayLabel(dateStr: string): string {

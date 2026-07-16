@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
+import { formatDateBR } from '@/lib/dates'
 import {
   Search, CheckSquare, Calendar, DollarSign,
   BookOpen, Lock, ShoppingCart, Target,
@@ -120,7 +121,7 @@ export function CommandPalette() {
     }))
     ;(eventsRes).forEach((e: any) => found.push({
       id: e.id, type: 'evento', title: e.title ?? '',
-      subtitle: e.start_at ? new Date(e.start_at).toLocaleDateString('pt-BR') : undefined,
+      subtitle: e.start_at ? formatDateBR(e.start_at) : undefined,
       url: '/agenda', color: e.color ?? TYPE_CONFIG.evento.color,
       icon: TYPE_CONFIG.evento.icon,
     }))

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
+import { formatMonthYearBR } from '@/lib/dates'
 import { Plus, ChevronLeft, ChevronRight, Calendar, List, Grid3x3, CalendarDays } from 'lucide-react'
 import type { CalendarEvent, CalendarView, Rotina } from './types'
 import { WeekView }   from './views/WeekView'
@@ -29,7 +30,7 @@ function addDays(d: Date, n: number): Date {
 
 function headerLabel(view: CalendarView, d: Date): string {
   if (view === 'mes') {
-    return d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+    return formatMonthYearBR(d)
   }
   if (view === 'semana') {
     const start = new Date(d)

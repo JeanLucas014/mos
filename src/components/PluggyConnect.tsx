@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { PluggyConnect as PluggyWidget } from 'react-pluggy-connect'
 import { supabase } from '@/lib/supabase'
+import { formatDateBR } from '@/lib/dates'
 import { Link2, Trash2, CheckCircle, Loader2 } from 'lucide-react'
 
 interface Connection {
@@ -115,7 +116,7 @@ export function PluggyConnect() {
                 <div className="text-sm text-white font-medium">{conn.bank_name}</div>
                 <div className="text-[10px] text-[#555]">
                   {conn.account_type === 'credit' ? 'Cartão crédito' : 'Débito'} ·
-                  desde {new Date(conn.created_at).toLocaleDateString('pt-BR')}
+                  desde {formatDateBR(conn.created_at)}
                 </div>
               </div>
               <button

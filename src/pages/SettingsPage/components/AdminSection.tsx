@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Shield } from 'lucide-react'
 import { useAllProfiles } from '@/hooks/useProfile'
 import { supabase } from '@/lib/supabase'
+import { formatDateBR } from '@/lib/dates'
 import { initials } from '../utils'
 import { SectionLabel, inputCls } from './shared'
 
@@ -57,7 +58,7 @@ export function AdminSection() {
                     {initials(p.name, undefined)}
                   </div>
                   <span className="text-ink text-sm flex-1 truncate">{p.name || '—'}</span>
-                  <span className="text-ink-3" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9 }}>{new Date(p.created_at).toLocaleDateString('pt-BR')}</span>
+                  <span className="text-ink-3" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9 }}>{formatDateBR(p.created_at)}</span>
                 </div>
               ))}
             </div>

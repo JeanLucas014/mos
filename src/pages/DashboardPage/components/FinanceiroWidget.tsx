@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight, DollarSign } from 'lucide-react'
 import { useDashFinancas, useDashRecorrentes } from '../../../hooks/useDashboard'
+import { formatMonthYearBR } from '../../../lib/dates'
 
 /* ══════════════════════════════════════════════════════════════════
    WIDGET — FINANCEIRO
@@ -34,7 +35,7 @@ export function FinanceiroWidget() {
       {/* Saldo */}
       <div className="mb-4">
         <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 4 }}>
-          {new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+          {formatMonthYearBR(new Date())}
         </div>
         <div style={{
           fontSize: 22,

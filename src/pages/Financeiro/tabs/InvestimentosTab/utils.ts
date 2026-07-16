@@ -1,4 +1,4 @@
-import { todayLocal } from '@/lib/dates'
+import { todayLocal, formatDateBR } from '@/lib/dates'
 import type { Investimento, Taxa } from './types'
 
 // ─── Formatters ──────────────────────────────────────────────────────────────
@@ -6,8 +6,7 @@ import type { Investimento, Taxa } from './types'
 export const BRL = (v: number) =>
   v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 export const PCT = (v: number) => (v >= 0 ? '+' : '') + v.toFixed(2).replace('.', ',') + '%'
-export const fmtDate = (s: string) =>
-  new Date(s + 'T12:00:00').toLocaleDateString('pt-BR')
+export const fmtDate = (s: string) => formatDateBR(s)
 export const today = () => todayLocal()
 
 // ─── Cálculos ────────────────────────────────────────────────────────────────

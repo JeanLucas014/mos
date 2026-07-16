@@ -26,3 +26,27 @@ export function addDaysLocal(dateStr: string, days: number): string {
 export function daysAgoLocal(days: number): string {
   return addDaysLocal(todayLocal(), -days)
 }
+
+/**
+ * pt-BR formatters. Accept either a Date or an ISO string. Plain
+ * 'YYYY-MM-DD' strings get a noon local time appended before parsing —
+ * otherwise `new Date('YYYY-MM-DD')` parses as UTC midnight, which can
+ * roll back to the previous day once rendered in Brazil's timezone.
+ */
+function toDate(date: string | Date): Date {
+  if (date instanceof Date) return date
+  return new Date(date.length === 10 ? date + 'T12:00:00' : date)
+}
+
+export function formatDateBR(date: string | Date): string {
+  return toDate(date).toLocaleDateString('pt-BR')
+}
+
+export function formatDateTimeBR(date: string | Date): string {
+  const d = toDate(date)
+  return `${d.toLocaleDateString('pt-BR')} ${d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`
+}
+
+export function formatMonthYearBR(date: string | Date): string {
+  return toDate(date).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+}
