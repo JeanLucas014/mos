@@ -2,6 +2,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { visualizer } from 'rollup-plugin-visualizer'
 import { resolve } from 'path'
 
 export default defineConfig({
@@ -54,6 +55,13 @@ export default defineConfig({
           },
         ],
       },
+    }),
+    /* Gera stats.html com o breakdown do bundle. Rodar com ANALYZE=true npm run build */
+    !!process.env.ANALYZE && visualizer({
+      filename: 'dist/stats.html',
+      gzipSize: true,
+      brotliSize: true,
+      open: true,
     }),
   ],
 })
