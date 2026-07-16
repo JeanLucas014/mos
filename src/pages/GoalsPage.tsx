@@ -6,6 +6,7 @@ import type { Database } from '../types/db'
 import { HelpButton } from '@/components/help/HelpButton'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ErrorState } from '@/components/ui/ErrorState'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 type Goal     = Database['public']['Tables']['goals']['Row']
 type GoalItem = Database['public']['Tables']['goal_items']['Row']
@@ -27,16 +28,16 @@ const AREA_COLOR: Record<string, string> = {
 function aColor(area?: string | null) { return AREA_COLOR[area ?? 'geral'] ?? 'var(--text2)' }
 
 /* ── Skeleton ──────────────────────────────────────────────────── */
-function Skeleton() {
+function GoalsSkeleton() {
   return (
-    <div className="bg-bg-2 border border-line rounded-card p-5 space-y-5 mt-5 animate-pulse">
+    <div className="bg-bg-2 border border-line rounded-card p-5 space-y-5 mt-5">
       {[1, 2, 3].map((i) => (
         <div key={i} className="space-y-2">
           <div className="flex justify-between">
-            <div className="h-4 bg-bg-3 rounded w-1/2" />
-            <div className="h-4 bg-bg-3 rounded w-12" />
+            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="h-4 w-12" />
           </div>
-          <div className="h-2 bg-bg-3 rounded" />
+          <Skeleton className="h-2" />
         </div>
       ))}
     </div>
@@ -453,7 +454,7 @@ export function GoalsPage() {
         <ErrorState message="Não foi possível carregar suas metas. Tente novamente." />
       )}
 
-      {isLoading && <Skeleton />}
+      {isLoading && <GoalsSkeleton />}
 
       {/* Empty state */}
       {!isLoading && total === 0 && (

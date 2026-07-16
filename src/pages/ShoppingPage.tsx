@@ -1,6 +1,8 @@
 import { useState, useRef, type FormEvent, type KeyboardEvent } from 'react'
 import { useShopping } from '../hooks/useShopping'
 import { HelpButton } from '@/components/help/HelpButton'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 const CATEGORIES = ['Todos', 'Geral', 'Açougue', 'Limpeza', 'Sacolão', 'Higiene Pessoal', 'Casa']
 const ADD_CATEGORIES = CATEGORIES.filter(c => c !== 'Todos')
@@ -14,13 +16,13 @@ const CAT_COLORS: Record<string, string> = {
   'Casa':            '#f97316',
 }
 
-function Skeleton() {
+function ShoppingSkeleton() {
   return (
-    <div className="bg-bg-2 border border-line rounded-card p-4 mt-5 space-y-2 animate-pulse">
+    <div className="bg-bg-2 border border-line rounded-card p-4 mt-5 space-y-2">
       {[1, 2, 3, 4].map((i) => (
         <div key={i} className="flex items-center gap-3" style={{ minHeight: 44 }}>
-          <div className="w-5 h-5 rounded-md bg-bg-3 flex-shrink-0" />
-          <div className="h-3 bg-bg-3 rounded flex-1" style={{ maxWidth: `${50 + i * 15}%` }} />
+          <Skeleton className="w-5 h-5 rounded-md flex-shrink-0" />
+          <Skeleton className="h-3 flex-1" style={{ maxWidth: `${50 + i * 15}%` }} />
         </div>
       ))}
     </div>
@@ -28,7 +30,7 @@ function Skeleton() {
 }
 
 export function ShoppingPage() {
-  const { data: items, isLoading, isError, error, addItem, toggleItem, deleteItem, clearDone } =
+  const { data: items, isLoading, isError, addItem, toggleItem, deleteItem, clearDone } =
     useShopping()
 
   const [draft, setDraft]         = useState('')
@@ -108,8 +110,8 @@ export function ShoppingPage() {
         )}
       </div>
 
-      {isError && <p className="text-red-400 text-sm mt-3">Erro: {(error as Error).message}</p>}
-      {isLoading && <Skeleton />}
+      {isError && <ErrorState message="Não foi possível carregar sua lista de compras. Tente novamente." />}
+      {isLoading && <ShoppingSkeleton />}
 
       {!isLoading && (
         <>

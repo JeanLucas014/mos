@@ -4,6 +4,8 @@ import { useStudies } from '../hooks/useStudies'
 import type { Database } from '../types/db'
 import { LibraryPage } from '@/pages/LibraryPage'
 import { HelpButton } from '@/components/help/HelpButton'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 type Study = Database['public']['Tables']['studies']['Row']
 type StudyFile = Database['public']['Tables']['study_files']['Row']
@@ -85,14 +87,14 @@ function ProgressBar({
 }
 
 /* ── Skeleton ─────────────────────────────────────────────────────── */
-function Skeleton() {
+function StudiesSkeleton() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-5">
       {[1, 2].map((i) => (
-        <div key={i} className="bg-bg-2 border border-line rounded-card p-5 space-y-3 animate-pulse">
-          <div className="h-5 bg-bg-3 rounded w-1/3" />
+        <div key={i} className="bg-bg-2 border border-line rounded-card p-5 space-y-3">
+          <Skeleton className="h-5 w-1/3" />
           {[1, 2, 3].map((j) => (
-            <div key={j} className="h-14 bg-bg-3 rounded-input" />
+            <Skeleton key={j} className="h-14 rounded-input" />
           ))}
         </div>
       ))}
@@ -520,12 +522,10 @@ export function StudiesPage() {
       {tab === 'biblioteca' && <LibraryPage />}
 
       {tab === 'estudos' && (studiesQ.isError || filesQ.isError) && (
-        <p className="text-red-400 text-sm mt-3">
-          Erro: {((studiesQ.error || filesQ.error) as Error).message}
-        </p>
+        <ErrorState message="Não foi possível carregar seus estudos. Tente novamente." />
       )}
 
-      {tab === 'estudos' && isLoading && <Skeleton />}
+      {tab === 'estudos' && isLoading && <StudiesSkeleton />}
 
       {tab === 'estudos' && !isLoading && studies.length === 0 && files.length === 0 && (
         <div className="mt-8 flex flex-col items-center gap-3 text-ink-3 py-12">

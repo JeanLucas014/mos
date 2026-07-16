@@ -5,6 +5,7 @@ import type { Database } from '../types/db'
 import { HelpButton } from '@/components/help/HelpButton'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ErrorState } from '@/components/ui/ErrorState'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 type Project = Database['public']['Tables']['projects']['Row']
 
@@ -45,17 +46,17 @@ function Pill({ status }: { status: string }) {
 }
 
 /* ── Skeleton ──────────────────────────────────────────────────── */
-function Skeleton() {
+function ProjectsSkeleton() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-5">
       {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="bg-bg-2 border border-line rounded-card p-5 space-y-3 animate-pulse">
+        <div key={i} className="bg-bg-2 border border-line rounded-card p-5 space-y-3">
           <div className="flex justify-between">
-            <div className="h-5 bg-bg-3 rounded w-2/3" />
-            <div className="h-5 bg-bg-3 rounded w-16" />
+            <Skeleton className="h-5 w-2/3" />
+            <Skeleton className="h-5 w-16" />
           </div>
-          <div className="h-3 bg-bg-3 rounded w-1/2" />
-          <div className="h-2 bg-bg-3 rounded" />
+          <Skeleton className="h-3 w-1/2" />
+          <Skeleton className="h-2" />
         </div>
       ))}
     </div>
@@ -509,7 +510,7 @@ export function ProjectsPage() {
         <ErrorState message="Não foi possível carregar seus projetos. Tente novamente." />
       )}
 
-      {isLoading && <Skeleton />}
+      {isLoading && <ProjectsSkeleton />}
 
       {/* Empty state */}
       {!isLoading && (projects ?? []).length === 0 && (
