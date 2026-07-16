@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
-import { format } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
 import { Search, MessageCircle } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useUIStore } from '../../stores/useUIStore'
@@ -39,7 +37,11 @@ export function Topbar() {
   }, [])
 
   const currentLabel = VIEW_LABELS[location.pathname] ?? 'MOS'
-  const dateStr = format(new Date(), 'EEE dd MMM', { locale: ptBR })
+  const now      = new Date()
+  const weekday  = now.toLocaleDateString('pt-BR', { weekday: 'long' }).replace('-feira', '')
+  const day      = now.toLocaleDateString('pt-BR', { day: '2-digit' })
+  const month    = now.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')
+  const dateStr  = `${weekday} ${day} ${month}`
 
   return (
     <>
