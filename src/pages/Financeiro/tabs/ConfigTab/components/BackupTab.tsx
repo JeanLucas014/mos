@@ -122,15 +122,15 @@ export function BackupTab({ anos }: { anos: FinAno[] }) {
       <div className="bg-bg-2 border border-line rounded-xl p-5">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <div className="text-xs text-[#555] font-[Sora] uppercase tracking-wider mb-1">Exportar backup</div>
-            <div className="text-sm text-[#aaa]">
+            <div className="text-xs text-ink-3 font-[Sora] uppercase tracking-wider mb-1">Exportar backup</div>
+            <div className="text-sm text-ink-2">
               Baixa todos os dados financeiros como JSON — anos, lançamentos, metas, investimentos, categorias, cartões e recorrentes.
             </div>
           </div>
           <button
             onClick={exportBackup}
             disabled={exporting}
-            className="flex items-center gap-2 shrink-0 px-4 py-2 text-sm font-medium bg-[#0EA5E9] text-black rounded-lg hover:bg-[#38bdf8] disabled:opacity-40 transition-colors"
+            className="flex items-center gap-2 shrink-0 px-4 py-2 text-sm font-medium bg-brand text-black rounded-lg hover:bg-[#38bdf8] disabled:opacity-40 transition-colors"
           >
             <Download size={14} />
             {exporting ? 'Exportando…' : 'Baixar backup'}
@@ -140,7 +140,7 @@ export function BackupTab({ anos }: { anos: FinAno[] }) {
 
       {/* ── Seção B: Importar ── */}
       <div className="bg-bg-2 border border-line rounded-xl p-5 space-y-4">
-        <div className="text-xs text-[#555] font-[Sora] uppercase tracking-wider">Restaurar backup</div>
+        <div className="text-xs text-ink-3 font-[Sora] uppercase tracking-wider">Restaurar backup</div>
 
         {/* Aviso */}
         <div className="flex gap-2.5 bg-[#f59e0b]/5 border border-[#f59e0b]/20 rounded-lg px-3 py-2.5">
@@ -152,17 +152,17 @@ export function BackupTab({ anos }: { anos: FinAno[] }) {
 
         {/* Upload */}
         {importState === 'idle' && (
-          <label className="flex flex-col items-center gap-3 py-8 border border-dashed border-[#2a2a2a] rounded-xl cursor-pointer hover:border-[#0EA5E9]/40 transition-colors">
+          <label className="flex flex-col items-center gap-3 py-8 border border-dashed border-[#2a2a2a] rounded-xl cursor-pointer hover:border-brand/40 transition-colors">
             <Upload size={20} className="text-[#444]" />
-            <span className="text-sm text-[#555]">Selecionar arquivo JSON</span>
+            <span className="text-sm text-ink-3">Selecionar arquivo JSON</span>
             <input ref={fileRef} type="file" accept=".json" className="sr-only" onChange={onFileChange} />
           </label>
         )}
 
         {/* Reading */}
         {importState === 'reading' && (
-          <div className="flex items-center gap-2 text-sm text-[#555] py-4">
-            <div className="w-4 h-4 rounded-full border-2 border-[#0EA5E9] border-t-transparent animate-spin" />
+          <div className="flex items-center gap-2 text-sm text-ink-3 py-4">
+            <div className="w-4 h-4 rounded-full border-2 border-brand border-t-transparent animate-spin" />
             Lendo arquivo…
           </div>
         )}
@@ -171,20 +171,20 @@ export function BackupTab({ anos }: { anos: FinAno[] }) {
         {importState === 'preview' && preview && (
           <div className="space-y-3">
             <div className="bg-bg border border-line rounded-lg px-4 py-3 space-y-1.5">
-              <div className="text-[10px] text-[#555] uppercase tracking-wider mb-2">
+              <div className="text-[10px] text-ink-3 uppercase tracking-wider mb-2">
                 {preview.format === 'mos-v1' ? 'Formato MOS v1' : 'Formato legado'}{preview.counts.extras ? ` · ${preview.counts.extras}` : ''}
               </div>
               <div className="flex gap-4 text-sm">
-                <span className="text-[#aaa]">Lançamentos: <strong className="text-white">{preview.counts.lancamentos}</strong></span>
-                <span className="text-[#aaa]">Metas: <strong className="text-white">{preview.counts.metas}</strong></span>
-                <span className="text-[#aaa]">Investimentos: <strong className="text-white">{preview.counts.investimentos}</strong></span>
+                <span className="text-ink-2">Lançamentos: <strong className="text-white">{preview.counts.lancamentos}</strong></span>
+                <span className="text-ink-2">Metas: <strong className="text-white">{preview.counts.metas}</strong></span>
+                <span className="text-ink-2">Investimentos: <strong className="text-white">{preview.counts.investimentos}</strong></span>
               </div>
             </div>
 
             {/* Ano destino (formato legado) */}
             {preview.format === 'legacy' && (
               <div>
-                <div className="text-[10px] text-[#555] uppercase tracking-wider mb-1.5">Ano de destino</div>
+                <div className="text-[10px] text-ink-3 uppercase tracking-wider mb-1.5">Ano de destino</div>
                 <select
                   value={selectedAnoId}
                   onChange={e => setSelectedAnoId(e.target.value)}
@@ -197,13 +197,13 @@ export function BackupTab({ anos }: { anos: FinAno[] }) {
             )}
 
             <div className="flex gap-2">
-              <button onClick={reset} className="px-4 py-2 text-sm text-[#555] border border-line rounded-lg hover:text-white transition-colors">
+              <button onClick={reset} className="px-4 py-2 text-sm text-ink-3 border border-line rounded-lg hover:text-white transition-colors">
                 Cancelar
               </button>
               <button
                 onClick={doImport}
                 disabled={preview.format === 'legacy' && !selectedAnoId}
-                className="flex-1 py-2 text-sm font-medium bg-[#0EA5E9] text-black rounded-lg hover:bg-[#38bdf8] disabled:opacity-40 transition-colors"
+                className="flex-1 py-2 text-sm font-medium bg-brand text-black rounded-lg hover:bg-[#38bdf8] disabled:opacity-40 transition-colors"
               >
                 Importar
               </button>
@@ -214,10 +214,10 @@ export function BackupTab({ anos }: { anos: FinAno[] }) {
         {/* Progress */}
         {importState === 'importing' && (
           <div className="space-y-3">
-            <div className="text-sm text-[#555]">Importando… {progress}%</div>
+            <div className="text-sm text-ink-3">Importando… {progress}%</div>
             <div className="h-1.5 bg-[#1f1f1f] rounded-full overflow-hidden">
               <div
-                className="h-full bg-[#0EA5E9] rounded-full transition-all duration-300"
+                className="h-full bg-brand rounded-full transition-all duration-300"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -237,7 +237,7 @@ export function BackupTab({ anos }: { anos: FinAno[] }) {
                 </div>
               ))}
             </div>
-            <button onClick={reset} className="px-4 py-1.5 text-sm text-[#0EA5E9] border border-[#0EA5E9]/30 rounded-lg hover:border-[#0EA5E9]/60 transition-colors">
+            <button onClick={reset} className="px-4 py-1.5 text-sm text-brand border border-brand/30 rounded-lg hover:border-brand/60 transition-colors">
               Importar outro arquivo
             </button>
           </div>

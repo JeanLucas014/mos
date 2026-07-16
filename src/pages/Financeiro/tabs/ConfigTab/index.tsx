@@ -28,7 +28,7 @@ export function ConfigTab({ anos, onReload }: Props) {
 
   if (loading) return (
     <div className="flex justify-center py-16">
-      <div className="w-5 h-5 rounded-full border-2 border-[#0EA5E9] border-t-transparent animate-spin" />
+      <div className="w-5 h-5 rounded-full border-2 border-brand border-t-transparent animate-spin" />
     </div>
   )
 
@@ -38,7 +38,7 @@ export function ConfigTab({ anos, onReload }: Props) {
         {subtabs.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
             className={['px-3 py-2 text-xs font-medium border-b-2 -mb-px transition-colors whitespace-nowrap',
-              tab === t.id ? 'text-[#0EA5E9] border-[#0EA5E9]' : 'text-[#555] border-transparent hover:text-[#999]'].join(' ')}>
+              tab === t.id ? 'text-brand border-brand' : 'text-ink-3 border-transparent hover:text-[#999]'].join(' ')}>
             {t.label}
           </button>
         ))}

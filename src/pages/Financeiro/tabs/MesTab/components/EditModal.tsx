@@ -54,7 +54,7 @@ export function EditModal({ item, categorias, cartoes, onSave, onClose }: EditMo
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="text-sm font-semibold text-white font-[Sora]">Editar lançamento</div>
-          <button onClick={onClose} className="text-[#555] hover:text-white transition-colors">
+          <button onClick={onClose} className="text-ink-3 hover:text-white transition-colors">
             <X size={14} />
           </button>
         </div>
@@ -64,17 +64,17 @@ export function EditModal({ item, categorias, cartoes, onSave, onClose }: EditMo
           value={form.nome}
           onChange={e => set('nome', e.target.value)}
           placeholder="Nome"
-          className="w-full bg-bg border border-line rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#0EA5E9]/60"
+          className="w-full bg-bg border border-line rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-brand/60"
         />
 
         {/* Data */}
         <div>
-          <div className="text-[10px] text-[#555] mb-1.5">Data</div>
+          <div className="text-[10px] text-ink-3 mb-1.5">Data</div>
           <input
             type="date"
             value={form.data}
             onChange={e => set('data', e.target.value)}
-            className="w-full bg-bg border border-line rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#0EA5E9]/60"
+            className="w-full bg-bg border border-line rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-brand/60"
             style={{ maxWidth: '100%', boxSizing: 'border-box' }}
           />
         </div>
@@ -83,13 +83,13 @@ export function EditModal({ item, categorias, cartoes, onSave, onClose }: EditMo
           value={form.valor}
           onChange={e => set('valor', e.target.value)}
           placeholder="Valor"
-          className="w-full bg-bg border border-line rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums"
+          className="w-full bg-bg border border-line rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-brand/60 tabular-nums"
         />
 
         {/* Natureza (somente raízes) */}
         {!item.parent_id && (
           <div>
-            <div className="text-[10px] text-[#555] mb-1.5">Natureza</div>
+            <div className="text-[10px] text-ink-3 mb-1.5">Natureza</div>
             <div className="flex gap-1">
               {(['entrada','saida','diario'] as Natureza[]).map(n => (
                 <button
@@ -97,7 +97,7 @@ export function EditModal({ item, categorias, cartoes, onSave, onClose }: EditMo
                   onClick={() => set('natureza', n)}
                   className={[
                     'flex-1 py-1.5 text-xs rounded-lg border transition-colors',
-                    form.natureza === n ? 'border-[#0EA5E9]/50 text-[#0EA5E9]' : 'border-line text-[#555] hover:text-white',
+                    form.natureza === n ? 'border-brand/50 text-brand' : 'border-line text-ink-3 hover:text-white',
                   ].join(' ')}
                 >
                   {n === 'entrada' ? 'Entrada' : n === 'saida' ? 'Saída' : 'Diário'}
@@ -110,7 +110,7 @@ export function EditModal({ item, categorias, cartoes, onSave, onClose }: EditMo
         {/* Saída tipo */}
         {form.natureza === 'saida' && (
           <div>
-            <div className="text-[10px] text-[#555] mb-1.5">Tipo</div>
+            <div className="text-[10px] text-ink-3 mb-1.5">Tipo</div>
             <div className="flex gap-1">
               {(['fixa','cartao'] as SaidaTipo[]).map(t => (
                 <button
@@ -118,7 +118,7 @@ export function EditModal({ item, categorias, cartoes, onSave, onClose }: EditMo
                   onClick={() => set('saida_tipo', t)}
                   className={[
                     'flex-1 py-1.5 text-xs rounded-lg border transition-colors',
-                    form.saida_tipo === t ? 'border-[#a78bfa]/50 text-[#a78bfa]' : 'border-line text-[#555] hover:text-white',
+                    form.saida_tipo === t ? 'border-[#a78bfa]/50 text-[#a78bfa]' : 'border-line text-ink-3 hover:text-white',
                   ].join(' ')}
                 >
                   {t === 'fixa' ? 'Fixa' : 'Cartão'}
@@ -156,14 +156,14 @@ export function EditModal({ item, categorias, cartoes, onSave, onClose }: EditMo
         <div className="flex gap-2 pt-1">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-[#555] border border-line rounded-lg hover:text-white transition-colors"
+            className="px-4 py-2 text-sm text-ink-3 border border-line rounded-lg hover:text-white transition-colors"
           >
             Cancelar
           </button>
           <button
             onClick={handle}
             disabled={saving || !form.nome.trim()}
-            className="flex-1 py-2 text-sm font-medium bg-[#0EA5E9] text-black rounded-lg hover:bg-[#38bdf8] disabled:opacity-40 transition-colors"
+            className="flex-1 py-2 text-sm font-medium bg-brand text-black rounded-lg hover:bg-[#38bdf8] disabled:opacity-40 transition-colors"
           >
             {saving ? 'Salvando…' : 'Salvar alterações'}
           </button>

@@ -18,13 +18,13 @@ export function AnosTab({ anos, onAdd, onUpdateSaldoInicial }: AnosTabProps) {
   return (
     <div className="space-y-4">
       <div className="bg-bg-2 border border-line rounded-xl p-4 space-y-3">
-        <div className="text-xs text-[#555] font-[Sora] uppercase tracking-wider">Criar novo ano</div>
+        <div className="text-xs text-ink-3 font-[Sora] uppercase tracking-wider">Criar novo ano</div>
         <div className="flex gap-2">
           <input placeholder="2027" value={anoForm.ano} onChange={e => setAnoForm({ ...anoForm, ano: e.target.value })}
-            className="w-24 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums" />
+            className="w-24 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-brand/60 tabular-nums" />
           <input placeholder="Saldo inicial" value={anoForm.saldo_inicial} onChange={e => setAnoForm({ ...anoForm, saldo_inicial: e.target.value })}
-            className="flex-1 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums" />
-          <button onClick={handleAdd} className="px-4 py-1.5 text-sm font-medium bg-[#0EA5E9] text-black rounded-lg hover:bg-[#38bdf8]">
+            className="flex-1 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-brand/60 tabular-nums" />
+          <button onClick={handleAdd} className="px-4 py-1.5 text-sm font-medium bg-brand text-black rounded-lg hover:bg-[#38bdf8]">
             Criar
           </button>
         </div>
@@ -32,12 +32,12 @@ export function AnosTab({ anos, onAdd, onUpdateSaldoInicial }: AnosTabProps) {
       {anos.map(a => (
         <div key={a.id} className="flex items-center gap-3 py-2.5 border-b border-line">
           <span className="text-sm font-semibold text-white w-12">{a.ano}</span>
-          <span className="text-xs text-[#555]">Saldo inicial:</span>
+          <span className="text-xs text-ink-3">Saldo inicial:</span>
           <input
             type="number"
             defaultValue={a.saldo_inicial}
             onBlur={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) onUpdateSaldoInicial(a.id, v) }}
-            className="w-32 bg-bg border border-line rounded-lg px-2 py-1 text-xs text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums"
+            className="w-32 bg-bg border border-line rounded-lg px-2 py-1 text-xs text-white outline-none focus:border-brand/60 tabular-nums"
           />
         </div>
       ))}

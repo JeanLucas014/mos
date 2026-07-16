@@ -44,7 +44,7 @@ export function ItemRow({ node, depth, expandedItems, toggleItem, onEdit, onDele
 
         {/* Nome + badges */}
         <td
-          className="py-1.5 px-2 text-xs text-[#aaa]"
+          className="py-1.5 px-2 text-xs text-ink-2"
           colSpan={3}
           onClick={isSaida ? (e) => { e.stopPropagation(); confirmPopup.open(e) } : undefined}
           style={isSaida ? { cursor: 'pointer' } : undefined}
@@ -107,7 +107,7 @@ export function ItemRow({ node, depth, expandedItems, toggleItem, onEdit, onDele
           <div className="flex items-center gap-1.5 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={() => onEdit(node)}
-              className="text-[#444] hover:text-[#0EA5E9] transition-colors"
+              className="text-[#444] hover:text-brand transition-colors"
               title="Editar"
             >
               <Pencil size={11} />
@@ -115,7 +115,7 @@ export function ItemRow({ node, depth, expandedItems, toggleItem, onEdit, onDele
             {node.is_grupo && (
               <button
                 onClick={() => onAddChild(node)}
-                className="text-[#444] hover:text-[#0EA5E9] transition-colors"
+                className="text-[#444] hover:text-brand transition-colors"
                 title="Adicionar subitem"
               >
                 <Plus size={11} />
@@ -168,10 +168,10 @@ export function ItemRow({ node, depth, expandedItems, toggleItem, onEdit, onDele
             <td colSpan={6} style={{ paddingLeft: pl + 20 }} className="pb-2">
               <button
                 onClick={() => onAddChild(node)}
-                className="flex items-center gap-1 text-[11px] text-[#0EA5E9]/50 hover:text-[#0EA5E9] transition-colors"
+                className="flex items-center gap-1 text-[11px] text-brand/50 hover:text-brand transition-colors"
               >
                 <Plus size={10} />
-                <span>item em <em className="not-italic text-[#0EA5E9]/80">{node.nome}</em></span>
+                <span>item em <em className="not-italic text-brand/80">{node.nome}</em></span>
               </button>
             </td>
           </tr>

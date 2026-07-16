@@ -85,7 +85,7 @@ export function MesTab({ ano, initialMonth }: Props) {
 
   if (loading) return (
     <div className="flex justify-center py-16">
-      <div className="w-5 h-5 rounded-full border-2 border-[#0EA5E9] border-t-transparent animate-spin" />
+      <div className="w-5 h-5 rounded-full border-2 border-brand border-t-transparent animate-spin" />
     </div>
   )
 
@@ -100,13 +100,13 @@ export function MesTab({ ano, initialMonth }: Props) {
           <select
             value={month}
             onChange={e => setMonth(Number(e.target.value))}
-            className="bg-bg-2 border border-line text-white text-sm rounded-lg px-3 py-1.5 outline-none focus:border-[#0EA5E9]/60"
+            className="bg-bg-2 border border-line text-white text-sm rounded-lg px-3 py-1.5 outline-none focus:border-brand/60"
           >
             {MS_OPT.map((m, i) => <option key={i + 1} value={i + 1}>{m}</option>)}
           </select>
-          <span className="text-[#555] text-sm">{MS_FULL[month - 1]} · {ano.ano}</span>
+          <span className="text-ink-3 text-sm">{MS_FULL[month - 1]} · {ano.ano}</span>
         </div>
-        <span className="sm:ml-auto text-xs text-[#555]">
+        <span className="sm:ml-auto text-xs text-ink-3">
           Abertura: <span className="text-white tabular-nums">{BRL(saldoAbertura)}</span>
         </span>
       </div>
@@ -118,8 +118,8 @@ export function MesTab({ ano, initialMonth }: Props) {
           className={[
             'flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border transition-colors',
             viewMode === 'calendario'
-              ? 'border-[#0EA5E9]/50 text-[#0EA5E9]'
-              : 'border-line text-[#555] hover:text-white',
+              ? 'border-brand/50 text-brand'
+              : 'border-line text-ink-3 hover:text-white',
           ].join(' ')}
         >
           <CalendarDays size={12} /> Calendário
@@ -129,8 +129,8 @@ export function MesTab({ ano, initialMonth }: Props) {
           className={[
             'flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border transition-colors',
             viewMode === 'extrato'
-              ? 'border-[#0EA5E9]/50 text-[#0EA5E9]'
-              : 'border-line text-[#555] hover:text-white',
+              ? 'border-brand/50 text-brand'
+              : 'border-line text-ink-3 hover:text-white',
           ].join(' ')}
         >
           <List size={12} /> Extrato
@@ -147,7 +147,7 @@ export function MesTab({ ano, initialMonth }: Props) {
         ].map(c => (
           <div key={c.label} className="bg-bg-2 border border-line rounded-xl p-3.5 relative">
             <span className="absolute top-3.5 right-3.5 w-2 h-2 rounded-full" style={{ background: c.color }} />
-            <div className="text-[10px] text-[#555] uppercase tracking-wider font-[Sora] mb-1.5">{c.label}</div>
+            <div className="text-[10px] text-ink-3 uppercase tracking-wider font-[Sora] mb-1.5">{c.label}</div>
             <div className="text-sm font-bold tabular-nums" style={{ color: c.color }}>{BRL(c.value)}</div>
           </div>
         ))}
@@ -162,7 +162,7 @@ export function MesTab({ ano, initialMonth }: Props) {
               onClick={() => setMobileCol(col)}
               className={[
                 'flex-1 py-1.5 text-xs rounded-lg border transition-colors',
-                mobileCol === col ? 'border-[#0EA5E9]/50 text-[#0EA5E9]' : 'border-line text-[#555]',
+                mobileCol === col ? 'border-brand/50 text-brand' : 'border-line text-ink-3',
               ].join(' ')}
             >
               {col === 'entrada' ? 'Entrada' : col === 'saida' ? 'Saída' : 'Diário'}
@@ -176,7 +176,7 @@ export function MesTab({ ano, initialMonth }: Props) {
       <div className="hidden sm:block overflow-x-auto">
         <table className="w-full min-w-[560px] text-sm border-collapse">
           <thead>
-            <tr className="text-[10px] text-[#555] uppercase tracking-wider select-none">
+            <tr className="text-[10px] text-ink-3 uppercase tracking-wider select-none">
               <th className="text-left py-2 px-2 w-12">Dia</th>
               <th className="text-right py-2 px-3 text-[#22c55e]/60" title="Clique na célula para adicionar">Entrada ↓</th>
               <th className="text-right py-2 px-3 text-[#ef4444]/60" title="Clique na célula para adicionar">Saída ↓</th>
@@ -196,7 +196,7 @@ export function MesTab({ ano, initialMonth }: Props) {
                   {/* ── Day row ── */}
                   <tr
                     key={`day-${d.dia}`}
-                    className={['border-t border-line group', isToday ? 'bg-[#0EA5E9]/5' : ''].join(' ')}
+                    className={['border-t border-line group', isToday ? 'bg-brand/5' : ''].join(' ')}
                   >
                     {/* Dia */}
                     <td className="py-2.5 px-2">
@@ -207,7 +207,7 @@ export function MesTab({ ano, initialMonth }: Props) {
                         {dayItems.length > 0
                           ? isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />
                           : <span className="w-3 inline-block" />}
-                        <span className={['tabular-nums font-medium', isToday ? 'text-[#0EA5E9]' : ''].join(' ')}>
+                        <span className={['tabular-nums font-medium', isToday ? 'text-brand' : ''].join(' ')}>
                           {d.dia}
                         </span>
                       </button>
@@ -249,7 +249,7 @@ export function MesTab({ ano, initialMonth }: Props) {
                     <td className="py-2.5 px-2">
                       <button
                         onClick={() => openAdd(d.dia)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity text-[#0EA5E9] hover:text-white"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-brand hover:text-white"
                       >
                         <Plus size={14} />
                       </button>
@@ -297,7 +297,7 @@ export function MesTab({ ano, initialMonth }: Props) {
           const isExpanded      = expandedDays.has(d.dia)
 
           return (
-            <div key={d.dia} className={isToday ? 'bg-[#0EA5E9]/5' : ''}>
+            <div key={d.dia} className={isToday ? 'bg-brand/5' : ''}>
               <div className="flex items-center gap-3 py-2.5">
                 <button
                   className="flex items-center gap-1 w-8 shrink-0"
@@ -306,7 +306,7 @@ export function MesTab({ ano, initialMonth }: Props) {
                   {dayItemsFiltered.length > 0
                     ? (isExpanded ? <ChevronDown size={11} className="text-[#666]" /> : <ChevronRight size={11} className="text-[#666]" />)
                     : <span className="w-[11px]" />}
-                  <span className={['text-sm tabular-nums font-medium', isToday ? 'text-[#0EA5E9]' : 'text-[#666]'].join(' ')}>
+                  <span className={['text-sm tabular-nums font-medium', isToday ? 'text-brand' : 'text-[#666]'].join(' ')}>
                     {d.dia}
                   </span>
                 </button>
@@ -320,7 +320,7 @@ export function MesTab({ ano, initialMonth }: Props) {
                 <span className={['tabular-nums text-xs font-medium', d.saldo >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'].join(' ')}>
                   {BRL(d.saldo)}
                 </span>
-                <button onClick={() => openAdd(d.dia, mobileCol)} className="text-[#0EA5E9] shrink-0">
+                <button onClick={() => openAdd(d.dia, mobileCol)} className="text-brand shrink-0">
                   <Plus size={14} />
                 </button>
               </div>
@@ -365,7 +365,7 @@ export function MesTab({ ano, initialMonth }: Props) {
               <div className="text-sm font-semibold text-white font-[Sora]">
                 Adicionar · Dia {addingToDay}
               </div>
-              <button onClick={() => setAddingToDay(null)} className="text-[#555] hover:text-white transition-colors">
+              <button onClick={() => setAddingToDay(null)} className="text-ink-3 hover:text-white transition-colors">
                 <X size={14} />
               </button>
             </div>

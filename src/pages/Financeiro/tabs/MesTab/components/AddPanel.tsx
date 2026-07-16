@@ -74,10 +74,10 @@ export function AddPanel({
       {/* ── Quick diary ── */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <div className="text-[10px] text-[#555] uppercase tracking-wider">Diário rápido</div>
+          <div className="text-[10px] text-ink-3 uppercase tracking-wider">Diário rápido</div>
           <button
             onClick={() => setShowNewCat(v => !v)}
-            className="flex items-center gap-0.5 text-[10px] text-[#0EA5E9]/60 hover:text-[#0EA5E9] transition-colors"
+            className="flex items-center gap-0.5 text-[10px] text-brand/60 hover:text-brand transition-colors"
           >
             <Plus size={10} /> nova categoria
           </button>
@@ -91,7 +91,7 @@ export function AddPanel({
               value={newCatNome}
               onChange={e => setNewCatNome(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && saveNewCat()}
-              className="flex-1 bg-bg border border-line rounded-lg px-2 py-1 text-xs text-white outline-none focus:border-[#0EA5E9]/60"
+              className="flex-1 bg-bg border border-line rounded-lg px-2 py-1 text-xs text-white outline-none focus:border-brand/60"
             />
             <input
               type="color"
@@ -102,7 +102,7 @@ export function AddPanel({
             <button
               onClick={saveNewCat}
               disabled={savingCat || !newCatNome.trim()}
-              className="px-2.5 py-1 text-xs bg-[#0EA5E9] text-black rounded-lg hover:bg-[#38bdf8] disabled:opacity-40"
+              className="px-2.5 py-1 text-xs bg-brand text-black rounded-lg hover:bg-[#38bdf8] disabled:opacity-40"
             >
               {savingCat ? '…' : 'OK'}
             </button>
@@ -122,7 +122,7 @@ export function AddPanel({
               className={[
                 'px-2.5 py-1 text-xs rounded-lg border transition-colors',
                 !cat.cor && (quickCat?.id === cat.id
-                  ? 'border-[#0EA5E9]/50 text-[#0EA5E9]'
+                  ? 'border-brand/50 text-brand'
                   : 'border-line text-[#666] hover:text-white'),
               ].join(' ')}
             >
@@ -139,20 +139,20 @@ export function AddPanel({
               value={quickNome}
               onChange={e => setQuickNome(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && fireQuick()}
-              className="flex-1 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60"
+              className="flex-1 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-brand/60"
             />
             <input
               placeholder="R$ 0,00"
               value={quickValor}
               onChange={e => setQuickValor(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && fireQuick()}
-              className="w-28 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums"
+              className="w-28 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-brand/60 tabular-nums"
               autoFocus
             />
             <button
               onClick={fireQuick}
               disabled={!quickValor.trim()}
-              className="bg-[#0EA5E9] text-black text-xs font-semibold px-3 rounded-lg hover:bg-[#38bdf8] disabled:opacity-40 transition-colors"
+              className="bg-brand text-black text-xs font-semibold px-3 rounded-lg hover:bg-[#38bdf8] disabled:opacity-40 transition-colors"
             >
               OK
             </button>
@@ -162,7 +162,7 @@ export function AddPanel({
 
       {/* ── Full form ── */}
       <div className="border-t border-line pt-4">
-        <div className="text-[10px] text-[#555] uppercase tracking-wider mb-3">
+        <div className="text-[10px] text-ink-3 uppercase tracking-wider mb-3">
           {form.parent_id ? '↳ Subitem do grupo' : 'Lançamento'}
         </div>
 
@@ -175,7 +175,7 @@ export function AddPanel({
                 onClick={() => set('natureza', n)}
                 className={[
                   'flex-1 py-1.5 text-xs rounded-lg border transition-colors',
-                  form.natureza === n ? 'border-[#0EA5E9]/50 text-[#0EA5E9]' : 'border-line text-[#555] hover:text-white',
+                  form.natureza === n ? 'border-brand/50 text-brand' : 'border-line text-ink-3 hover:text-white',
                 ].join(' ')}
               >
                 {n === 'entrada' ? 'Entrada' : n === 'saida' ? 'Saída' : 'Diário'}
@@ -193,7 +193,7 @@ export function AddPanel({
                 onClick={() => set('saida_tipo', t)}
                 className={[
                   'flex-1 py-1.5 text-xs rounded-lg border transition-colors',
-                  form.saida_tipo === t ? 'border-[#a78bfa]/50 text-[#a78bfa]' : 'border-line text-[#555] hover:text-white',
+                  form.saida_tipo === t ? 'border-[#a78bfa]/50 text-[#a78bfa]' : 'border-line text-ink-3 hover:text-white',
                 ].join(' ')}
               >
                 {t === 'fixa' ? 'Fixa' : 'Cartão'}
@@ -222,7 +222,7 @@ export function AddPanel({
             onChange={e => set('nome', e.target.value)}
             onKeyDown={e => e.key === 'Enter' && onAdd()}
             autoFocus
-            className="flex-1 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60"
+            className="flex-1 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-brand/60"
           />
           {!form.is_grupo && (
             <input
@@ -230,7 +230,7 @@ export function AddPanel({
               value={form.valor}
               onChange={e => set('valor', e.target.value)}
               onKeyDown={e => e.key === 'Enter' && onAdd()}
-              className="w-28 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums"
+              className="w-28 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-brand/60 tabular-nums"
             />
           )}
         </div>
@@ -250,24 +250,24 @@ export function AddPanel({
         )}
 
         {/* Grupo toggle */}
-        <label className="flex items-center gap-2 text-xs text-[#555] cursor-pointer mb-3 select-none">
+        <label className="flex items-center gap-2 text-xs text-ink-3 cursor-pointer mb-3 select-none">
           <input
             type="checkbox"
             checked={form.is_grupo}
             onChange={e => set('is_grupo', e.target.checked)}
-            className="accent-[#0EA5E9]"
+            className="accent-brand"
           />
           Criar como grupo (soma dos subitens)
         </label>
 
         {/* Recorrência */}
         <div className="border-t border-line pt-3 mb-3">
-          <label className="flex items-center gap-2 text-xs text-[#555] cursor-pointer select-none">
+          <label className="flex items-center gap-2 text-xs text-ink-3 cursor-pointer select-none">
             <input
               type="checkbox"
               checked={form.repetir}
               onChange={e => set('repetir', e.target.checked)}
-              className="accent-[#0EA5E9]"
+              className="accent-brand"
             />
             Repetir este lançamento
           </label>
@@ -282,8 +282,8 @@ export function AddPanel({
                     className={[
                       'flex-1 py-1.5 text-xs rounded-lg border transition-colors',
                       form.repeticao_freq === f
-                        ? 'border-[#0EA5E9]/50 text-[#0EA5E9]'
-                        : 'border-line text-[#555] hover:text-white',
+                        ? 'border-brand/50 text-brand'
+                        : 'border-line text-ink-3 hover:text-white',
                     ].join(' ')}
                   >
                     {f === 'mensal' ? 'Mensal' : f === 'quinzenal' ? 'Quinzenal' : 'Semanal'}
@@ -291,14 +291,14 @@ export function AddPanel({
                 ))}
               </div>
               <div>
-                <div className="text-[10px] text-[#555] mb-1">Repetir até</div>
+                <div className="text-[10px] text-ink-3 mb-1">Repetir até</div>
                 <input
                   type="date"
                   value={form.repeticao_ate}
                   onChange={e => set('repeticao_ate', e.target.value)}
                   min={`${anoAno}-01-01`}
                   max={`${anoAno}-12-31`}
-                  className="w-full bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60"
+                  className="w-full bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-brand/60"
                 />
               </div>
             </div>
@@ -309,14 +309,14 @@ export function AddPanel({
         <div className="flex gap-2">
           <button
             onClick={onCancel}
-            className="px-4 py-1.5 text-sm text-[#555] border border-line rounded-lg hover:text-white transition-colors"
+            className="px-4 py-1.5 text-sm text-ink-3 border border-line rounded-lg hover:text-white transition-colors"
           >
             Cancelar
           </button>
           <button
             onClick={onAdd}
             disabled={saving || !form.nome.trim()}
-            className="flex-1 py-1.5 text-sm font-medium bg-[#0EA5E9] text-black rounded-lg hover:bg-[#38bdf8] disabled:opacity-40 transition-colors"
+            className="flex-1 py-1.5 text-sm font-medium bg-brand text-black rounded-lg hover:bg-[#38bdf8] disabled:opacity-40 transition-colors"
           >
             {saving ? 'Salvando…' : form.repetir && form.repeticao_ate ? `Adicionar (${repeticaoCount}x)` : 'Adicionar'}
           </button>

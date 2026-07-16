@@ -23,7 +23,7 @@ export function MobileItemRow({ node, depth, expandedItems, toggleItem, onEdit, 
           <span className="w-[11px] shrink-0" />
         )}
         <span
-          className="flex-1 text-xs text-[#aaa] truncate"
+          className="flex-1 text-xs text-ink-2 truncate"
           onClick={isSaida ? (e) => { e.stopPropagation(); confirmPopup.open(e) } : undefined}
           style={isSaida ? { cursor: 'pointer' } : undefined}
         >
