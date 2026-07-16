@@ -54,10 +54,12 @@ function mapActivityType(type: string): { sport: string; kind: string } {
     case 'WeightTraining':
     case 'Workout':
     case 'Crossfit':
+      return { sport: 'musculacao', kind: 'full_body' }
     case 'Yoga':
     case 'Pilates':
+      return { sport: 'yoga', kind: 'geral' }
     case 'Elliptical':
-      return { sport: 'musculacao', kind: 'full_body' }
+      return { sport: 'musculacao', kind: 'cardio' }
     case 'Walk':
     case 'Hike':
     case 'VirtualRun':
