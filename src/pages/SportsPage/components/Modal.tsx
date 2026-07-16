@@ -9,7 +9,7 @@ export function Modal({ title, onClose, children }: { title: string; onClose: ()
       <div className="w-full max-w-md rounded-2xl border border-line p-6 space-y-4" style={{ background: 'var(--bg2)', maxHeight: '90vh', overflowY: 'auto' }}>
         <div className="flex items-center justify-between">
           <h3 style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 17 }}>{title}</h3>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-ink-3 hover:text-ink rounded-input hover:bg-bg-3 transition-colors text-lg">×</button>
+          <button onClick={onClose} aria-label="Fechar" className="w-8 h-8 flex items-center justify-center text-ink-3 hover:text-ink rounded-input hover:bg-bg-3 transition-colors text-lg">×</button>
         </div>
         {children}
       </div>

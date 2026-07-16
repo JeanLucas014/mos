@@ -90,7 +90,7 @@ export function GoalsSection({ sport }: { sport: string }) {
                   </div>
                 )}
               </div>
-              <button onClick={() => deleteGoal.mutate(g.id)} className="opacity-0 group-hover:opacity-100 text-ink-3 hover:text-red-400 transition-opacity w-7 h-7 flex items-center justify-center text-sm flex-shrink-0">×</button>
+              <button onClick={() => deleteGoal.mutate(g.id)} aria-label="Excluir meta" className="opacity-0 group-hover:opacity-100 text-ink-3 hover:text-red-400 transition-opacity w-7 h-7 flex items-center justify-center text-sm flex-shrink-0">×</button>
             </div>
           ))}
         </div>

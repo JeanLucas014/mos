@@ -91,6 +91,7 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
               </h3>
               <button
                 onClick={onClose}
+                aria-label="Fechar"
                 className="w-8 h-8 flex items-center justify-center text-ink-3 hover:text-ink hover:bg-bg-3 rounded-input transition-colors text-lg"
               >×</button>
             </div>

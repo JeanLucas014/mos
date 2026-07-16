@@ -33,7 +33,7 @@ export function SportShoppingSection({ sport }: { sport: string }) {
                 {item.done && <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2.5 6L5 8.5L9.5 3.5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>}
               </button>
               <span className={`flex-1 text-sm ${item.done ? 'line-through text-ink-3' : 'text-ink'}`}>{item.title}</span>
-              <button onClick={() => deleteItem.mutate(item.id)} className="opacity-0 group-hover:opacity-100 text-ink-3 hover:text-red-400 transition-opacity w-7 h-7 flex items-center justify-center text-sm flex-shrink-0">×</button>
+              <button onClick={() => deleteItem.mutate(item.id)} aria-label="Excluir item" className="opacity-0 group-hover:opacity-100 text-ink-3 hover:text-red-400 transition-opacity w-7 h-7 flex items-center justify-center text-sm flex-shrink-0">×</button>
             </div>
           ))}
         </div>

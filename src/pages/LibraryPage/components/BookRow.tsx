@@ -74,6 +74,7 @@ export function BookRow({ book, onFavorite, onDelete, onClick }: {
           e.stopPropagation()
           if (window.confirm(`Remover "${book.title}"?`)) onDelete(book.id)
         }}
+        aria-label="Remover livro"
         className="opacity-0 group-hover:opacity-100 transition-opacity text-[#555] hover:text-red-400 text-base w-6 flex items-center justify-center shrink-0"
       >×</button>
     </div>

@@ -51,7 +51,7 @@ export function ChangePasswordModal({ onClose }: { onClose: () => void }) {
           <>
             <div className="flex items-center justify-between mb-5">
               <h3 style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 17 }}>Alterar senha</h3>
-              <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-ink-3 hover:text-ink hover:bg-bg-3 rounded-input transition-colors text-lg">×</button>
+              <button onClick={onClose} aria-label="Fechar" className="w-8 h-8 flex items-center justify-center text-ink-3 hover:text-ink hover:bg-bg-3 rounded-input transition-colors text-lg">×</button>
             </div>
             <form onSubmit={handleSubmit} className="space-y-3">
               <div>

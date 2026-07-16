@@ -33,6 +33,7 @@ export function WorkoutRow({ w, onDelete }: { w: Sport; onDelete: (id: string) =
         <span className="text-xs text-[#555]">{fmtDayLabel(w.sport_date)}</span>
         <button
           onClick={() => onDelete(w.id)}
+          aria-label="Excluir treino"
           className="opacity-0 group-hover:opacity-100 text-[#444] hover:text-red-400 transition-opacity w-6 h-6 flex items-center justify-center text-sm"
         >×</button>
       </div>

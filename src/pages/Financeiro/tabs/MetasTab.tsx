@@ -104,8 +104,8 @@ export function MetasTab() {
                 </div>
               </div>
               <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => openEdit(meta)} className="text-[#555] hover:text-[#0EA5E9]"><Pencil size={13} /></button>
-                <button onClick={() => del(meta.id)} className="text-[#555] hover:text-[#ef4444]"><Trash2 size={13} /></button>
+                <button onClick={() => openEdit(meta)} aria-label="Editar meta" className="text-[#555] hover:text-[#0EA5E9]"><Pencil size={13} /></button>
+                <button onClick={() => del(meta.id)} aria-label="Excluir meta" className="text-[#555] hover:text-[#ef4444]"><Trash2 size={13} /></button>
               </div>
             </div>
             {/* Progress bar */}

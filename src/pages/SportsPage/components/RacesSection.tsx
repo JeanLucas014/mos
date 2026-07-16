@@ -69,7 +69,7 @@ export function RacesSection({ sport }: { sport: string }) {
                   <button onClick={() => toggleRegistered.mutate({ id: r.id, registered: !r.registered })} className={`text-xs px-2 py-1 rounded transition-colors ${r.registered ? 'text-ok hover:text-ink-2' : 'text-ink-3 hover:text-ok'}`} style={{ fontSize: 14 }}>
                     {r.registered ? <Check size={14} /> : <Circle size={14} />}
                   </button>
-                  <button onClick={() => deleteRace.mutate(r.id)} className="opacity-0 group-hover:opacity-100 text-ink-3 hover:text-red-400 transition-opacity w-7 h-7 flex items-center justify-center text-sm">×</button>
+                  <button onClick={() => deleteRace.mutate(r.id)} aria-label="Excluir prova" className="opacity-0 group-hover:opacity-100 text-ink-3 hover:text-red-400 transition-opacity w-7 h-7 flex items-center justify-center text-sm">×</button>
                 </div>
               </div>
             )

@@ -140,6 +140,7 @@ function VaultModal({
           </h3>
           <button
             onClick={onClose}
+            aria-label="Fechar"
             className="w-8 h-8 flex items-center justify-center text-ink-3 hover:text-ink hover:bg-bg-3 rounded-input transition-colors text-lg"
           >×</button>
         </div>
@@ -705,6 +706,7 @@ export function VaultPage() {
         {search && (
           <button
             onClick={() => setSearch('')}
+            aria-label="Limpar busca"
             className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-3 hover:text-ink transition-colors"
           >×</button>
         )}

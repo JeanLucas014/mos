@@ -68,11 +68,11 @@ export function MobileItemRow({ node, depth, expandedItems, toggleItem, onEdit, 
           )}
         </span>
         <div className="flex items-center gap-2 shrink-0">
-          <button onClick={() => onEdit(node)} className="text-[#444]"><Pencil size={11} /></button>
+          <button onClick={() => onEdit(node)} aria-label="Editar lançamento" className="text-[#444]"><Pencil size={11} /></button>
           {node.is_grupo && (
-            <button onClick={() => onAddChild(node)} className="text-[#444]"><Plus size={11} /></button>
+            <button onClick={() => onAddChild(node)} aria-label="Adicionar item ao grupo" className="text-[#444]"><Plus size={11} /></button>
           )}
-          <button onClick={() => onDelete(node.id)} className="text-[#444]"><Trash2 size={11} /></button>
+          <button onClick={() => onDelete(node.id)} aria-label="Excluir lançamento" className="text-[#444]"><Trash2 size={11} /></button>
         </div>
       </div>
 

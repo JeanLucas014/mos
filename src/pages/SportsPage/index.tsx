@@ -92,7 +92,7 @@ export function SportsPage() {
           <div className="bg-[#111111] border border-[#1f1f1f] rounded-2xl w-full max-w-sm p-5" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <span className="text-sm font-semibold font-[Sora] text-white">Adicionar esporte</span>
-              <button onClick={() => setShowAddSport(false)} className="text-[#555] hover:text-white text-lg">×</button>
+              <button onClick={() => setShowAddSport(false)} aria-label="Fechar" className="text-[#555] hover:text-white text-lg">×</button>
             </div>
             <div className="space-y-1 max-h-80 overflow-y-auto">
               {SPORT_CATALOG

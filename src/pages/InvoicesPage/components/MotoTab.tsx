@@ -222,6 +222,7 @@ export function MotoTab() {
                                     onClick={() => deleteRecord.mutate(r.id)}
                                     style={{ color:C.dm2, fontSize:14, cursor:'pointer', background:'none', border:'none', flexShrink:0, padding:'0 4px' }}
                                     title="Excluir"
+                                    aria-label="Excluir lançamento"
                                   >×</button>
                                 </div>
                               ))}

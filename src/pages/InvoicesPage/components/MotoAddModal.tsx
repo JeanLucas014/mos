@@ -48,7 +48,7 @@ export function MotoAddModal({
       <div onClick={e => e.stopPropagation()} style={{ background:C.card, border:'1px solid '+C.border, borderRadius: isMobile ? '18px 18px 0 0' : 14, padding: isMobile ? '24px 20px 32px' : 24, width:'100%', maxWidth: isMobile ? '100%' : 420, maxHeight:'92dvh', overflowY:'auto' }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
           <span style={{ fontSize:15, fontWeight:700, color:C.tx }}>Novo registro · {dateLabel}</span>
-          <button onClick={onClose} style={{ background:'none', border:'none', cursor:'pointer', color:C.dm }}><X size={18} /></button>
+          <button onClick={onClose} aria-label="Fechar" style={{ background:'none', border:'none', cursor:'pointer', color:C.dm }}><X size={18} /></button>
         </div>
 
         {/* Type toggle */}
