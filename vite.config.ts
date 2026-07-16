@@ -24,7 +24,29 @@ export default defineConfig({
       /* Workbox: generate a minimal SW that caches the app shell */
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        runtimeCaching: [],
+        /* Assets do build (JS/CSS/imagens) já vão pro precache acima.
+           runtimeCaching cobre o que globPatterns não alcança: fontes do
+           Google Fonts, carregadas via <link> em index.html a partir de
+           um domínio externo. CacheFirst é seguro aqui — fontes não mudam. */
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-stylesheets',
+              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-webfonts',
+              expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
         cleanupOutdatedCaches: true,
         skipWaiting: true,
         clientsClaim: true,
