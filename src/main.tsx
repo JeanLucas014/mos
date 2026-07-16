@@ -10,7 +10,8 @@ import './index.css'
 /* Register service worker */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {/* SW not critical */})
+    navigator.serviceWorker.register('/sw.js')
+      .catch((err) => console.error('[ServiceWorker] falha no registro:', err))
   })
 }
 
