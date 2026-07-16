@@ -183,15 +183,13 @@ Deno.serve(async (req: Request) => {
     const activities = await fetchAllActivities(accessToken)
     console.log(`[strava-sync] total activities fetched: ${activities.length}`)
 
-    /* Get existing strava notes to avoid duplicates */
+    /* Get existing external_ids to avoid duplicates */
     const { data: existing } = await admin
-      .from('sports').select('notes')
+      .from('sports').select('external_id')
       .eq('user_id', user.id)
-      .like('notes', 'strava:%')
+      .not('external_id', 'is', null)
 
-    const existingIds = new Set((existing ?? []).map((w: { notes: string | null }) =>
-      w.notes?.replace('strava:', ''),
-    ))
+    const existingIds = new Set((existing ?? []).map((w: { external_id: string | null }) => w.external_id))
 
     /* Build insert array */
     const toInsert = activities
@@ -213,7 +211,8 @@ Deno.serve(async (req: Request) => {
           duration_s: duration_s,
           pace_label,
           sport_date,
-          notes:      `strava:${a.id}`,
+          notes:       `strava:${a.id}`,
+          external_id: String(a.id),
         }
       })
 
