@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { formatDateBR } from '@/lib/dates'
+import { useDebounce } from '@/hooks/useDebounce'
 import {
   Search, CheckSquare, Calendar, DollarSign,
   BookOpen, Lock, ShoppingCart, Target,
@@ -169,10 +170,8 @@ export function CommandPalette() {
     setLoading(false)
   }, [])
 
-  useEffect(() => {
-    const timer = setTimeout(() => search(query), 200)
-    return () => clearTimeout(timer)
-  }, [query, search])
+  const debouncedQuery = useDebounce(query, 200)
+  useEffect(() => { search(debouncedQuery) }, [debouncedQuery, search])
 
   function onKeyDown(e: React.KeyboardEvent) {
     const list = query ? results : NAVIGATION
