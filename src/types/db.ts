@@ -1,5 +1,3 @@
-// Generated types — run `npx supabase gen types typescript --linked > src/types/db.ts` to regenerate
-
 export type Json =
   | string
   | number
@@ -175,6 +173,24 @@ export type Database = {
           id?: string
           name?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      chat_rate_limits: {
+        Row: {
+          count: number
+          user_id: string
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          user_id: string
+          window_start?: string
+        }
+        Update: {
+          count?: number
+          user_id?: string
+          window_start?: string
         }
         Relationships: []
       }
@@ -1219,6 +1235,7 @@ export type Database = {
           created_at: string
           distance_m: number | null
           duration_s: number
+          external_id: string | null
           id: string
           kind: string
           notes: string | null
@@ -1231,6 +1248,7 @@ export type Database = {
           created_at?: string
           distance_m?: number | null
           duration_s: number
+          external_id?: string | null
           id?: string
           kind?: string
           notes?: string | null
@@ -1243,6 +1261,7 @@ export type Database = {
           created_at?: string
           distance_m?: number | null
           duration_s?: number
+          external_id?: string | null
           id?: string
           kind?: string
           notes?: string | null
@@ -1610,6 +1629,7 @@ export type Database = {
         Row: {
           created_at: string | null
           enabled_modules: string[]
+          is_admin: boolean
           notification_prefs: Json | null
           onboarding_completed: boolean
           theme: string | null
@@ -1618,6 +1638,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           enabled_modules?: string[]
+          is_admin?: boolean
           notification_prefs?: Json | null
           onboarding_completed?: boolean
           theme?: string | null
@@ -1626,6 +1647,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           enabled_modules?: string[]
+          is_admin?: boolean
           notification_prefs?: Json | null
           onboarding_completed?: boolean
           theme?: string | null
