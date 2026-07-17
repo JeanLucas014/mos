@@ -7,7 +7,7 @@ import { Skeleton } from './components/Skeleton'
 import { AddModal } from './components/AddModal'
 import { EditModal } from './components/EditModal'
 import { BookCard } from './components/BookCard'
-import { BookRow } from './components/BookRow'
+import { VirtualBookList, type BookListRow } from './components/VirtualBookList'
 import { FiltersBar } from './components/FiltersBar'
 import { useLibraryFilters } from './hooks/useLibraryFilters'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -60,6 +60,18 @@ export function LibraryPage() {
   function handleDelete(id: string) {
     deleteBook.mutate(id)
   }
+
+  /* Linhas achatadas pra lista virtualizada (com ou sem cabeçalhos de seção) */
+  const listRows: BookListRow[] = useGroups
+    ? SECTIONS.flatMap(({ key, label, color }) => {
+        const section = filtered.filter((b) => b.status === key)
+        if (section.length === 0) return []
+        return [
+          { type: 'header' as const, key: `h-${key}`, label, color, count: section.length },
+          ...section.map((book) => ({ type: 'book' as const, key: book.id, book })),
+        ]
+      })
+    : filtered.map((book) => ({ type: 'book' as const, key: book.id, book }))
 
   return (
     <div>
@@ -120,7 +132,16 @@ export function LibraryPage() {
 
       {/* Grid or sectioned */}
       {!isLoading && filtered.length > 0 && (
-        useGroups ? (
+        viewMode === 'list' ? (
+          <div className="mt-6">
+            <VirtualBookList
+              rows={listRows}
+              onFavorite={handleFavorite}
+              onDelete={handleDelete}
+              onClick={setEditBook}
+            />
+          </div>
+        ) : useGroups ? (
           SECTIONS.map(({ key, label, color }) => {
             const section = filtered.filter((b) => b.status === key)
             if (section.length === 0) return null
@@ -133,64 +154,36 @@ export function LibraryPage() {
                     {section.length}
                   </span>
                 </div>
-                {viewMode === 'list' ? (
-                  <div className="bg-bg-2 border border-line rounded-xl overflow-hidden">
-                    {section.map((book) => (
-                      <BookRow
-                        key={book.id}
-                        book={book}
-                        onFavorite={handleFavorite}
-                        onDelete={handleDelete}
-                        onClick={setEditBook}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))`, gap: 12 }}>
-                    {section.map((book) => (
-                      <BookCard
-                        key={book.id}
-                        book={book}
-                        onStatus={handleStatus}
-                        onProgress={handleProgress}
-                        onFavorite={handleFavorite}
-                        onDelete={handleDelete}
-                        onClick={setEditBook}
-                      />
-                    ))}
-                  </div>
-                )}
+                <div style={{ display: 'grid', gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))`, gap: 12 }}>
+                  {section.map((book) => (
+                    <BookCard
+                      key={book.id}
+                      book={book}
+                      onStatus={handleStatus}
+                      onProgress={handleProgress}
+                      onFavorite={handleFavorite}
+                      onDelete={handleDelete}
+                      onClick={setEditBook}
+                    />
+                  ))}
+                </div>
               </div>
             )
           })
         ) : (
-          viewMode === 'list' ? (
-            <div className="bg-bg-2 border border-line rounded-xl overflow-hidden">
-              {filtered.map((book) => (
-                <BookRow
-                  key={book.id}
-                  book={book}
-                  onFavorite={handleFavorite}
-                  onDelete={handleDelete}
-                  onClick={setEditBook}
-                />
-              ))}
-            </div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))`, gap: 12 }}>
-              {filtered.map((book) => (
-                <BookCard
-                  key={book.id}
-                  book={book}
-                  onStatus={handleStatus}
-                  onProgress={handleProgress}
-                  onFavorite={handleFavorite}
-                  onDelete={handleDelete}
-                  onClick={setEditBook}
-                />
-              ))}
-            </div>
-          )
+          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))`, gap: 12 }}>
+            {filtered.map((book) => (
+              <BookCard
+                key={book.id}
+                book={book}
+                onStatus={handleStatus}
+                onProgress={handleProgress}
+                onFavorite={handleFavorite}
+                onDelete={handleDelete}
+                onClick={setEditBook}
+              />
+            ))}
+          </div>
         )
       )}
 

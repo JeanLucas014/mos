@@ -41,26 +41,26 @@ system (`text-brand`, `bg-brand`, `border-brand`, `text-ink-3`,
 `text-ink-2`, `var(--blue)`, `var(--text2)`), verificado sem regressão
 via `tsc` + build + grep por padrões de concat quebrados.
 
-## B15 — Virtualização de listas longas (não implementado)
+## B15 — Virtualização de listas longas (parcial — só Biblioteca modo lista)
 
-O item B15 do audit pedia virtualização do Extrato (MesTab) e da
-Biblioteca com `react-window` ou `@tanstack/react-virtual`. Não
-implementado nesta rodada por dois motivos:
+O item B15 pedia virtualização do Extrato (MesTab) e da Biblioteca.
+Por decisão do usuário (dado o risco e a impossibilidade de QA visual
+nesta sessão), o escopo final foi:
 
-1. **Extrato**: os blocos têm altura variável (item avulso vs. grupo
-   com N filhos expandidos), o que exige o modo de tamanho variável do
-   virtualizador — mais complexo de acertar sem quebrar o agrupamento
-   visual, e a lista é escopada por mês (dezenas de itens, não
-   milhares), então o ganho real de performance é baixo.
-2. **Biblioteca**: usa um grid responsivo (colunas variam por
-   viewport) com seções agrupadas por status E dois modos de
-   visualização (grid/lista) — virtualizar grid responsivo é um dos
-   padrões mais complexos de acertar, e este projeto tem uso pessoal
-   (1 usuário), improvável de chegar a milhares de livros.
+- **Implementado**: `src/pages/LibraryPage/components/VirtualBookList.tsx`
+  (`@tanstack/react-virtual`) — cobre o modo lista da Biblioteca, tanto
+  agrupado por status (cabeçalhos de seção viram linhas no mesmo
+  virtualizador, tamanho estimado por tipo de linha) quanto a lista
+  plana (quando há filtro de status ativo). O modo grid (`BookCard`,
+  colunas responsivas) foi mantido como estava — virtualizar grid
+  responsivo é bem mais complexo e não fazia parte do escopo aprovado.
+- **Não implementado**: Extrato (MesTab) — blocos de altura variável
+  (item avulso vs. grupo com N filhos) e volume baixo por mês (uso
+  pessoal, 1 usuário), ganho real de performance é baixo.
 
-Se o volume de dados crescer a ponto de a performance de render virar
-problema real (não é o caso hoje), vale revisitar com
-`@tanstack/react-virtual` (suporta tamanho variável e é o mais
-flexível para grid), testando visualmente em navegador antes de
-mesclar — este item precisa de QA visual que não foi possível fazer
-nesta sessão.
+**Verificação:** `tsc -b --force`, `vitest run` (48 testes) e
+`vite build` passam limpos. **Não foi possível confirmar visualmente
+no navegador** — o ambiente de preview desta sessão não completa o
+login demo (provável restrição de rede para alcançar o Supabase Auth
+a partir daqui). Recomenda-se testar manualmente: Biblioteca → modo
+lista → com e sem filtro de status → scroll com muitos livros.
