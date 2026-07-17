@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { formatMonthYearBR } from '@/lib/dates'
 import { Plus, ChevronLeft, ChevronRight, Calendar, List, Grid3x3, CalendarDays } from 'lucide-react'
@@ -12,6 +12,7 @@ import { RotinaTab }  from './components/RotinaTab'
 import { RecurrenceDialog, type RecurrenceScope } from './components/RecurrenceDialog'
 import { expandRecurringEvents } from './utils/expandRecurrence'
 import { HelpButton } from '@/components/help/HelpButton'
+import { useRealtimeStore } from '@/stores/useRealtimeStore'
 
 type Tab = 'agenda' | 'rotina'
 
@@ -123,6 +124,15 @@ export default function AgendaPage() {
     loadEvents()
     loadRotinas()
   }, [loadEvents, loadRotinas])
+
+  // Recarrega quando outra aba/dispositivo muda calendar_events (useRealtimeSync).
+  // Pula a primeira execução — o mount acima já carrega os dados.
+  const eventsVersion = useRealtimeStore(s => s.versions.calendar_events)
+  const skipFirstSync = useRef(true)
+  useEffect(() => {
+    if (skipFirstSync.current) { skipFirstSync.current = false; return }
+    loadEvents()
+  }, [eventsVersion, loadEvents])
 
   function navigate(dir: 1 | -1) {
     setCurrentDate(d => addDays(d, dir * navStep(view)))
