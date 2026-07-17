@@ -34,11 +34,11 @@ export default function TarefasPage() {
 
   async function loadAll() {
     const [{ data: t }, { data: p }] = await Promise.all([
-      (supabase as any).from('tasks').select('*').order('ordem').order('created_at'),
-      (supabase as any).from('task_projects').select('*').order('ordem').order('name'),
+      supabase.from('tasks').select('*').order('ordem').order('created_at'),
+      supabase.from('task_projects').select('*').order('ordem').order('name'),
     ])
-    setTasks(t ?? [])
-    setProjects(p ?? [])
+    setTasks((t ?? []) as Task[])
+    setProjects((p ?? []) as TaskProject[])
     setLoading(false)
   }
 
@@ -69,18 +69,18 @@ export default function TarefasPage() {
 
   async function handleComplete(task: Task) {
     const now = task.completed_at ? null : new Date().toISOString()
-    await (supabase as any).from('tasks').update({ completed_at: now }).eq('id', task.id)
+    await supabase.from('tasks').update({ completed_at: now }).eq('id', task.id)
     setTasks(prev => prev.map(t => t.id === task.id ? { ...t, completed_at: now } : t))
   }
 
   async function handleDelete(id: string) {
-    await (supabase as any).from('tasks').delete().eq('id', id)
+    await supabase.from('tasks').delete().eq('id', id)
     setTasks(prev => prev.filter(t => t.id !== id && t.parent_id !== id))
     setModal(null)
   }
 
   async function handleDeleteProject(id: string) {
-    await (supabase as any).from('task_projects').delete().eq('id', id)
+    await supabase.from('task_projects').delete().eq('id', id)
     setProjects(prev => prev.filter(p => p.id !== id))
     if (viewId === id) setViewId('inbox')
     setEditingProject(null)
@@ -88,9 +88,10 @@ export default function TarefasPage() {
 
   async function handleSave(payload: Partial<Task>) {
     if (payload.id) {
-      await (supabase as any).from('tasks').update(payload).eq('id', payload.id)
+      await supabase.from('tasks').update(payload).eq('id', payload.id)
       setTasks(prev => prev.map(t => t.id === payload.id ? { ...t, ...payload } : t))
     } else {
+      if (!payload.title) return
       const insert = {
         title:       payload.title,
         description: payload.description ?? null,
@@ -101,7 +102,7 @@ export default function TarefasPage() {
         due_time:    payload.due_time ?? null,
         ordem:       tasks.length,
       }
-      const { data } = await (supabase as any).from('tasks').insert(insert).select().single()
+      const { data } = await supabase.from('tasks').insert(insert).select().single()
       if (data) setTasks(prev => [...prev, data as Task])
     }
     setModal(null)
@@ -116,7 +117,7 @@ export default function TarefasPage() {
       due_date:   viewId === 'hoje' ? todayLocal() : null,
       ordem:      tasks.length,
     }
-    const { data } = await (supabase as any).from('tasks').insert(insert).select().single()
+    const { data } = await supabase.from('tasks').insert(insert).select().single()
     if (data) setTasks(prev => [...prev, data as Task])
     setQuickTitle('')
   }
@@ -423,8 +424,9 @@ export default function TarefasPage() {
         <ProjectModal
           project={editingProject}
           onSave={async updated => {
+            if (!updated.name) return
             if (updated.id === 'new') {
-              const { data } = await (supabase as any)
+              const { data } = await supabase
                 .from('task_projects')
                 .insert({ name: updated.name, color: updated.color, ordem: projects.length })
                 .select().single()
@@ -432,8 +434,8 @@ export default function TarefasPage() {
                 setProjects(prev => [...prev, data as TaskProject])
                 setViewId((data as TaskProject).id)
               }
-            } else {
-              await (supabase as any)
+            } else if (updated.id) {
+              await supabase
                 .from('task_projects')
                 .update({ name: updated.name, color: updated.color })
                 .eq('id', updated.id)

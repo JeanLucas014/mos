@@ -50,7 +50,7 @@ export function FaturasTab({ modal, setModal }: FaturasTabProps) {
   /* ── Delete ── */
   const deleteMut = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await (supabase.from('invoices') as any)
+      const { error } = await supabase.from('invoices')
         .delete().eq('id', id)
       if (error) throw error
     },

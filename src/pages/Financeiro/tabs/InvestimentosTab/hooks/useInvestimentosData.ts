@@ -18,11 +18,11 @@ export function useInvestimentosData() {
   async function load() {
     setLoading(true)
     const [{ data: inv }, { data: tax }] = await Promise.all([
-      (supabase.from('fin_investimentos') as any)
+      supabase.from('fin_investimentos')
         .select('*')
         .eq('ativo', true)
         .order('criado_em'),
-      (supabase.from('fin_taxas_economicas') as any).select('*'),
+      supabase.from('fin_taxas_economicas').select('*'),
     ])
     setItems((inv ?? []) as Investimento[])
     setTaxas((tax ?? []) as Taxa[])

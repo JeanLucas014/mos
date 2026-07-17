@@ -54,14 +54,14 @@ export function TaskModal({ task, projects, onSave, onClose, onDelete }: Props) 
   }, [task.id])
 
   async function loadComments() {
-    const { data } = await (supabase as any)
+    const { data } = await supabase
       .from('task_comments').select('*')
       .eq('task_id', task.id!).order('created_at')
     setComments(data ?? [])
   }
 
   async function loadRecurrence() {
-    const { data } = await (supabase as any)
+    const { data } = await supabase
       .from('task_recurrence').select('*').eq('task_id', task.id!).maybeSingle()
     if (data) {
       setRecurrence(data.freq)
@@ -84,10 +84,10 @@ export function TaskModal({ task, projects, onSave, onClose, onDelete }: Props) 
     }
 
     if (task.id) {
-      await (supabase as any).from('task_recurrence').delete().eq('task_id', task.id)
+      await supabase.from('task_recurrence').delete().eq('task_id', task.id)
       if (recurrence) {
         const nextDue = dueDate || todayLocal()
-        await (supabase as any).from('task_recurrence').insert({
+        await supabase.from('task_recurrence').insert({
           task_id:      task.id,
           freq:         recurrence,
           interval_n:   1,
@@ -103,7 +103,7 @@ export function TaskModal({ task, projects, onSave, onClose, onDelete }: Props) 
 
   async function handleAddComment() {
     if (!newComment.trim() || !task.id) return
-    const { data } = await (supabase as any).from('task_comments')
+    const { data } = await supabase.from('task_comments')
       .insert({ task_id: task.id, content: newComment.trim() })
       .select().single()
     if (data) setComments(prev => [...prev, data as TaskComment])
@@ -111,7 +111,7 @@ export function TaskModal({ task, projects, onSave, onClose, onDelete }: Props) 
   }
 
   async function handleDeleteComment(id: string) {
-    await (supabase as any).from('task_comments').delete().eq('id', id)
+    await supabase.from('task_comments').delete().eq('id', id)
     setComments(prev => prev.filter(c => c.id !== id))
   }
 
@@ -294,7 +294,7 @@ export function TaskModal({ task, projects, onSave, onClose, onDelete }: Props) 
                   <div className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-2">
                     <div className="text-sm text-[#ddd]">{c.content}</div>
                     <div className="text-[10px] text-[#555] mt-1">
-                      {new Date(c.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      {c.created_at ? new Date(c.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}
                     </div>
                   </div>
                   <button

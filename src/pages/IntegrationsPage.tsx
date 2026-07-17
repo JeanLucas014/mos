@@ -10,7 +10,7 @@ function useIntegration(provider: string) {
   return useQuery({
     queryKey: ['integration', provider],
     queryFn: async () => {
-      const { data, error } = await (supabase.from('integrations') as any)
+      const { data, error } = await supabase.from('integrations')
         .select('connected, meta, updated_at')
         .eq('provider', provider)
         .maybeSingle()
@@ -168,7 +168,7 @@ function StravaCard() {
 
   async function handleDisconnect() {
     if (!window.confirm('Desconectar Strava?')) return
-    await (supabase.from('integrations') as any)
+    await supabase.from('integrations')
       .update({ connected: false, access_token_cipher: null, refresh_token_cipher: null })
       .eq('provider', 'strava')
     qc.invalidateQueries({ queryKey: ['integration', 'strava'] })

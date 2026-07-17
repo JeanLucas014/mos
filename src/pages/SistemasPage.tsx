@@ -84,7 +84,7 @@ function useSystems() {
   const query = useQuery({
     queryKey: ['systems'],
     queryFn: async () => {
-      const { data, error } = await (supabase.from('systems') as any)
+      const { data, error } = await supabase.from('systems')
         .select('*')
         .order('created_at', { ascending: false })
       if (error) throw error
@@ -94,7 +94,7 @@ function useSystems() {
 
   const add = useMutation<void, Error, Omit<System, 'id' | 'created_at'>>({
     mutationFn: async (payload) => {
-      const { error } = await (supabase.from('systems') as any).insert(payload)
+      const { error } = await supabase.from('systems').insert(payload)
       if (error) throw error
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['systems'] }),
@@ -102,7 +102,7 @@ function useSystems() {
 
   const update = useMutation<void, Error, Partial<System> & { id: string }>({
     mutationFn: async ({ id, ...payload }) => {
-      const { error } = await (supabase.from('systems') as any).update(payload).eq('id', id)
+      const { error } = await supabase.from('systems').update(payload).eq('id', id)
       if (error) throw error
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['systems'] }),
@@ -110,7 +110,7 @@ function useSystems() {
 
   const remove = useMutation<void, Error, string>({
     mutationFn: async (id) => {
-      const { error } = await (supabase.from('systems') as any).delete().eq('id', id)
+      const { error } = await supabase.from('systems').delete().eq('id', id)
       if (error) throw error
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['systems'] }),
@@ -125,7 +125,7 @@ function useSystemFiles(systemId: string) {
   const query = useQuery({
     queryKey: ['system_files', systemId],
     queryFn: async () => {
-      const { data, error } = await (supabase.from('system_files') as any)
+      const { data, error } = await supabase.from('system_files')
         .select('*')
         .eq('system_id', systemId)
         .order('created_at', { ascending: true })
@@ -136,7 +136,7 @@ function useSystemFiles(systemId: string) {
 
   const add = useMutation<void, Error, { name: string; file_type: string; file_url: string; is_download: boolean }>({
     mutationFn: async (payload) => {
-      const { error } = await (supabase.from('system_files') as any).insert({ ...payload, system_id: systemId })
+      const { error } = await supabase.from('system_files').insert({ ...payload, system_id: systemId })
       if (error) throw error
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['system_files', systemId] }),
@@ -144,7 +144,7 @@ function useSystemFiles(systemId: string) {
 
   const remove = useMutation<void, Error, string>({
     mutationFn: async (id) => {
-      const { error } = await (supabase.from('system_files') as any).delete().eq('id', id)
+      const { error } = await supabase.from('system_files').delete().eq('id', id)
       if (error) throw error
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['system_files', systemId] }),

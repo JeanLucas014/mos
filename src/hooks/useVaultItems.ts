@@ -12,7 +12,7 @@ export function useVaultItems() {
   const query = useQuery({
     queryKey: key,
     queryFn: async () => {
-      const { data, error } = await (supabase.from('vault_items') as any)
+      const { data, error } = await supabase.from('vault_items')
         .select('*')
         .order('service', { ascending: true })
       if (error) throw error
@@ -28,7 +28,7 @@ export function useVaultItems() {
       password_iv: string
       kind?: string
     }) => {
-      const { data, error } = await (supabase.from('vault_items') as any)
+      const { data, error } = await supabase.from('vault_items')
         .insert(item)
         .select()
         .single()
@@ -49,7 +49,7 @@ export function useVaultItems() {
       id,
       ...fields
     }: Partial<VaultItem> & { id: string }) => {
-      const { error } = await (supabase.from('vault_items') as any)
+      const { error } = await supabase.from('vault_items')
         .update(fields)
         .eq('id', id)
       if (error) throw error
@@ -70,7 +70,7 @@ export function useVaultItems() {
 
   const deleteItem = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await (supabase.from('vault_items') as any)
+      const { error } = await supabase.from('vault_items')
         .delete()
         .eq('id', id)
       if (error) throw error

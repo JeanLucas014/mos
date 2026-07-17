@@ -27,9 +27,9 @@ export function RotinaTab({ rotinas, onReload }: Props) {
     if (!editing?.titulo?.trim()) return
     setSaving(true)
     if (editing.id) {
-      await (supabase as any).from('calendar_rotinas').update(editing).eq('id', editing.id)
+      await supabase.from('calendar_rotinas').update(editing).eq('id', editing.id)
     } else {
-      await (supabase as any).from('calendar_rotinas').insert({ ...editing, ordem: rotinas.length })
+      await supabase.from('calendar_rotinas').insert({ ...editing, titulo: editing.titulo!, ordem: rotinas.length })
     }
     setSaving(false)
     setEditing(null)
@@ -38,12 +38,12 @@ export function RotinaTab({ rotinas, onReload }: Props) {
 
   async function del(id: string) {
     if (!window.confirm('Excluir esta rotina?')) return
-    await (supabase as any).from('calendar_rotinas').delete().eq('id', id)
+    await supabase.from('calendar_rotinas').delete().eq('id', id)
     onReload()
   }
 
   async function toggle(r: Rotina) {
-    await (supabase as any).from('calendar_rotinas').update({ ativa: !r.ativa }).eq('id', r.id)
+    await supabase.from('calendar_rotinas').update({ ativa: !r.ativa }).eq('id', r.id)
     onReload()
   }
 

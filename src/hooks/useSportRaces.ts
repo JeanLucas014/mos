@@ -11,7 +11,7 @@ export function useSportRaces(sport: string) {
   const query = useQuery({
     queryKey: key,
     queryFn: async () => {
-      const { data, error } = await (supabase.from('sport_races') as any)
+      const { data, error } = await supabase.from('sport_races')
         .select('*')
         .eq('sport', sport)
         .order('race_date', { ascending: true })
@@ -28,7 +28,7 @@ export function useSportRaces(sport: string) {
       distance?: string
       goal_time?: string
     }) => {
-      const { data, error } = await (supabase.from('sport_races') as any)
+      const { data, error } = await supabase.from('sport_races')
         .insert({
           sport,
           name: r.name,
@@ -52,7 +52,7 @@ export function useSportRaces(sport: string) {
 
   const toggleRegistered = useMutation({
     mutationFn: async ({ id, registered }: { id: string; registered: boolean }) => {
-      const { error } = await (supabase.from('sport_races') as any).update({ registered }).eq('id', id)
+      const { error } = await supabase.from('sport_races').update({ registered }).eq('id', id)
       if (error) throw error
     },
     onMutate: async ({ id, registered }) => {
@@ -67,7 +67,7 @@ export function useSportRaces(sport: string) {
 
   const deleteRace = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await (supabase.from('sport_races') as any).delete().eq('id', id)
+      const { error } = await supabase.from('sport_races').delete().eq('id', id)
       if (error) throw error
     },
     onMutate: async (id) => {

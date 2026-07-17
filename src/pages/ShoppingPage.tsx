@@ -48,7 +48,7 @@ export function ShoppingPage() {
 
   const filtered = activeTab === 'Todos'
     ? allItems
-    : allItems.filter(i => (i as any).category === activeTab)
+    : allItems.filter(i => i.category === activeTab)
 
   const sorted = [...filtered].sort((a, b) => {
     if (a.done === b.done) return 0
@@ -118,7 +118,7 @@ export function ShoppingPage() {
           {/* ── Abas de categoria ── */}
           <div className="flex gap-1 mt-5 overflow-x-auto pb-1">
             {CATEGORIES.map(cat => {
-              const catItems = cat === 'Todos' ? allItems : allItems.filter(i => (i as any).category === cat)
+              const catItems = cat === 'Todos' ? allItems : allItems.filter(i => i.category === cat)
               const pending  = catItems.filter(i => !i.done).length
               const isActive = activeTab === cat
               return (
@@ -171,7 +171,7 @@ export function ShoppingPage() {
             ) : (
               <ul>
                 {sorted.map((item) => {
-                  const cat = (item as any).category ?? 'Geral'
+                  const cat = item.category ?? 'Geral'
                   return (
                     <li
                       key={item.id}

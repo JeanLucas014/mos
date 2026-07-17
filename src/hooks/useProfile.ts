@@ -19,7 +19,7 @@ export function useProfile() {
     queryKey: key,
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await (supabase.from('profiles') as any)
+      const { data, error } = await supabase.from('profiles')
         .select('*')
         .eq('id', user!.id)
         .maybeSingle()
@@ -30,7 +30,7 @@ export function useProfile() {
 
   const updateProfile = useMutation({
     mutationFn: async (fields: Partial<Omit<Profile, 'id' | 'created_at'>>) => {
-      const { error } = await (supabase.from('profiles') as any)
+      const { error } = await supabase.from('profiles')
         .upsert({ id: user!.id, ...fields })
       if (error) throw error
     },
@@ -54,7 +54,7 @@ export function useAllProfiles() {
   return useQuery({
     queryKey: ['all-profiles'],
     queryFn: async () => {
-      const { data, error } = await (supabase.from('profiles') as any)
+      const { data, error } = await supabase.from('profiles')
         .select('id, name, created_at')
         .order('created_at', { ascending: false })
       if (error) throw error

@@ -97,20 +97,20 @@ export function CommandPalette() {
     ] = await Promise.all([
       supabase.from('tasks').select('id,title').ilike('title', term)
         .is('completed_at', null).limit(4).then(r => r.data ?? []),
-      (supabase as any).from('calendar_events').select('id,title,start_at,color').ilike('title', term)
+      supabase.from('calendar_events').select('id,title,start_at,color').ilike('title', term)
         .limit(4).then((r: any) => r.data ?? []),
-      (supabase as any).from('fin_lancamentos').select('id,nome,valor').ilike('nome', term)
+      supabase.from('fin_lancamentos').select('id,nome,valor').ilike('nome', term)
         .eq('is_grupo', false).limit(4).then((r: any) => r.data ?? []),
       supabase.from('books').select('id,title,author').ilike('title', term)
         .limit(4).then(r => r.data ?? []),
-      (supabase as any).from('vault_items').select('id,service,username').ilike('service', term)
+      supabase.from('vault_items').select('id,service,username').ilike('service', term)
         .limit(4).then((r: any) => r.data ?? []),
-      (supabase as any).from('shopping_items').select('id,title').ilike('title', term)
+      supabase.from('shopping_items').select('id,title').ilike('title', term)
         .eq('done', false).limit(4).then((r: any) => r.data ?? []),
-      (supabase as any).from('goals').select('id,title').ilike('title', term)
-        .limit(4).then((r: any) => r.data ?? []).catch(() => []),
-      (supabase as any).from('projects').select('id,name').ilike('name', term)
-        .limit(4).then((r: any) => r.data ?? []).catch(() => []),
+      Promise.resolve(supabase.from('goals').select('id,title').ilike('title', term)
+        .limit(4)).then(r => r.data ?? []).catch(() => []),
+      Promise.resolve(supabase.from('projects').select('id,name').ilike('name', term)
+        .limit(4)).then(r => r.data ?? []).catch(() => []),
       supabase.from('notes').select('id,title').ilike('title', term)
         .limit(4).then(r => r.data ?? []),
     ]) as [any[], any[], any[], any[], any[], any[], any[], any[], any[]]

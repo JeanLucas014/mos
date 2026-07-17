@@ -11,7 +11,7 @@ export function useSportShopping(sport: string) {
   const query = useQuery({
     queryKey: key,
     queryFn: async () => {
-      const { data, error } = await (supabase.from('sport_shopping') as any)
+      const { data, error } = await supabase.from('sport_shopping')
         .select('*')
         .eq('sport', sport)
         .order('created_at', { ascending: false })
@@ -22,7 +22,7 @@ export function useSportShopping(sport: string) {
 
   const addItem = useMutation({
     mutationFn: async (name: string) => {
-      const { data, error } = await (supabase.from('sport_shopping') as any)
+      const { data, error } = await supabase.from('sport_shopping')
         .insert({ sport, title: name, done: false })
         .select()
         .single()
@@ -36,7 +36,7 @@ export function useSportShopping(sport: string) {
 
   const toggleItem = useMutation({
     mutationFn: async ({ id, done }: { id: string; done: boolean }) => {
-      const { error } = await (supabase.from('sport_shopping') as any).update({ done }).eq('id', id)
+      const { error } = await supabase.from('sport_shopping').update({ done }).eq('id', id)
       if (error) throw error
     },
     onMutate: async ({ id, done }) => {
@@ -51,7 +51,7 @@ export function useSportShopping(sport: string) {
 
   const deleteItem = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await (supabase.from('sport_shopping') as any).delete().eq('id', id)
+      const { error } = await supabase.from('sport_shopping').delete().eq('id', id)
       if (error) throw error
     },
     onMutate: async (id) => {

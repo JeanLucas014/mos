@@ -13,7 +13,7 @@ export function useStudies() {
   const studiesQuery = useQuery({
     queryKey: studiesKey,
     queryFn: async () => {
-      const { data, error } = await (supabase.from('studies') as any)
+      const { data, error } = await supabase.from('studies')
         .select('*')
         .order('created_at', { ascending: false })
       if (error) throw error
@@ -24,7 +24,7 @@ export function useStudies() {
   const filesQuery = useQuery({
     queryKey: filesKey,
     queryFn: async () => {
-      const { data, error } = await (supabase.from('study_files') as any)
+      const { data, error } = await supabase.from('study_files')
         .select('*')
         .order('updated_at', { ascending: false })
       if (error) throw error
@@ -34,7 +34,7 @@ export function useStudies() {
 
   const addStudy = useMutation({
     mutationFn: async (s: { name: string; meta?: string; status?: string }) => {
-      const { data, error } = await (supabase.from('studies') as any)
+      const { data, error } = await supabase.from('studies')
         .insert({ name: s.name, meta: s.meta ?? null, status: s.status ?? 'ativo', progress: 0 })
         .select()
         .single()
@@ -48,7 +48,7 @@ export function useStudies() {
 
   const updateStudy = useMutation({
     mutationFn: async ({ id, ...fields }: Partial<Study> & { id: string }) => {
-      const { error } = await (supabase.from('studies') as any).update(fields).eq('id', id)
+      const { error } = await supabase.from('studies').update(fields).eq('id', id)
       if (error) throw error
     },
     onMutate: async ({ id, ...fields }) => {
@@ -67,7 +67,7 @@ export function useStudies() {
 
   const deleteStudy = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await (supabase.from('studies') as any).delete().eq('id', id)
+      const { error } = await supabase.from('studies').delete().eq('id', id)
       if (error) throw error
     },
     onMutate: async (id) => {
@@ -90,7 +90,7 @@ export function useStudies() {
       source?: string
       external_url?: string
     }) => {
-      const { data, error } = await (supabase.from('study_files') as any)
+      const { data, error } = await supabase.from('study_files')
         .insert({
           study_id: f.study_id,
           name: f.name,
@@ -110,7 +110,7 @@ export function useStudies() {
 
   const deleteFile = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await (supabase.from('study_files') as any).delete().eq('id', id)
+      const { error } = await supabase.from('study_files').delete().eq('id', id)
       if (error) throw error
     },
     onMutate: async (id) => {

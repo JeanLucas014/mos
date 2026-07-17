@@ -12,8 +12,8 @@ import { inputCls, inputH } from './shared'
    SECTION 2 — METAS
 ══════════════════════════════════════════════════════════════════ */
 export function GoalsSection({ sport }: { sport: string }) {
-  const { data: goals = [], isLoading, addGoal, toggleGoal, deleteGoal } = useSportGoals(sport as any)
-  const { data: races = [] } = useSportRaces(sport as any)
+  const { data: goals = [], isLoading, addGoal, toggleGoal, deleteGoal } = useSportGoals(sport)
+  const { data: races = [] } = useSportRaces(sport)
   const [showModal, setShowModal] = useState(false)
   const [gName, setGName] = useState('')
   const [gTarget, setGTarget] = useState('')
@@ -114,7 +114,7 @@ export function GoalsSection({ sport }: { sport: string }) {
                     <input
                       value={f === 'dist' ? gDistKm : f === 'dur' ? gDurStr : gPace}
                       readOnly={paceComputedField === f}
-                      onChange={(e) => handlePaceInput(f as any, e.target.value)}
+                      onChange={(e) => handlePaceInput(f as 'dist' | 'dur' | 'pace', e.target.value)}
                       placeholder={f === 'dist' ? '42.2' : f === 'dur' ? '3:00:00' : '4:16/km'}
                       className={inputCls}
                       style={{ minHeight: 36, fontFamily: 'JetBrains Mono, monospace', fontSize: 12, ...(paceComputedField === f ? { background: '#1e1e1e', color: '#666', cursor: 'default' } : {}) }}

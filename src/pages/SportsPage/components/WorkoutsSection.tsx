@@ -19,14 +19,14 @@ import { MonthGroup } from './MonthGroup'
    SECTION 1 — TREINOS
 ══════════════════════════════════════════════════════════════════ */
 export function WorkoutsSection({ sport }: { sport: string }) {
-  const { addWorkout } = useWorkouts(sport as any)
+  const { addWorkout } = useWorkouts(sport)
   const qc = useQueryClient()
   const { data: stravaConnected } = useStravaConnected()
 
   const { data: allWorkouts = [], isLoading } = useQuery({
     queryKey: ['sports_all'],
     queryFn: async () => {
-      const { data, error } = await (supabase.from('sports') as any)
+      const { data, error } = await supabase.from('sports')
         .select('*').order('sport_date', { ascending: false })
       if (error) throw error
       return data as Sport[]
@@ -35,7 +35,7 @@ export function WorkoutsSection({ sport }: { sport: string }) {
 
   const deleteW = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await (supabase.from('sports') as any).delete().eq('id', id)
+      const { error } = await supabase.from('sports').delete().eq('id', id)
       if (error) throw error
     },
     onSuccess: () => {
@@ -82,7 +82,7 @@ export function WorkoutsSection({ sport }: { sport: string }) {
     const dist_m = Math.round(dist * 1000)
     const pace   = dist_m > 0 ? calcPace(dist_m, dur) : null
     addWorkout.mutate(
-      { sport, kind: wKind, distance_m: dist_m || null, duration_s: dur, pace_label: pace, sport_date: wDate, notes: wNotes || null } as any,
+      { sport, kind: wKind, distance_m: dist_m || null, duration_s: dur, pace_label: pace, sport_date: wDate, notes: wNotes || null },
       { onSuccess: () => {
         setShowModal(false); setWDist(''); setWDur(''); setWNotes('')
         qc.invalidateQueries({ queryKey: ['sports_all'] })

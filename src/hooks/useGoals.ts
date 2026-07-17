@@ -22,7 +22,7 @@ export function useGoals() {
 
   const addGoal = useMutation({
     mutationFn: async (g: { name: string; label?: string; progress?: number; area?: string | null }) => {
-      const { data, error } = await (supabase.from('goals') as any)
+      const { data, error } = await supabase.from('goals')
         .insert({ name: g.name, label: g.label ?? null, progress: g.progress ?? 0, area: g.area ?? null })
         .select()
         .single()
@@ -36,7 +36,7 @@ export function useGoals() {
 
   const updateGoal = useMutation({
     mutationFn: async ({ id, ...fields }: Partial<Goal> & { id: string }) => {
-      const { error } = await (supabase.from('goals') as any).update(fields).eq('id', id)
+      const { error } = await supabase.from('goals').update(fields).eq('id', id)
       if (error) throw error
     },
     onMutate: async ({ id, ...fields }) => {
@@ -53,7 +53,7 @@ export function useGoals() {
 
   const deleteGoal = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await (supabase.from('goals') as any).delete().eq('id', id)
+      const { error } = await supabase.from('goals').delete().eq('id', id)
       if (error) throw error
     },
     onMutate: async (id) => {

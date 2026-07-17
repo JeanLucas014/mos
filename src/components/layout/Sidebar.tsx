@@ -4,7 +4,19 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useUIStore } from '../../stores/useUIStore'
 import { useUserSettings } from '../../hooks/useUserSettings'
 
-const GROUPS = [
+interface NavItem {
+  path: string
+  label: string
+  moduleId: string
+  icon: React.ReactNode
+  end?: boolean
+}
+interface NavGroup {
+  label: string
+  items: NavItem[]
+}
+
+const GROUPS: NavGroup[] = [
   {
     label: 'Sistema',
     items: [
@@ -273,7 +285,7 @@ export function Sidebar() {
                 <NavLink
                   key={item.label}
                   to={item.path}
-                  end={'end' in item ? (item as any).end : false}
+                  end={item.end ?? false}
                   onClick={handleNavClick}
                   title={c ? item.label : undefined}
                   className={({ isActive }) => NAV_LINK_CLASS(isActive, c)}

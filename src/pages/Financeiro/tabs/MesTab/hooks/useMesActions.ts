@@ -57,12 +57,12 @@ export function useMesActions({ ano, month, reload }: UseMesActionsParams) {
       saida_tipo:  form.natureza === 'saida' ? form.saida_tipo : null,
     }))
 
-    await (supabase.from('fin_lancamentos') as any).insert(inserts)
+    await supabase.from('fin_lancamentos').insert(inserts)
     await reload()
   }
 
   async function saveEdit(item: FinLancamento, form: EditFormState) {
-    const update: Record<string, unknown> = {
+    const update: Partial<FinLancamento> = {
       nome:         form.nome.trim(),
       data:         form.data,
       categoria_id: form.categoria_id || null,
@@ -81,18 +81,18 @@ export function useMesActions({ ano, month, reload }: UseMesActionsParams) {
       update.saida_tipo = null
       update.cartao_id  = null
     }
-    await (supabase.from('fin_lancamentos') as any).update(update).eq('id', item.id)
+    await supabase.from('fin_lancamentos').update(update).eq('id', item.id)
     await reload()
   }
 
   async function deleteLancamento(id: string) {
     if (!confirm('Excluir este lançamento e todos os seus subitens?')) return
-    await (supabase.from('fin_lancamentos') as any).delete().eq('id', id)
+    await supabase.from('fin_lancamentos').delete().eq('id', id)
     await reload()
   }
 
   async function saveDiarioValue(id: string, valor: number) {
-    await (supabase.from('fin_lancamentos') as any).update({
+    await supabase.from('fin_lancamentos').update({
       valor,
       is_previsao: false,
       nome: 'Diário',
@@ -101,7 +101,7 @@ export function useMesActions({ ano, month, reload }: UseMesActionsParams) {
   }
 
   async function togglePago(id: string, pago: boolean) {
-    await (supabase.from('fin_lancamentos') as any).update({ pago }).eq('id', id)
+    await supabase.from('fin_lancamentos').update({ pago }).eq('id', id)
     await reload()
     queryClient.invalidateQueries({ queryKey: ['dash_recorrentes'] })
   }
@@ -110,7 +110,7 @@ export function useMesActions({ ano, month, reload }: UseMesActionsParams) {
     const v = parseFloat(valor.replace(',', '.'))
     if (!v || !nome.trim()) return
     const data = `${ano.ano}-${String(month).padStart(2,'0')}-${String(dia).padStart(2,'0')}`
-    await (supabase.from('fin_lancamentos') as any).insert({
+    await supabase.from('fin_lancamentos').insert({
       ano_id: ano.id, data, natureza: 'diario', nome: nome.trim(),
       valor: v, is_grupo: false, categoria_id: cat.id,
     })
@@ -119,7 +119,7 @@ export function useMesActions({ ano, month, reload }: UseMesActionsParams) {
 
   async function addQuickCat(nome: string, cor: string | undefined, ordem: number) {
     if (!nome.trim()) return
-    await (supabase.from('fin_categorias') as any).insert({
+    await supabase.from('fin_categorias').insert({
       nome: nome.trim(), natureza: 'diario', cor: cor || null, rapida: true,
       ordem,
     })

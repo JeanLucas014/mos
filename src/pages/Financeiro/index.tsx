@@ -22,7 +22,7 @@ const TABS: { id: Tab; label: string }[] = [
 export default function FinanceiroPage() {
   const location = useLocation()
   const [activeTab, setActiveTab] = useState<Tab>(
-    (location.state as any)?.initialTab ?? 'ano'
+    (location.state as { initialTab?: Tab } | null)?.initialTab ?? 'ano'
   )
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1)

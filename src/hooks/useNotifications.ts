@@ -39,22 +39,22 @@ export function useNotificationPrefs() {
   const query = useQuery({
     queryKey: ['notification_prefs', user?.id],
     queryFn: async () => {
-      const { data, error } = await (supabase
-        .from('user_settings') as any)
+      const { data, error } = await supabase
+        .from('user_settings')
         .select('notification_prefs')
         .eq('user_id', user!.id)
         .maybeSingle()
       if (error) throw error
-      return (data?.notification_prefs as NotificationPrefs) ?? DEFAULT_PREFS
+      return (data?.notification_prefs as unknown as NotificationPrefs) ?? DEFAULT_PREFS
     },
     enabled: !!user,
   })
 
   const update = useMutation({
     mutationFn: async (prefs: NotificationPrefs) => {
-      const { error } = await (supabase
-        .from('user_settings') as any)
-        .update({ notification_prefs: prefs })
+      const { error } = await supabase
+        .from('user_settings')
+        .update({ notification_prefs: prefs as unknown as Record<string, boolean> })
         .eq('user_id', user!.id)
       if (error) throw error
     },
@@ -89,7 +89,7 @@ export function useAppNotifications() {
         habitosRes,
       ] = await Promise.all([
         prefs.tarefas_vencidas
-          ? (supabase.from('tasks') as any)
+          ? supabase.from('tasks')
               .select('id, title, due_date')
               .is('completed_at', null)
               .is('parent_id', null)
@@ -98,7 +98,7 @@ export function useAppNotifications() {
               .limit(10)
           : Promise.resolve({ data: [] }),
         prefs.tarefas_hoje
-          ? (supabase.from('tasks') as any)
+          ? supabase.from('tasks')
               .select('id, title, due_date')
               .is('completed_at', null)
               .is('parent_id', null)
@@ -106,7 +106,7 @@ export function useAppNotifications() {
               .limit(10)
           : Promise.resolve({ data: [] }),
         prefs.eventos_agenda
-          ? (supabase.from('calendar_events') as any)
+          ? supabase.from('calendar_events')
               .select('id, title, start_at')
               .gte('start_at', now.toISOString())
               .lte('start_at', new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString())
@@ -114,21 +114,21 @@ export function useAppNotifications() {
               .limit(5)
           : Promise.resolve({ data: [] }),
         prefs.contas_vencidas
-          ? (supabase.from('fin_recorrentes') as any)
+          ? supabase.from('fin_recorrentes')
               .select('id, nome, valor, dia_previsto')
               .eq('ativo', true)
               .lt('dia_previsto', todayDay)
           : Promise.resolve({ data: [] }),
         prefs.contas_hoje
-          ? (supabase.from('fin_recorrentes') as any)
+          ? supabase.from('fin_recorrentes')
               .select('id, nome, valor, dia_previsto')
               .eq('ativo', true)
               .eq('dia_previsto', todayDay)
           : Promise.resolve({ data: [] }),
         habitosAfter18h
           ? Promise.all([
-              (supabase.from('habits') as any).select('id, name'),
-              (supabase.from('habit_logs') as any).select('habit_id').eq('log_date', today),
+              supabase.from('habits').select('id, name'),
+              supabase.from('habit_logs').select('habit_id').eq('log_date', today),
             ])
           : Promise.resolve(null),
       ])

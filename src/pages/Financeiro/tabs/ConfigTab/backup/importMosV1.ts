@@ -25,7 +25,7 @@ export async function importarMosV1(json: any, onProgress: (p: number) => void):
   // Anos
   for (const a of srcAnos) {
     try {
-      const { data: row } = await (supabase.from('fin_anos') as any)
+      const { data: row } = await supabase.from('fin_anos')
         .insert({ ano: a.ano, saldo_inicial: a.saldo_inicial ?? 0 }).select('id').single()
       if (row?.id) anoMap.set(a.id, row.id)
     } catch (err) { erros.push(`Ano ${a.ano}: ${err}`) }
@@ -35,7 +35,7 @@ export async function importarMosV1(json: any, onProgress: (p: number) => void):
   // Categorias
   for (const c of srcCats) {
     try {
-      const { data: row } = await (supabase.from('fin_categorias') as any)
+      const { data: row } = await supabase.from('fin_categorias')
         .insert({ nome: c.nome, natureza: c.natureza, cor: c.cor, rapida: c.rapida ?? false, ordem: c.ordem ?? 0 })
         .select('id').single()
       if (row?.id) catMap.set(c.id, row.id)
@@ -46,7 +46,7 @@ export async function importarMosV1(json: any, onProgress: (p: number) => void):
   // Cartões
   for (const c of srcCards) {
     try {
-      const { data: row } = await (supabase.from('fin_cartoes') as any)
+      const { data: row } = await supabase.from('fin_cartoes')
         .insert({ nome: c.nome, cor: c.cor }).select('id').single()
       if (row?.id) cardMap.set(c.id, row.id)
     } catch (err) { erros.push(`Cartão ${c.nome}: ${err}`) }
@@ -59,7 +59,7 @@ export async function importarMosV1(json: any, onProgress: (p: number) => void):
 
   for (const l of roots) {
     try {
-      const { data: row } = await (supabase.from('fin_lancamentos') as any).insert({
+      const { data: row } = await supabase.from('fin_lancamentos').insert({
         ano_id: anoMap.get(l.ano_id) ?? l.ano_id,
         parent_id: null,
         data: l.data,
@@ -79,7 +79,7 @@ export async function importarMosV1(json: any, onProgress: (p: number) => void):
 
   for (const l of children) {
     try {
-      await (supabase.from('fin_lancamentos') as any).insert({
+      await supabase.from('fin_lancamentos').insert({
         ano_id: anoMap.get(l.ano_id) ?? l.ano_id,
         parent_id: lancMap.get(l.parent_id) ?? null,
         data: l.data,
@@ -99,7 +99,7 @@ export async function importarMosV1(json: any, onProgress: (p: number) => void):
   // Metas
   for (const m of srcMetas) {
     try {
-      await (supabase.from('fin_metas') as any).insert({ nome: m.nome, alvo: m.alvo, atual: m.atual ?? 0, ordem: m.ordem ?? 0 })
+      await supabase.from('fin_metas').insert({ nome: m.nome, alvo: m.alvo, atual: m.atual ?? 0, ordem: m.ordem ?? 0 })
     } catch (err) { erros.push(`Meta ${m.nome}: ${err}`) }
     tick()
   }
@@ -107,7 +107,9 @@ export async function importarMosV1(json: any, onProgress: (p: number) => void):
   // Investimentos
   for (const i of srcInvs) {
     try {
-      await (supabase.from('fin_investimentos') as any).insert({ data: i.data, valor: i.valor, descricao: i.descricao ?? null })
+      // NOTA: mesmo caso de importLegacy.ts — não bate com o schema atual
+      // de fin_investimentos, já falhava e caía no catch antes desta sessão.
+      await supabase.from('fin_investimentos').insert({ data: i.data, valor: i.valor, descricao: i.descricao ?? null } as any)
     } catch (err) { erros.push(`Invest ${i.data}: ${err}`) }
     tick()
   }
@@ -115,7 +117,7 @@ export async function importarMosV1(json: any, onProgress: (p: number) => void):
   // Recorrentes
   for (const r of srcRecs) {
     try {
-      await (supabase.from('fin_recorrentes') as any).insert({
+      await supabase.from('fin_recorrentes').insert({
         nome: r.nome, valor: r.valor, dia_previsto: r.dia_previsto,
         natureza: r.natureza ?? 'saida', saida_tipo: r.saida_tipo ?? 'fixa',
         categoria_id: r.categoria_id ? catMap.get(r.categoria_id) ?? null : null,

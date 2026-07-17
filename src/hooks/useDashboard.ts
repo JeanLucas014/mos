@@ -68,7 +68,7 @@ export function useDashTasks() {
         .order('due_date', { ascending: true, nullsFirst: false })
         .limit(5)
       if (error) throw error
-      return (data ?? []) as any
+      return (data ?? []) as DashTask[]
     },
   })
 }
@@ -155,7 +155,7 @@ export function useDashInvoices() {
   return useQuery({
     queryKey: ['dash_invoices'],
     queryFn: async () => {
-      const { data, error } = await (supabase.from('invoices') as any)
+      const { data, error } = await supabase.from('invoices')
         .select('amount_cents, status')
         .neq('status', 'pago')
       if (error) throw error
@@ -171,7 +171,7 @@ export function useDashSports() {
   const workouts = useQuery({
     queryKey: ['workouts', 'corrida'],
     queryFn: async () => {
-      const { data, error } = await (supabase.from('sports') as any)
+      const { data, error } = await supabase.from('sports')
         .select('*')
         .eq('sport', 'corrida')
         .order('sport_date', { ascending: false })
@@ -183,7 +183,7 @@ export function useDashSports() {
   const races = useQuery({
     queryKey: ['sport_races', 'corrida'],
     queryFn: async () => {
-      const { data, error } = await (supabase.from('sport_races') as any)
+      const { data, error } = await supabase.from('sport_races')
         .select('*')
         .eq('sport', 'corrida')
         .order('race_date', { ascending: true })
@@ -241,7 +241,7 @@ export function useDashEvents() {
   return useQuery({
     queryKey: ['dash_events'],
     queryFn: async () => {
-      const { data, error } = await (supabase.from('calendar_events') as any)
+      const { data, error } = await supabase.from('calendar_events')
         .select('id, title, start_at, end_at, color')
         .gte('start_at', new Date().toISOString())
         .order('start_at', { ascending: true })
@@ -264,7 +264,7 @@ export function useDashVercel() {
     queryKey: ['dash_vercel'],
     queryFn: async () => {
       // first check if vercel integration is connected
-      const { data: int } = await (supabase.from('integrations') as any)
+      const { data: int } = await supabase.from('integrations')
         .select('connected')
         .eq('provider', 'vercel')
         .eq('connected', true)
@@ -309,7 +309,7 @@ export function useDashFinancas() {
     queryKey: ['dash_financas_score'],
     queryFn: async () => {
       const start = monthStart()
-      const { data, error } = await (supabase.from('fin_lancamentos') as any)
+      const { data, error } = await supabase.from('fin_lancamentos')
         .select('valor, natureza, is_grupo')
         .gte('data', start)
         .lte('data', today())
@@ -362,7 +362,7 @@ export function useDashEstudos() {
   const studies = useQuery({
     queryKey: ['studies'],
     queryFn: async () => {
-      const { data, error } = await (supabase.from('studies') as any)
+      const { data, error } = await supabase.from('studies')
         .select('id, progress, status')
       if (error) throw error
       return data ?? []

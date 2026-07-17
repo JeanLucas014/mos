@@ -65,7 +65,7 @@ export function EventModal({ event, onSave, onDelete, onClose }: Props) {
   const [recEndDate,  setRecEndDate]  = useState('')
 
   useEffect(() => {
-    ;(supabase as any).from('calendar_tags').select('*').order('name')
+    ;supabase.from('calendar_tags').select('*').order('name')
       .then(({ data }: { data: CalendarTag[] | null }) => setAllTags(data ?? []))
   }, [])
 

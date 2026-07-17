@@ -11,7 +11,7 @@ export function useProjectChecklist(projectId: string) {
   const query = useQuery({
     queryKey: key,
     queryFn: async () => {
-      const { data, error } = await (supabase.from('project_checklist') as any)
+      const { data, error } = await supabase.from('project_checklist')
         .select('*')
         .eq('project_id', projectId)
         .order('position', { ascending: true })
@@ -24,7 +24,7 @@ export function useProjectChecklist(projectId: string) {
   const addItem = useMutation({
     mutationFn: async (title: string) => {
       const position = (query.data?.length ?? 0)
-      const { data, error } = await (supabase.from('project_checklist') as any)
+      const { data, error } = await supabase.from('project_checklist')
         .insert({ project_id: projectId, title, done: false, position })
         .select().single()
       if (error) throw error
@@ -38,7 +38,7 @@ export function useProjectChecklist(projectId: string) {
 
   const toggleItem = useMutation({
     mutationFn: async ({ id, done }: { id: string; done: boolean }) => {
-      const { error } = await (supabase.from('project_checklist') as any).update({ done }).eq('id', id)
+      const { error } = await supabase.from('project_checklist').update({ done }).eq('id', id)
       if (error) throw error
     },
     onMutate: async ({ id, done }) => {
@@ -53,7 +53,7 @@ export function useProjectChecklist(projectId: string) {
 
   const deleteItem = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await (supabase.from('project_checklist') as any).delete().eq('id', id)
+      const { error } = await supabase.from('project_checklist').delete().eq('id', id)
       if (error) throw error
     },
     onMutate: async (id) => {

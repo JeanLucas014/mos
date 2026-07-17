@@ -29,6 +29,16 @@ function cellBg(v: number | null): string {
 
 interface MonthData { mi: number; days: number; cells: number[] }
 
+interface LancNode {
+  id: string
+  parent_id: string | null
+  data: string
+  natureza: string
+  valor: number | null
+  is_grupo: boolean | null
+  children: LancNode[]
+}
+
 interface Props { ano: FinAno }
 
 export function HorizonteSaldos({ ano }: Props) {
@@ -54,12 +64,13 @@ export function HorizonteSaldos({ ano }: Props) {
     if (error || !allRows) { setLoading(false); return }
 
     // Monta árvore global
-    const map = new Map<string, any>()
-    for (const r of allRows as any[]) map.set(r.id, { ...r, children: [] })
-    const roots: any[] = []
+    const map = new Map<string, LancNode>()
+    for (const r of allRows) map.set(r.id, { ...r, children: [] })
+    const roots: LancNode[] = []
     for (const node of map.values()) {
-      if (node.parent_id && map.has(node.parent_id)) {
-        map.get(node.parent_id).children.push(node)
+      const parent = node.parent_id ? map.get(node.parent_id) : undefined
+      if (parent) {
+        parent.children.push(node)
       } else {
         roots.push(node)
       }
@@ -70,7 +81,7 @@ export function HorizonteSaldos({ ano }: Props) {
     // em outros meses contaminem a data do grupo.
     const netByDate: Record<string, number> = {}
 
-    function addLeaves(node: any): void {
+    function addLeaves(node: LancNode): void {
       const hasChildren = node.children && node.children.length > 0
       if (node.is_grupo && hasChildren) {
         // Grupo com filhos: desce para as folhas

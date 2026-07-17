@@ -77,7 +77,7 @@ export function useHabits() {
   const exceptionsQuery = useQuery({
     queryKey: exceptionsKey,
     queryFn: async () => {
-      const { data, error } = await (supabase.from('habit_exceptions') as any).select('*')
+      const { data, error } = await supabase.from('habit_exceptions').select('*')
       if (error) throw error
       return data as HabitException[]
     },
@@ -99,7 +99,7 @@ export function useHabits() {
         if (error) throw error
         return { action: 'deleted' as const, id: existing.id }
       } else {
-        const { data, error } = await (supabase.from('habit_logs') as any)
+        const { data, error } = await supabase.from('habit_logs')
           .insert({ habit_id: habitId, log_date: date })
           .select().single()
         if (error) throw error
@@ -113,7 +113,7 @@ export function useHabits() {
 
   const addHabit = useMutation({
     mutationFn: async (name: string) => {
-      const { data, error } = await (supabase.from('habits') as any)
+      const { data, error } = await supabase.from('habits')
         .insert({ name }).select().single()
       if (error) throw error
       return data as Habit
@@ -150,11 +150,11 @@ export function useHabits() {
         (e) => e.habit_id === habitId && e.exception_date === date,
       )
       if (existing) {
-        const { error } = await (supabase.from('habit_exceptions') as any).delete().eq('id', existing.id)
+        const { error } = await supabase.from('habit_exceptions').delete().eq('id', existing.id)
         if (error) throw error
         return { action: 'deleted' as const }
       } else {
-        const { error } = await (supabase.from('habit_exceptions') as any)
+        const { error } = await supabase.from('habit_exceptions')
           .insert({ habit_id: habitId, exception_date: date })
         if (error) throw error
         return { action: 'inserted' as const }

@@ -13,7 +13,7 @@ export function useMotoRevenue(year: number, month: number) {
   const query = useQuery({
     queryKey: key,
     queryFn: async () => {
-      const { data, error } = await (supabase.from('moto_revenue') as any)
+      const { data, error } = await supabase.from('moto_revenue')
         .select('*')
         .gte('revenue_date', from)
         .lte('revenue_date', to)
@@ -26,7 +26,7 @@ export function useMotoRevenue(year: number, month: number) {
 
   const addRecord = useMutation({
     mutationFn: async (r: { revenue_date: string; kind: string; category: string; description: string; amount_cents: number; notes?: string }) => {
-      const { error } = await (supabase.from('moto_revenue') as any).insert(r).select().single()
+      const { error } = await supabase.from('moto_revenue').insert(r).select().single()
       if (error) throw error
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
@@ -35,7 +35,7 @@ export function useMotoRevenue(year: number, month: number) {
 
   const deleteRecord = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await (supabase.from('moto_revenue') as any).delete().eq('id', id)
+      const { error } = await supabase.from('moto_revenue').delete().eq('id', id)
       if (error) throw error
     },
     onMutate: async (id) => {

@@ -13,8 +13,8 @@ export function useTheme() {
     queryKey: ['theme', user?.id],
     queryFn: async () => {
       if (!user) return 'system'
-      const { data } = await (supabase
-        .from('user_settings') as any)
+      const { data } = await supabase
+        .from('user_settings')
         .select('theme')
         .eq('user_id', user.id)
         .maybeSingle()
@@ -27,8 +27,8 @@ export function useTheme() {
   const setThemeMutation = useMutation({
     mutationFn: async (t: ThemeOption) => {
       if (!user) return
-      await (supabase
-        .from('user_settings') as any)
+      await supabase
+        .from('user_settings')
         .update({ theme: t })
         .eq('user_id', user.id)
     },

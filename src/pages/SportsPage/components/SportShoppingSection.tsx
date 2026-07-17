@@ -7,7 +7,7 @@ import { Section } from './Section'
    SECTION 4 — LISTA DE COMPRAS
 ══════════════════════════════════════════════════════════════════ */
 export function SportShoppingSection({ sport }: { sport: string }) {
-  const { data: items = [], isLoading, addItem, toggleItem, deleteItem } = useSportShopping(sport as any)
+  const { data: items = [], isLoading, addItem, toggleItem, deleteItem } = useSportShopping(sport)
   const [draft, setDraft] = useState('')
   const [addErr, setAddErr] = useState<string | null>(null)
   const sorted = [...items].sort((a, b) => (a.done === b.done ? 0 : a.done ? 1 : -1))

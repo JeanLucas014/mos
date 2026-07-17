@@ -22,7 +22,7 @@ export function useProjects() {
 
   const addProject = useMutation({
     mutationFn: async (p: { name: string; meta?: string; status?: string }) => {
-      const { data, error } = await (supabase.from('projects') as any)
+      const { data, error } = await supabase.from('projects')
         .insert({
           name: p.name,
           meta: p.meta ?? null,
@@ -42,7 +42,7 @@ export function useProjects() {
 
   const updateProject = useMutation({
     mutationFn: async ({ id, ...fields }: Partial<Project> & { id: string }) => {
-      const { error } = await (supabase.from('projects') as any).update(fields).eq('id', id)
+      const { error } = await supabase.from('projects').update(fields).eq('id', id)
       if (error) throw error
     },
     onMutate: async ({ id, ...fields }) => {
@@ -59,7 +59,7 @@ export function useProjects() {
 
   const deleteProject = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await (supabase.from('projects') as any).delete().eq('id', id)
+      const { error } = await supabase.from('projects').delete().eq('id', id)
       if (error) throw error
     },
     onMutate: async (id) => {

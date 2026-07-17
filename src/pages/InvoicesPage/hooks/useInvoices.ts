@@ -7,7 +7,7 @@ export function useInvoices() {
   return useQuery({
     queryKey: ['invoices'],
     queryFn: async () => {
-      const { data, error } = await (supabase.from('invoices') as any)
+      const { data, error } = await supabase.from('invoices')
         .select('*')
         .order('created_at', { ascending: false })
       if (error) throw error

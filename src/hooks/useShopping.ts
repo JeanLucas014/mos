@@ -25,7 +25,7 @@ export function useShopping() {
 
   const addItem = useMutation({
     mutationFn: async ({ title, category }: { title: string; category: string }) => {
-      const { data, error } = await (supabase.from('shopping_items') as any)
+      const { data, error } = await supabase.from('shopping_items')
         .insert({ title, category })
         .select()
         .single()
@@ -39,7 +39,7 @@ export function useShopping() {
 
   const toggleItem = useMutation({
     mutationFn: async ({ id, done }: { id: string; done: boolean }) => {
-      const { error } = await (supabase.from('shopping_items') as any)
+      const { error } = await supabase.from('shopping_items')
         .update({ done })
         .eq('id', id)
       if (error) throw error
@@ -58,7 +58,7 @@ export function useShopping() {
 
   const deleteItem = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await (supabase.from('shopping_items') as any).delete().eq('id', id)
+      const { error } = await supabase.from('shopping_items').delete().eq('id', id)
       if (error) throw error
     },
     onMutate: async (id) => {
@@ -74,7 +74,7 @@ export function useShopping() {
   const clearDone = useMutation({
     mutationFn: async (ids: string[]) => {
       if (!ids.length) return
-      const { error } = await (supabase.from('shopping_items') as any)
+      const { error } = await supabase.from('shopping_items')
         .delete()
         .in('id', ids)
       if (error) throw error

@@ -98,7 +98,7 @@ export function useMesData(ano: FinAno, month: number) {
       is_previsao: true,
     }))
 
-    await (supabase.from('fin_lancamentos') as any).insert(inserts)
+    await supabase.from('fin_lancamentos').insert(inserts)
 
     const lastDay = days
     const startDate = `${ano.ano}-${String(month).padStart(2,'0')}-01`

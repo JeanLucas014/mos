@@ -25,8 +25,8 @@ export function useNotes() {
 
   const addNote = useMutation({
     mutationFn: async () => {
-      const { data, error } = await (supabase
-        .from('notes') as any)
+      const { data, error } = await supabase
+        .from('notes')
         .insert({ title: 'Sem título', body: '' })
         .select()
         .single()
@@ -40,10 +40,10 @@ export function useNotes() {
 
   const updateNote = useMutation({
     mutationFn: async ({ id, title, body }: { id: string; title?: string; body?: string }) => {
-      const updates: Record<string, string> = {}
+      const updates: { title?: string; body?: string } = {}
       if (title !== undefined) updates.title = title
       if (body !== undefined) updates.body = body
-      const { error } = await (supabase.from('notes') as any).update(updates).eq('id', id)
+      const { error } = await supabase.from('notes').update(updates).eq('id', id)
       if (error) throw error
     },
     onMutate: async ({ id, title, body }) => {

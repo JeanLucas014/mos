@@ -35,7 +35,7 @@ export function useAtualizarTaxas(reload: () => Promise<void>) {
         { indicador: 'POUPANCA', valor_anual: +poupanca.toFixed(4),   valor_mensal: +((Math.pow(1 + poupanca / 100, 1 / 12) - 1) * 100).toFixed(6), data_referencia: today() },
       ]
       for (const u of updates) {
-        await (supabase.from('fin_taxas_economicas') as any).upsert(u, { onConflict: 'indicador' })
+        await supabase.from('fin_taxas_economicas').upsert(u, { onConflict: 'indicador' })
       }
       await reload()
     } catch {

@@ -35,12 +35,12 @@ export function InvoiceModal({ initial, onClose }: ModalProps) {
   const upsert = useMutation({
     mutationFn: async (payload: InvoiceInsert & { id?: string }) => {
       if (isEdit && payload.id) {
-        const { error } = await (supabase.from('invoices') as any)
+        const { error } = await supabase.from('invoices')
           .update(payload)
           .eq('id', payload.id)
         if (error) throw error
       } else {
-        const { error } = await (supabase.from('invoices') as any)
+        const { error } = await supabase.from('invoices')
           .insert(payload)
         if (error) throw error
       }

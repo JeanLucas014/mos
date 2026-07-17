@@ -18,7 +18,7 @@ export function useUserSettings() {
   const query = useQuery({
     queryKey: key,
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('user_settings')
         .select('*')
         .single()
@@ -42,7 +42,7 @@ export function useUserSettings() {
       const enabled = current.enabled_modules.includes(moduleId)
         ? current.enabled_modules.filter(m => m !== moduleId)
         : [...current.enabled_modules, moduleId]
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('user_settings')
         .upsert({ user_id: user!.id, enabled_modules: enabled }, { onConflict: 'user_id' })
       if (error) throw error
@@ -58,7 +58,7 @@ export function useUserSettings() {
 
   const completeOnboarding = useMutation({
     mutationFn: async (selectedModules: string[]) => {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('user_settings')
         .upsert(
           { user_id: user!.id, enabled_modules: selectedModules, onboarding_completed: true },

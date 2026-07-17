@@ -35,7 +35,7 @@ export function useConfigData(onReload: () => void) {
 
   async function addCategoria(nome: string, natureza: string, cor: string, rapida: boolean) {
     if (!nome.trim()) return
-    await (supabase.from('fin_categorias') as any).insert({
+    await supabase.from('fin_categorias').insert({
       nome: nome.trim(), natureza,
       cor: cor || null, rapida,
       ordem: categorias.filter(c => c.natureza === natureza).length,
@@ -44,18 +44,18 @@ export function useConfigData(onReload: () => void) {
   }
 
   async function delCat(id: string) {
-    await (supabase.from('fin_categorias') as any).delete().eq('id', id)
+    await supabase.from('fin_categorias').delete().eq('id', id)
     loadAll()
   }
 
   async function addCartao(nome: string, cor: string) {
     if (!nome.trim()) return
-    await (supabase.from('fin_cartoes') as any).insert({ nome: nome.trim(), cor: cor || null })
+    await supabase.from('fin_cartoes').insert({ nome: nome.trim(), cor: cor || null })
     loadAll()
   }
 
   async function delCartao(id: string) {
-    await (supabase.from('fin_cartoes') as any).delete().eq('id', id)
+    await supabase.from('fin_cartoes').delete().eq('id', id)
     loadAll()
   }
 
@@ -63,20 +63,20 @@ export function useConfigData(onReload: () => void) {
     const a = parseInt(anoStr)
     const s = parseFloat(saldoInicialStr.replace(',', '.')) || 0
     if (!a || a < 2020 || a > 2100) return alert('Ano inválido.')
-    await (supabase.from('fin_anos') as any).insert({ ano: a, saldo_inicial: s })
+    await supabase.from('fin_anos').insert({ ano: a, saldo_inicial: s })
     onReload()
     loadAll()
   }
 
   async function updateSaldoInicial(id: string, v: number) {
-    await (supabase.from('fin_anos') as any).update({ saldo_inicial: v }).eq('id', id)
+    await supabase.from('fin_anos').update({ saldo_inicial: v }).eq('id', id)
     onReload()
   }
 
   async function addPrevisaoItem(nome: string, valorStr: string) {
     const v = parseFloat(valorStr.replace(',', '.')) || 0
     if (!nome.trim() || !v) return
-    await (supabase.from('fin_previsao_config') as any).insert({
+    await supabase.from('fin_previsao_config').insert({
       nome: nome.trim(), valor: v,
       ordem: previsaoItems.length,
     })
@@ -85,13 +85,13 @@ export function useConfigData(onReload: () => void) {
   }
 
   async function delPrevisaoItem(id: string) {
-    await (supabase.from('fin_previsao_config') as any).delete().eq('id', id)
+    await supabase.from('fin_previsao_config').delete().eq('id', id)
     loadAll()
     await updateFuturePrevisoes()
   }
 
   async function updatePrevisaoValor(id: string, valor: number) {
-    await (supabase.from('fin_previsao_config') as any).update({ valor }).eq('id', id)
+    await supabase.from('fin_previsao_config').update({ valor }).eq('id', id)
     loadAll()
     await updateFuturePrevisoes()
   }
@@ -124,7 +124,7 @@ export function useConfigData(onReload: () => void) {
 
     for (const { ids, days } of Object.values(byMonth)) {
       const dailyValue = Math.round((total / days) * 100) / 100
-      await (supabase.from('fin_lancamentos') as any)
+      await supabase.from('fin_lancamentos')
         .update({ valor: dailyValue })
         .in('id', ids)
     }

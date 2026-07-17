@@ -11,7 +11,7 @@ export function useSportGoals(sport: string) {
   const query = useQuery({
     queryKey: key,
     queryFn: async () => {
-      const { data, error } = await (supabase.from('sport_goals') as any)
+      const { data, error } = await supabase.from('sport_goals')
         .select('*')
         .eq('sport', sport)
         .order('created_at', { ascending: false })
@@ -22,7 +22,7 @@ export function useSportGoals(sport: string) {
 
   const addGoal = useMutation({
     mutationFn: async (g: { name: string; target?: string; target_date?: string; distance_km?: number | null; duration_s?: number | null; linked_race_id?: string | null }) => {
-      const { data, error } = await (supabase.from('sport_goals') as any)
+      const { data, error } = await supabase.from('sport_goals')
         .insert({
           sport, name: g.name,
           target: g.target ?? null, target_date: g.target_date ?? null,
@@ -42,7 +42,7 @@ export function useSportGoals(sport: string) {
 
   const toggleGoal = useMutation({
     mutationFn: async ({ id, done }: { id: string; done: boolean }) => {
-      const { error } = await (supabase.from('sport_goals') as any).update({ done }).eq('id', id)
+      const { error } = await supabase.from('sport_goals').update({ done }).eq('id', id)
       if (error) throw error
     },
     onMutate: async ({ id, done }) => {
@@ -57,7 +57,7 @@ export function useSportGoals(sport: string) {
 
   const deleteGoal = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await (supabase.from('sport_goals') as any).delete().eq('id', id)
+      const { error } = await supabase.from('sport_goals').delete().eq('id', id)
       if (error) throw error
     },
     onMutate: async (id) => {

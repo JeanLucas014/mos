@@ -40,7 +40,7 @@ export function useBooks() {
       const { coverFile, ...fields } = input
 
       /* 1. Insert book to get the id */
-      const { data, error } = await (supabase.from('books') as any)
+      const { data, error } = await supabase.from('books')
         .insert({
           title: fields.title,
           author: fields.author ?? null,
@@ -70,7 +70,7 @@ export function useBooks() {
           .upload(path, coverFile, { upsert: true })
         if (!uploadErr) {
           const { data: urlData } = supabase.storage.from('covers').getPublicUrl(path)
-          await (supabase.from('books') as any)
+          await supabase.from('books')
             .update({ cover_url: urlData.publicUrl })
             .eq('id', book.id)
           return { ...book, cover_url: urlData.publicUrl } as Book
@@ -86,25 +86,25 @@ export function useBooks() {
 
   const updateBook = useMutation({
     mutationFn: async ({ id, ...fields }: Partial<Book> & { id: string; coverFile?: File | null }) => {
-      const { coverFile, ...rest } = fields as any
+      const { coverFile, ...rest } = fields
       if (coverFile) {
-        const ext = (coverFile as File).name.split('.').pop() ?? 'jpg'
+        const ext = coverFile.name.split('.').pop() ?? 'jpg'
         const path = `${id}.${ext}`
         const { error: uploadErr } = await supabase.storage
           .from('covers')
-          .upload(path, coverFile as File, { upsert: true })
+          .upload(path, coverFile, { upsert: true })
         if (!uploadErr) {
           const { data: urlData } = supabase.storage.from('covers').getPublicUrl(path)
           rest.cover_url = urlData.publicUrl
         }
       }
-      const { error } = await (supabase.from('books') as any).update(rest).eq('id', id)
+      const { error } = await supabase.from('books').update(rest).eq('id', id)
       if (error) throw error
     },
     onMutate: async ({ id, ...fields }) => {
       await qc.cancelQueries({ queryKey: key })
       const prev = qc.getQueryData<Book[]>(key)
-      const { coverFile: _cf, ...safeFields } = fields as any
+      const { coverFile: _cf, ...safeFields } = fields
       qc.setQueryData<Book[]>(key, (old) =>
         old?.map((b) => (b.id === id ? { ...b, ...safeFields } : b)),
       )

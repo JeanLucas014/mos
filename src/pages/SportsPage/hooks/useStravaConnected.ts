@@ -6,7 +6,7 @@ export function useStravaConnected() {
   return useQuery({
     queryKey: ['integration', 'strava'],
     queryFn: async () => {
-      const { data } = await (supabase.from('integrations') as any)
+      const { data } = await supabase.from('integrations')
         .select('connected').eq('provider', 'strava').eq('connected', true).maybeSingle()
       return !!data
     },

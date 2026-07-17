@@ -67,7 +67,7 @@ function VaultModal({
 }) {
   const editItem = mode.kind === 'edit' ? mode.item : null
   const [itemKind, setItemKind] = useState<'senha' | 'chave_api'>(
-    (editItem as any)?.kind === 'chave_api' ? 'chave_api' : 'senha'
+    editItem?.kind === 'chave_api' ? 'chave_api' : 'senha'
   )
   const [service,  setService]  = useState(editItem?.service  ?? '')
   const [username, setUsername] = useState(editItem?.username ?? '')
@@ -305,7 +305,7 @@ function VaultRow({
     return tryDecrypt()
   }
 
-  const isApiKey = (item as any).kind === 'chave_api'
+  const isApiKey = item.kind === 'chave_api'
 
   return (
     <div className="group flex items-center gap-2 px-4 py-3 rounded-xl border border-line bg-bg-2 hover:border-white/10 transition-colors">

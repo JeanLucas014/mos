@@ -11,7 +11,7 @@ export function useGoalItems(goalId: string) {
   const query = useQuery({
     queryKey: key,
     queryFn: async () => {
-      const { data, error } = await (supabase.from('goal_items') as any)
+      const { data, error } = await supabase.from('goal_items')
         .select('*')
         .eq('goal_id', goalId)
         .order('created_at', { ascending: true })
@@ -23,7 +23,7 @@ export function useGoalItems(goalId: string) {
 
   const addItem = useMutation({
     mutationFn: async (title: string) => {
-      const { data, error } = await (supabase.from('goal_items') as any)
+      const { data, error } = await supabase.from('goal_items')
         .insert({ goal_id: goalId, title, done: false })
         .select().single()
       if (error) throw error
@@ -37,7 +37,7 @@ export function useGoalItems(goalId: string) {
 
   const toggleItem = useMutation({
     mutationFn: async ({ id, done }: { id: string; done: boolean }) => {
-      const { error } = await (supabase.from('goal_items') as any).update({ done }).eq('id', id)
+      const { error } = await supabase.from('goal_items').update({ done }).eq('id', id)
       if (error) throw error
     },
     onMutate: async ({ id, done }) => {
@@ -52,7 +52,7 @@ export function useGoalItems(goalId: string) {
 
   const deleteItem = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await (supabase.from('goal_items') as any).delete().eq('id', id)
+      const { error } = await supabase.from('goal_items').delete().eq('id', id)
       if (error) throw error
     },
     onMutate: async (id) => {

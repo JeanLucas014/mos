@@ -12,7 +12,7 @@ import { inputCls, inputH } from './shared'
    SECTION 3 — PRÓXIMAS PROVAS
 ══════════════════════════════════════════════════════════════════ */
 export function RacesSection({ sport }: { sport: string }) {
-  const { data: races = [], isLoading, addRace, toggleRegistered, deleteRace } = useSportRaces(sport as any)
+  const { data: races = [], isLoading, addRace, toggleRegistered, deleteRace } = useSportRaces(sport)
   const [showModal, setShowModal] = useState(false)
   const [rName, setRName] = useState('')
   const [rDate, setRDate] = useState('')

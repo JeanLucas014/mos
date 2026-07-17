@@ -31,7 +31,7 @@ export function LifeScoreSection() {
     tarefas:  calcTarefasScore(tasksScore.data?.total ?? 0, tasksScore.data?.overdue ?? 0),
     habitos:  calcHabitosScore(doneToday, habitTotal),
     estudos:  calcEstudosScore(estudos.activeStudies, estudos.readingBooks, estudos.avgProgress ?? 0),
-    metas:    calcMetasScore((goals as any[]) ?? []),
+    metas:    calcMetasScore(goals ?? []),
   }
 
   const overall = Math.round(
@@ -54,7 +54,7 @@ export function LifeScoreSection() {
     { label: 'Tarefas',  score: scores.tarefas,  meta: (tasksScore.data?.overdue ?? 0) > 0 ? `${tasksScore.data?.overdue} atrasadas` : `${tasksScore.data?.total ?? 0} pendentes` },
     { label: 'Habitos',  score: scores.habitos,  meta: `${doneToday}/${habitTotal} hoje` },
     { label: 'Estudos',  score: scores.estudos,  meta: estudos.activeStudies > 0 ? `${estudos.activeStudies} ativo(s)` : 'Sem atividade' },
-    { label: 'Metas',    score: scores.metas,    meta: `${(goals as any[]).length} ativas` },
+    { label: 'Metas',    score: scores.metas,    meta: `${goals.length} ativas` },
   ]
 
   return (

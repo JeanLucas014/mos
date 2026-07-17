@@ -29,9 +29,9 @@ export function MetasTab() {
     }
     if (!payload.nome) return
     if (editing) {
-      await (supabase.from('fin_metas') as any).update(payload).eq('id', editing.id)
+      await supabase.from('fin_metas').update(payload).eq('id', editing.id)
     } else {
-      await (supabase.from('fin_metas') as any).insert({ ...payload, ordem: metas.length })
+      await supabase.from('fin_metas').insert({ ...payload, ordem: metas.length })
     }
     setEditing(null)
     setShowForm(false)
@@ -40,13 +40,13 @@ export function MetasTab() {
   }
 
   async function updateAtual(meta: FinMeta, value: number) {
-    await (supabase.from('fin_metas') as any).update({ atual: value }).eq('id', meta.id)
+    await supabase.from('fin_metas').update({ atual: value }).eq('id', meta.id)
     load()
   }
 
   async function del(id: string) {
     if (!confirm('Excluir esta meta?')) return
-    await (supabase.from('fin_metas') as any).delete().eq('id', id)
+    await supabase.from('fin_metas').delete().eq('id', id)
     load()
   }
 
