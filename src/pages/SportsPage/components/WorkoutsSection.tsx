@@ -133,8 +133,8 @@ export function WorkoutsSection({ sport }: { sport: string }) {
                 onClick={() => setModalityTab(t.key)}
                 className="px-3 py-2 text-xs font-semibold transition-colors"
                 style={{
-                  color: modalityTab === t.key ? '#0EA5E9' : 'var(--text2)',
-                  borderBottom: modalityTab === t.key ? '2px solid #0EA5E9' : '2px solid transparent',
+                  color: modalityTab === t.key ? 'var(--blue)' : 'var(--text2)',
+                  borderBottom: modalityTab === t.key ? '2px solid var(--blue)' : '2px solid transparent',
                   marginBottom: -1,
                 }}
               >

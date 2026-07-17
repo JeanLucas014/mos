@@ -11,7 +11,7 @@ type Project = Database['public']['Tables']['projects']['Row']
 
 /* ── Status config ─────────────────────────────────────────────── */
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
-  'em dev':  { label: 'Em dev',  color: '#0EA5E9', bg: 'rgba(14,165,233,.14)' },
+  'em dev':  { label: 'Em dev',  color: 'var(--blue)', bg: 'rgba(14,165,233,.14)' },
   'início':  { label: 'Início',  color: '#fbbf24', bg: 'rgba(251,191,36,.12)' },
   'ativo':   { label: 'Ativo',   color: '#34d399', bg: 'rgba(52,211,153,.12)' },
   'live':    { label: 'Live',    color: '#059669', bg: 'rgba(5,150,105,.12)'  },
@@ -119,7 +119,7 @@ function ChecklistSection({
             )}
           </button>
           <span style={{
-            flex: 1, fontSize: 12, color: item.done ? 'var(--text3)' : '#aaa',
+            flex: 1, fontSize: 12, color: item.done ? 'var(--text3)' : 'var(--text2)',
             textDecoration: item.done ? 'line-through' : 'none',
             fontFamily: 'Manrope, sans-serif',
           }}>

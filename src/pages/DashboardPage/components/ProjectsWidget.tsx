@@ -21,7 +21,7 @@ export function ProjectsWidget() {
         <div className="space-y-2"><Sk w="w-12" h="h-6" /><Sk /><Sk w="w-4/5" /></div>
       ) : (
         <>
-          <BigStat value={active.length} label="em andamento" color="#0EA5E9" />
+          <BigStat value={active.length} label="em andamento" color="var(--blue)" />
           {top2.length === 0 ? (
             <p className="text-ink-3 text-xs mt-2">Nenhum projeto ativo.</p>
           ) : (
@@ -43,7 +43,7 @@ export function ProjectsWidget() {
                       {p.status}
                     </span>
                   </div>
-                  <Bar pct={p.progress} color={STATUS_COLOR[p.status] ?? '#0EA5E9'} />
+                  <Bar pct={p.progress} color={STATUS_COLOR[p.status] ?? 'var(--blue)'} />
                   <div className="text-right mt-0.5" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--text3)' }}>
                     {p.progress}%
                   </div>

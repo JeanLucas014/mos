@@ -1,7 +1,7 @@
 function Step({ n, text }: { n: number; text: string }) {
   return (
     <div className="flex gap-3">
-      <div className="w-6 h-6 rounded-full bg-[#0EA5E9]/15 text-[#0EA5E9] text-xs font-bold flex items-center justify-center shrink-0">
+      <div className="w-6 h-6 rounded-full bg-brand/15 text-brand text-xs font-bold flex items-center justify-center shrink-0">
         {n}
       </div>
       <p className="text-sm text-[#ccc] leading-relaxed pt-0.5">{text}</p>

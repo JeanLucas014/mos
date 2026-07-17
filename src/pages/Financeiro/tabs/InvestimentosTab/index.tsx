@@ -24,7 +24,7 @@ export function InvestimentosTab() {
   if (loading)
     return (
       <div className="flex justify-center py-16">
-        <div className="w-5 h-5 rounded-full border-2 border-[#0EA5E9] border-t-transparent animate-spin" />
+        <div className="w-5 h-5 rounded-full border-2 border-brand border-t-transparent animate-spin" />
       </div>
     )
 
@@ -42,8 +42,8 @@ export function InvestimentosTab() {
             onClick={() => setActiveTab(t.id)}
             className="px-3 py-2 text-xs font-medium border-b-2 -mb-px transition-colors whitespace-nowrap"
             style={{
-              color: activeTab === t.id ? '#0EA5E9' : 'var(--text3)',
-              borderColor: activeTab === t.id ? '#0EA5E9' : 'transparent',
+              color: activeTab === t.id ? 'var(--blue)' : 'var(--text3)',
+              borderColor: activeTab === t.id ? 'var(--blue)' : 'transparent',
             }}
           >
             {t.label}

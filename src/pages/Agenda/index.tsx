@@ -285,7 +285,7 @@ export default function AgendaPage() {
             {(['agenda', 'rotina'] as Tab[]).map(t => (
               <button key={t} onClick={() => setTab(t)}
                 className={['px-3 py-1.5 text-xs font-medium capitalize transition-colors',
-                  tab === t ? 'bg-[#1f1f1f] text-white' : 'text-[#555] hover:text-white',
+                  tab === t ? 'bg-[#1f1f1f] text-white' : 'text-ink-3 hover:text-white',
                 ].join(' ')}>
                 {t === 'agenda' ? 'Agenda' : 'Rotina'}
               </button>
@@ -297,13 +297,13 @@ export default function AgendaPage() {
           {tab === 'agenda' && (
             <>
               <button onClick={goToday}
-                className="px-2.5 py-1.5 text-xs text-[#555] border border-[#1f1f1f] rounded-lg hover:text-white transition-colors shrink-0">
+                className="px-2.5 py-1.5 text-xs text-ink-3 border border-[#1f1f1f] rounded-lg hover:text-white transition-colors shrink-0">
                 Hoje
               </button>
-              <button onClick={() => navigate(-1)} className="text-[#555] hover:text-white transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center">
+              <button onClick={() => navigate(-1)} className="text-ink-3 hover:text-white transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center">
                 <ChevronLeft size={16} />
               </button>
-              <button onClick={() => navigate(1)} className="text-[#555] hover:text-white transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center">
+              <button onClick={() => navigate(1)} className="text-ink-3 hover:text-white transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center">
                 <ChevronRight size={16} />
               </button>
               <span className="text-xs sm:text-sm font-semibold text-white capitalize truncate min-w-0">
@@ -312,7 +312,7 @@ export default function AgendaPage() {
               <div className="flex-1" />
               <button
                 onClick={() => openNewEvent(new Date())}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-[#0EA5E9] text-black rounded-lg hover:bg-[#38bdf8] transition-colors shrink-0"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-brand text-black rounded-lg hover:bg-[#38bdf8] transition-colors shrink-0"
               >
                 <Plus size={13} />
                 <span className="hidden sm:inline">Evento</span>
@@ -327,7 +327,7 @@ export default function AgendaPage() {
               <button key={v.id} onClick={() => setView(v.id)}
                 title={v.label}
                 className={['flex items-center gap-1.5 px-3 py-1.5 text-xs transition-colors flex-1 sm:flex-none justify-center',
-                  view === v.id ? 'bg-[#1f1f1f] text-white' : 'text-[#555] hover:text-white',
+                  view === v.id ? 'bg-[#1f1f1f] text-white' : 'text-ink-3 hover:text-white',
                 ].join(' ')}>
                 {v.icon}
                 <span className="hidden md:inline">{v.label}</span>

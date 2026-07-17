@@ -41,7 +41,7 @@ export function DashboardPage() {
           }}
         >
           {greeting()},{' '}
-          <span style={{ color: '#0EA5E9' }}>{displayName}</span>
+          <span style={{ color: 'var(--blue)' }}>{displayName}</span>
         </h1>
         <p className="text-ink-2 mt-1.5" style={{ fontFamily: 'Manrope, sans-serif', fontSize: 13 }}>
           {longDate()}

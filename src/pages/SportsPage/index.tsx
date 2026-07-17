@@ -52,7 +52,7 @@ export function SportsPage() {
             {sport === s.key && (
               <span
                 onClick={(e) => { e.stopPropagation(); removeSport(s.id, s.key) }}
-                className="ml-1 text-[#555] hover:text-[#ef4444] transition-colors"
+                className="ml-1 text-ink-3 hover:text-[#ef4444] transition-colors"
                 style={{ fontSize: 16, lineHeight: 1 }}
               >×</span>
             )}
@@ -60,7 +60,7 @@ export function SportsPage() {
         ))}
         <button
           onClick={() => setShowAddSport(true)}
-          className="flex items-center gap-1.5 px-3 rounded-lg text-[#555] hover:text-[#0EA5E9] transition-colors flex-shrink-0"
+          className="flex items-center gap-1.5 px-3 rounded-lg text-ink-3 hover:text-brand transition-colors flex-shrink-0"
           style={{ minHeight: 40, fontSize: 13 }}
         >
           <Plus size={14} /> Adicionar
@@ -92,7 +92,7 @@ export function SportsPage() {
           <div className="bg-[#111111] border border-[#1f1f1f] rounded-2xl w-full max-w-sm p-5" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <span className="text-sm font-semibold font-[Sora] text-white">Adicionar esporte</span>
-              <button onClick={() => setShowAddSport(false)} aria-label="Fechar" className="text-[#555] hover:text-white text-lg">×</button>
+              <button onClick={() => setShowAddSport(false)} aria-label="Fechar" className="text-ink-3 hover:text-white text-lg">×</button>
             </div>
             <div className="space-y-1 max-h-80 overflow-y-auto">
               {SPORT_CATALOG
@@ -108,7 +108,7 @@ export function SportsPage() {
                 ))}
             </div>
             {SPORT_CATALOG.filter(c => !userSports.some(s => s.key === c.key)).length === 0 && (
-              <p className="text-[#555] text-sm text-center py-4">Todos os esportes já foram adicionados.</p>
+              <p className="text-ink-3 text-sm text-center py-4">Todos os esportes já foram adicionados.</p>
             )}
           </div>
         </div>

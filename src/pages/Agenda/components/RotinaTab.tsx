@@ -52,11 +52,11 @@ export function RotinaTab({ rotinas, onReload }: Props) {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-base font-bold font-[Sora] text-white">Rotina</h2>
-          <p className="text-xs text-[#555] mt-0.5">Descreva como são seus dias típicos da semana</p>
+          <p className="text-xs text-ink-3 mt-0.5">Descreva como são seus dias típicos da semana</p>
         </div>
         <button
           onClick={() => setEditing({ ...EMPTY })}
-          className="flex items-center gap-1.5 text-sm text-[#0EA5E9] hover:text-white transition-colors"
+          className="flex items-center gap-1.5 text-sm text-brand hover:text-white transition-colors"
         >
           <Plus size={14} /> Nova rotina
         </button>
@@ -70,28 +70,28 @@ export function RotinaTab({ rotinas, onReload }: Props) {
             onChange={e => setEditing(v => ({ ...v!, titulo: e.target.value }))}
             placeholder="Ex: Manhã de treino, Trabalho remoto..."
             autoFocus
-            className="w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#0EA5E9]/60"
+            className="w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-brand/60"
           />
           <textarea
             value={editing.descricao ?? ''}
             onChange={e => setEditing(v => ({ ...v!, descricao: e.target.value }))}
             placeholder="Descrição detalhada da rotina desse período..."
             rows={3}
-            className="w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-2 text-sm text-[#aaa] outline-none resize-none focus:border-[#0EA5E9]/60"
+            className="w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-2 text-sm text-ink-2 outline-none resize-none focus:border-brand/60"
           />
           <div className="flex gap-2 items-center">
             <input
               type="time"
               value={editing.hora_inicio ?? ''}
               onChange={e => setEditing(v => ({ ...v!, hora_inicio: e.target.value }))}
-              className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-[#0EA5E9]/60"
+              className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-brand/60"
             />
-            <span className="text-[#555] text-xs">até</span>
+            <span className="text-ink-3 text-xs">até</span>
             <input
               type="time"
               value={editing.hora_fim ?? ''}
               onChange={e => setEditing(v => ({ ...v!, hora_fim: e.target.value }))}
-              className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-[#0EA5E9]/60"
+              className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-brand/60"
             />
           </div>
 
@@ -109,8 +109,8 @@ export function RotinaTab({ rotinas, onReload }: Props) {
                   }))}
                   className={['w-9 h-9 text-xs rounded-full border transition-colors font-medium',
                     active
-                      ? 'border-[#0EA5E9] bg-[#0EA5E9]/20 text-[#0EA5E9]'
-                      : 'border-[#1f1f1f] text-[#555] hover:text-white',
+                      ? 'border-brand bg-brand/20 text-brand'
+                      : 'border-[#1f1f1f] text-ink-3 hover:text-white',
                   ].join(' ')}>
                   {d.label[0]}
                 </button>
@@ -135,14 +135,14 @@ export function RotinaTab({ rotinas, onReload }: Props) {
           <div className="flex gap-2">
             <button
               onClick={() => setEditing(null)}
-              className="px-3 py-1.5 text-sm text-[#555] border border-[#1f1f1f] rounded-lg hover:text-white transition-colors"
+              className="px-3 py-1.5 text-sm text-ink-3 border border-[#1f1f1f] rounded-lg hover:text-white transition-colors"
             >
               Cancelar
             </button>
             <button
               onClick={save}
               disabled={saving || !editing.titulo?.trim()}
-              className="flex-1 py-1.5 text-sm font-semibold bg-[#0EA5E9] text-black rounded-lg disabled:opacity-40 hover:bg-[#38bdf8] transition-colors"
+              className="flex-1 py-1.5 text-sm font-semibold bg-brand text-black rounded-lg disabled:opacity-40 hover:bg-[#38bdf8] transition-colors"
             >
               {saving ? 'Salvando…' : editing.id ? 'Salvar' : 'Criar'}
             </button>
@@ -157,11 +157,11 @@ export function RotinaTab({ rotinas, onReload }: Props) {
             <div className="w-1 self-stretch rounded-full shrink-0" style={{ background: r.cor }} />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className={['text-sm font-semibold', r.ativa ? 'text-white' : 'text-[#555] line-through'].join(' ')}>
+                <span className={['text-sm font-semibold', r.ativa ? 'text-white' : 'text-ink-3 line-through'].join(' ')}>
                   {r.titulo}
                 </span>
                 {r.hora_inicio && (
-                  <span className="text-[10px] text-[#555]">
+                  <span className="text-[10px] text-ink-3">
                     {r.hora_inicio}{r.hora_fim ? ` – ${r.hora_fim}` : ''}
                   </span>
                 )}
@@ -169,7 +169,7 @@ export function RotinaTab({ rotinas, onReload }: Props) {
               {r.dias_semana.length > 0 && (
                 <div className="flex gap-1 mt-1.5 flex-wrap">
                   {r.dias_semana.map(d => (
-                    <span key={d} className="text-[9px] px-1.5 py-0.5 rounded-full border border-[#1f1f1f] text-[#555]">
+                    <span key={d} className="text-[9px] px-1.5 py-0.5 rounded-full border border-[#1f1f1f] text-ink-3">
                       {DIAS_LABELS[d] ?? d}
                     </span>
                   ))}
@@ -186,14 +186,14 @@ export function RotinaTab({ rotinas, onReload }: Props) {
                 className={['text-xs px-2 py-1 rounded-lg border transition-colors',
                   r.ativa
                     ? 'border-[#22c55e]/30 text-[#22c55e] hover:bg-[#22c55e]/10'
-                    : 'border-[#1f1f1f] text-[#555] hover:text-white',
+                    : 'border-[#1f1f1f] text-ink-3 hover:text-white',
                 ].join(' ')}>
                 {r.ativa ? 'Ativa' : 'Inativa'}
               </button>
-              <button onClick={() => setEditing(r)} className="text-[#555] hover:text-[#0EA5E9] p-1 transition-colors">
+              <button onClick={() => setEditing(r)} className="text-ink-3 hover:text-brand p-1 transition-colors">
                 <Pencil size={13} />
               </button>
-              <button onClick={() => del(r.id)} className="text-[#555] hover:text-[#ef4444] p-1 transition-colors">
+              <button onClick={() => del(r.id)} className="text-ink-3 hover:text-[#ef4444] p-1 transition-colors">
                 <Trash2 size={13} />
               </button>
             </div>
@@ -202,9 +202,9 @@ export function RotinaTab({ rotinas, onReload }: Props) {
       ))}
 
       {rotinas.length === 0 && !editing && (
-        <div className="text-center py-12 text-[#555] text-sm">
+        <div className="text-center py-12 text-ink-3 text-sm">
           Nenhuma rotina.{' '}
-          <button onClick={() => setEditing({ ...EMPTY })} className="text-[#0EA5E9] hover:underline">
+          <button onClick={() => setEditing({ ...EMPTY })} className="text-brand hover:underline">
             Criar →
           </button>
         </div>

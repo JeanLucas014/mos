@@ -248,7 +248,7 @@ function AdminSection() {
               >
                 <div
                   className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'var(--border)', fontSize: 10, fontWeight: 700, color: '#0EA5E9' }}
+                  style={{ background: 'var(--border)', fontSize: 10, fontWeight: 700, color: 'var(--blue)' }}
                 >
                   {initials(p.name, undefined)}
                 </div>
@@ -338,7 +338,7 @@ export function ProfilePage() {
   }
 
   /* Avatar color based on email hash */
-  const avatarColor = '#0EA5E9'
+  const avatarColor = 'var(--blue)'
 
   return (
     <div className="max-w-lg">

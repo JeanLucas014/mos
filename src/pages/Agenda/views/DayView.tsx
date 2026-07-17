@@ -105,7 +105,7 @@ export function DayView({ events, currentDate, onSelectEvent, onSelectSlot }: Pr
     <div className="flex flex-col h-full">
       {/* Day header */}
       <div className="shrink-0 border-b border-[#1f1f1f] px-4 py-3" style={{ paddingLeft: TIME_W + 16 }}>
-        <div className={['text-sm font-semibold capitalize', isToday ? 'text-[#0EA5E9]' : 'text-white'].join(' ')}>
+        <div className={['text-sm font-semibold capitalize', isToday ? 'text-brand' : 'text-white'].join(' ')}>
           {dayLabel}
         </div>
         {allDayEvents.length > 0 && (
@@ -155,7 +155,7 @@ export function DayView({ events, currentDate, onSelectEvent, onSelectSlot }: Pr
 
             {/* Today highlight */}
             {isToday && (
-              <div className="absolute inset-0 bg-[#0EA5E9]/[0.03] pointer-events-none" />
+              <div className="absolute inset-0 bg-brand/[0.03] pointer-events-none" />
             )}
 
             {/* Current time indicator */}

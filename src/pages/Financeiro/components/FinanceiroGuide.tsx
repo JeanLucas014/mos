@@ -7,7 +7,7 @@ interface Props {
 const SECTIONS = [
   {
     icon: <Calendar size={16} />,
-    color: '#0EA5E9',
+    color: 'var(--blue)',
     title: 'Ano e Mês',
     text: 'A aba "Ano" mostra a visão geral de saldo, projeção e gráfico anual. A aba "Mês" mostra o detalhe dia a dia, onde você lança suas movimentações.',
   },
@@ -58,11 +58,11 @@ export function FinanceiroGuide({ onClose }: Props) {
             <span className="text-sm font-semibold font-[Sora] text-white">
               Como funciona o Financeiro
             </span>
-            <p className="text-[11px] text-[#555] mt-0.5">
+            <p className="text-[11px] text-ink-3 mt-0.5">
               Um guia rápido pelos principais conceitos
             </p>
           </div>
-          <button onClick={onClose} className="text-[#555] hover:text-white transition-colors shrink-0">
+          <button onClick={onClose} className="text-ink-3 hover:text-white transition-colors shrink-0">
             <X size={16} />
           </button>
         </div>
@@ -87,7 +87,7 @@ export function FinanceiroGuide({ onClose }: Props) {
         <div className="px-5 py-4 border-t border-line sticky bottom-0 bg-bg-2">
           <button
             onClick={onClose}
-            className="w-full py-2.5 bg-[#0EA5E9] text-black font-semibold text-sm rounded-xl hover:bg-[#38bdf8] transition-colors"
+            className="w-full py-2.5 bg-brand text-black font-semibold text-sm rounded-xl hover:bg-[#38bdf8] transition-colors"
           >
             Entendi, começar
           </button>

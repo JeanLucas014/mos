@@ -19,10 +19,10 @@ export function MonthGroup({ monthKey, workouts, onDelete }: { monthKey: string;
           <div className="flex-1">
             <div className="text-sm font-bold text-white capitalize mb-1" style={{ fontFamily: 'Sora, sans-serif' }}>{label}</div>
             <div className="flex gap-3 flex-wrap">
-              <span className="text-xs text-[#555]">{workouts.length} atividade{workouts.length !== 1 ? 's' : ''}</span>
-              {totalKm > 0 && <span className="text-xs text-[#555]">{(totalKm / 1000).toFixed(1)} km</span>}
-              <span className="text-xs text-[#555]">{fmtDurationShort(totalTime)}</span>
-              {pace && <span className="text-xs text-[#555]">Pace med. {pace}</span>}
+              <span className="text-xs text-ink-3">{workouts.length} atividade{workouts.length !== 1 ? 's' : ''}</span>
+              {totalKm > 0 && <span className="text-xs text-ink-3">{(totalKm / 1000).toFixed(1)} km</span>}
+              <span className="text-xs text-ink-3">{fmtDurationShort(totalTime)}</span>
+              {pace && <span className="text-xs text-ink-3">Pace med. {pace}</span>}
             </div>
           </div>
           {open ? <ChevronUp size={14} color="var(--text2)" /> : <ChevronDown size={14} color="var(--text2)" />}

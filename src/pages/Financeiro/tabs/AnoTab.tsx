@@ -71,7 +71,7 @@ export function AnoTab({ ano, onGoToMonth }: Props) {
   const today = new Date()
   const currentMonth = ano.ano === today.getFullYear() ? today.getMonth() + 1 : -1
 
-  if (loading) return <div className="flex justify-center py-16"><div className="w-5 h-5 rounded-full border-2 border-[#0EA5E9] border-t-transparent animate-spin" /></div>
+  if (loading) return <div className="flex justify-center py-16"><div className="w-5 h-5 rounded-full border-2 border-brand border-t-transparent animate-spin" /></div>
 
   return (
     <div className="space-y-6">
@@ -86,7 +86,7 @@ export function AnoTab({ ano, onGoToMonth }: Props) {
             ].join(' ')}
           >
             <span className="absolute top-3.5 right-3.5 w-2 h-2 rounded-full" style={{ background: c.color }} />
-            <div className="text-[10px] text-[#555] uppercase tracking-wider font-[Sora] mb-2">{c.label}</div>
+            <div className="text-[10px] text-ink-3 uppercase tracking-wider font-[Sora] mb-2">{c.label}</div>
             <div className="text-base font-bold tabular-nums" style={{ color: c.color }}>{BRL(c.value)}</div>
           </div>
         ))}
@@ -94,7 +94,7 @@ export function AnoTab({ ano, onGoToMonth }: Props) {
 
       {/* Chart */}
       <div className="bg-bg-2 border border-line rounded-xl p-5">
-        <div className="text-xs text-[#555] font-[Sora] uppercase tracking-wider mb-4">
+        <div className="text-xs text-ink-3 font-[Sora] uppercase tracking-wider mb-4">
           Entradas vs Saídas · {ano.ano}
         </div>
         <ResponsiveContainer width="100%" height={200}>
@@ -107,7 +107,7 @@ export function AnoTab({ ano, onGoToMonth }: Props) {
             />
             <Tooltip
               contentStyle={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
-              labelStyle={{ color: '#aaa' }}
+              labelStyle={{ color: 'var(--text2)' }}
               formatter={(v, name) => [BRL(Number(v)), String(name)]}
             />
             <Bar dataKey="Fixas"      stackId="s" fill="#ef4444" fillOpacity={0.75} />
@@ -128,11 +128,11 @@ export function AnoTab({ ano, onGoToMonth }: Props) {
               key={m.mes}
               onClick={() => onGoToMonth(m.mes)}
               className={[
-                'bg-bg-2 border rounded-xl p-4 text-left transition-colors hover:border-[#0EA5E9]/40 focus:outline-none',
-                isCurrent ? 'border-[#0EA5E9]/50' : 'border-line',
+                'bg-bg-2 border rounded-xl p-4 text-left transition-colors hover:border-brand/40 focus:outline-none',
+                isCurrent ? 'border-brand/50' : 'border-line',
               ].join(' ')}
             >
-              <div className={['text-sm font-semibold font-[Sora] mb-3', isCurrent ? 'text-[#0EA5E9]' : 'text-white'].join(' ')}>
+              <div className={['text-sm font-semibold font-[Sora] mb-3', isCurrent ? 'text-brand' : 'text-white'].join(' ')}>
                 {MS_FULL[i]}
               </div>
               <div className="space-y-1 text-[11px] tabular-nums">
@@ -142,13 +142,13 @@ export function AnoTab({ ano, onGoToMonth }: Props) {
                   { label: 'Diário',  value: m.diario,          color: '#f97316' },
                 ].map(row => (
                   <div key={row.label} className="flex justify-between">
-                    <span className="text-[#555]">{row.label}</span>
+                    <span className="text-ink-3">{row.label}</span>
                     <span style={{ color: row.color }}>{BRL(row.value)}</span>
                   </div>
                 ))}
                 <div className="border-t border-line my-1" />
                 <div className="flex justify-between">
-                  <span className="text-[#555]">Resultado</span>
+                  <span className="text-ink-3">Resultado</span>
                   <span style={{ color: resultado >= 0 ? '#22c55e' : '#ef4444' }}>{BRL(resultado)}</span>
                 </div>
               </div>

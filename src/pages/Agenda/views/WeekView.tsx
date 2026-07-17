@@ -144,13 +144,13 @@ export function WeekView({ events, currentDate, onSelectEvent, onSelectSlot }: P
             <div key={i} className="flex-1 text-center py-2 border-l border-[#1f1f1f]">
               <div className={['uppercase tracking-wider mb-1',
                 isMobile ? 'text-[9px]' : 'text-[10px]',
-                isToday ? 'text-[#0EA5E9]' : 'text-[#555]'].join(' ')}>
+                isToday ? 'text-brand' : 'text-ink-3'].join(' ')}>
                 {isMobile ? DAYS_SHORT[day.getDay()] : DAYS_PT[day.getDay()]}
               </div>
               <div className={[
                 'rounded-full flex items-center justify-center mx-auto font-bold',
                 isMobile ? 'text-sm w-6 h-6' : 'text-lg w-8 h-8',
-                isToday ? 'bg-[#0EA5E9] text-black' : 'text-white',
+                isToday ? 'bg-brand text-black' : 'text-white',
               ].join(' ')}>
                 {day.getDate()}
               </div>
@@ -204,7 +204,7 @@ export function WeekView({ events, currentDate, onSelectEvent, onSelectSlot }: P
 
               {/* Today highlight */}
               {isSameDay(day, today) && (
-                <div className="absolute inset-0 bg-[#0EA5E9]/[0.03] pointer-events-none" />
+                <div className="absolute inset-0 bg-brand/[0.03] pointer-events-none" />
               )}
 
               {/* Current time indicator */}

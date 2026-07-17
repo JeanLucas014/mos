@@ -25,7 +25,7 @@ export function RecurrenceDialog({ mode, onConfirm, onClose }: Props) {
           <span className="text-sm font-semibold font-[Sora] text-white">
             {mode === 'delete' ? 'Excluir evento recorrente' : 'Editar evento recorrente'}
           </span>
-          <button onClick={onClose} className="text-[#555] hover:text-white transition-colors">
+          <button onClick={onClose} className="text-ink-3 hover:text-white transition-colors">
             <X size={15} />
           </button>
         </div>
@@ -43,10 +43,10 @@ export function RecurrenceDialog({ mode, onConfirm, onClose }: Props) {
             >
               <div
                 className="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors"
-                style={{ borderColor: scope === opt.id ? '#0EA5E9' : '#333' }}
+                style={{ borderColor: scope === opt.id ? 'var(--blue)' : '#333' }}
               >
                 {scope === opt.id && (
-                  <div className="w-2.5 h-2.5 rounded-full bg-[#0EA5E9]" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-brand" />
                 )}
               </div>
               <span className="text-sm text-[#ccc] group-hover:text-white transition-colors">
@@ -59,14 +59,14 @@ export function RecurrenceDialog({ mode, onConfirm, onClose }: Props) {
         <div className="flex gap-2">
           <button
             onClick={onClose}
-            className="flex-1 py-2.5 text-sm text-[#555] border border-[#1f1f1f] rounded-xl hover:text-white transition-colors"
+            className="flex-1 py-2.5 text-sm text-ink-3 border border-[#1f1f1f] rounded-xl hover:text-white transition-colors"
           >
             Cancelar
           </button>
           <button
             onClick={() => onConfirm(scope)}
             className="flex-1 py-2.5 text-sm font-semibold rounded-xl transition-colors"
-            style={{ background: mode === 'delete' ? '#ef4444' : '#0EA5E9', color: '#000' }}
+            style={{ background: mode === 'delete' ? '#ef4444' : 'var(--blue)', color: '#000' }}
           >
             OK
           </button>

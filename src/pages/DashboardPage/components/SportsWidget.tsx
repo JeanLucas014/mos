@@ -20,7 +20,7 @@ export function SportsWidget() {
               <div style={{ fontSize: 9, color: 'var(--text3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 4 }}>
                 km no mes
               </div>
-              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 18, fontWeight: 800, color: '#0EA5E9' }}>
+              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 18, fontWeight: 800, color: 'var(--blue)' }}>
                 {kmMonth.toFixed(1)}
               </div>
             </div>

@@ -155,9 +155,9 @@ function VaultModal({
                 onClick={() => setItemKind(k)}
                 className="flex-1 py-2 rounded-lg text-xs font-semibold border transition-colors"
                 style={{
-                  borderColor: itemKind === k ? '#0EA5E9' : 'var(--border)',
+                  borderColor: itemKind === k ? 'var(--blue)' : 'var(--border)',
                   background:  itemKind === k ? 'rgba(14,165,233,.1)' : 'transparent',
-                  color:       itemKind === k ? '#0EA5E9' : 'var(--text3)',
+                  color:       itemKind === k ? 'var(--blue)' : 'var(--text3)',
                 }}
               >
                 {k === 'senha' ? 'Senha' : 'Chave de API'}
@@ -334,7 +334,7 @@ function VaultRow({
           <div style={{ fontSize: 11, color: '#f87171' }}>Erro ao descriptografar</div>
         ) : revealed && decryptedPw ? (
           <div
-            className="text-[#0EA5E9] truncate select-text"
+            className="text-brand truncate select-text"
             style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}
           >
             {decryptedPw}
@@ -355,7 +355,7 @@ function VaultRow({
         <div className="relative">
           <button
             onClick={() => setShowMenu(v => !v)}
-            className="w-8 h-8 flex items-center justify-center text-[#555] hover:text-white rounded-lg hover:bg-[#1f1f1f] transition-colors"
+            className="w-8 h-8 flex items-center justify-center text-ink-3 hover:text-white rounded-lg hover:bg-[#1f1f1f] transition-colors"
           >
             ···
           </button>
@@ -427,10 +427,10 @@ function UnlockScreen({
           className="w-16 h-16 mx-auto mb-6 flex items-center justify-center rounded-2xl"
           style={{ background: 'rgba(14,165,233,.1)', border: '1px solid rgba(14,165,233,.2)' }}
         >
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0EA5E9" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="11" width="18" height="11" rx="2" />
             <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-            <circle cx="12" cy="16" r="1" fill="#0EA5E9" />
+            <circle cx="12" cy="16" r="1" fill="var(--blue)" />
           </svg>
         </div>
 
@@ -471,7 +471,7 @@ function UnlockScreen({
               </button>
             </div>
             {isDemo && (
-              <p className="text-[11px] text-[#0EA5E9] mt-2 text-center">
+              <p className="text-[11px] text-brand mt-2 text-center">
                 Senha mestra de demonstração: <strong>demo1234</strong>
               </p>
             )}

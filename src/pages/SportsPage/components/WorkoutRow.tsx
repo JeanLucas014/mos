@@ -22,15 +22,15 @@ export function WorkoutRow({ w, onDelete }: { w: Sport; onDelete: (id: string) =
       <div className="flex-shrink-0">{icon}</div>
       <div className="flex-1 flex items-center gap-2 min-w-0 overflow-hidden">
         <span className="text-sm font-semibold text-white flex-shrink-0">{label}</span>
-        {km && <span className="text-sm text-[#555] flex-shrink-0">{km}</span>}
+        {km && <span className="text-sm text-ink-3 flex-shrink-0">{km}</span>}
         {km && <span className="text-[#333] flex-shrink-0">·</span>}
-        <span className="text-sm text-[#555] flex-shrink-0">{fmtDurationShort(w.duration_s)}</span>
+        <span className="text-sm text-ink-3 flex-shrink-0">{fmtDurationShort(w.duration_s)}</span>
       </div>
       <div className="flex items-center gap-3 flex-shrink-0">
         {w.pace_label && (
-          <span className="text-sm font-bold" style={{ fontFamily: 'Sora, sans-serif', color: '#0EA5E9' }}>{w.pace_label}</span>
+          <span className="text-sm font-bold" style={{ fontFamily: 'Sora, sans-serif', color: 'var(--blue)' }}>{w.pace_label}</span>
         )}
-        <span className="text-xs text-[#555]">{fmtDayLabel(w.sport_date)}</span>
+        <span className="text-xs text-ink-3">{fmtDayLabel(w.sport_date)}</span>
         <button
           onClick={() => onDelete(w.id)}
           aria-label="Excluir treino"

@@ -42,7 +42,7 @@ export function TaskItem({ task, subtasks, project, showProject, onComplete, onD
         {/* Subtask toggle */}
         <button
           onClick={() => setExpanded(v => !v)}
-          className={['w-4 shrink-0 mt-0.5 transition-colors', subtasks.length > 0 ? 'text-[#555] hover:text-white' : 'invisible'].join(' ')}
+          className={['w-4 shrink-0 mt-0.5 transition-colors', subtasks.length > 0 ? 'text-ink-3 hover:text-white' : 'invisible'].join(' ')}
         >
           {subtasks.length > 0
             ? (expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />)
@@ -54,7 +54,7 @@ export function TaskItem({ task, subtasks, project, showProject, onComplete, onD
           onClick={() => onComplete(task)}
           className={[
             'w-4 h-4 rounded-full border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all',
-            isDone ? 'border-[#555] bg-[#555]' : 'hover:border-[#0EA5E9]',
+            isDone ? 'border-ink-3 bg-ink-3' : 'hover:border-brand',
           ].join(' ')}
           style={{ borderColor: isDone ? 'var(--text3)' : cfg.color, minWidth: 28, minHeight: 28, margin: '-6px 0' }}
         >
@@ -67,7 +67,7 @@ export function TaskItem({ task, subtasks, project, showProject, onComplete, onD
 
         {/* Content */}
         <div className="flex-1 min-w-0 cursor-pointer" onClick={() => !isDone && onClick(task)}>
-          <div className={['text-sm leading-snug', isDone ? 'line-through text-[#555]' : 'text-[#ddd]'].join(' ')}>
+          <div className={['text-sm leading-snug', isDone ? 'line-through text-ink-3' : 'text-[#ddd]'].join(' ')}>
             {task.title}
           </div>
 
@@ -82,13 +82,13 @@ export function TaskItem({ task, subtasks, project, showProject, onComplete, onD
               </span>
             )}
             {showProject && project && (
-              <span className="flex items-center gap-1 text-[11px] text-[#555]">
+              <span className="flex items-center gap-1 text-[11px] text-ink-3">
                 <span className="w-2 h-2 rounded-full" style={{ background: project.color }} />
                 {project.name}
               </span>
             )}
             {subtasks.length > 0 && (
-              <span className="text-[11px] text-[#555]">{subtasks.length} subtarefa{subtasks.length !== 1 ? 's' : ''}</span>
+              <span className="text-[11px] text-ink-3">{subtasks.length} subtarefa{subtasks.length !== 1 ? 's' : ''}</span>
             )}
           </div>
         </div>
@@ -106,7 +106,7 @@ export function TaskItem({ task, subtasks, project, showProject, onComplete, onD
           {!isDone && (
             <button
               onClick={() => onAddSubtask(task)}
-              className="text-[#555] hover:text-[#0EA5E9] transition-colors p-1"
+              className="text-ink-3 hover:text-brand transition-colors p-1"
               title="Adicionar subtarefa"
             >
               <Plus size={13} />
@@ -114,7 +114,7 @@ export function TaskItem({ task, subtasks, project, showProject, onComplete, onD
           )}
           <button
             onClick={() => onDelete(task.id)}
-            className="text-[#555] hover:text-[#ef4444] transition-colors p-1"
+            className="text-ink-3 hover:text-[#ef4444] transition-colors p-1"
             title="Excluir"
           >
             <Trash2 size={13} />

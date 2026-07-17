@@ -25,8 +25,8 @@ export function InvestimentoModal({
   const isVariavel = ['acoes', 'fiis', 'etfs'].includes(form.tipo ?? '')
 
   const inp =
-    'w-full bg-bg border border-line rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#0EA5E9]/60 transition-colors'
-  const lbl = 'block text-[11px] text-[#555] uppercase tracking-wider mb-1'
+    'w-full bg-bg border border-line rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-brand/60 transition-colors'
+  const lbl = 'block text-[11px] text-ink-3 uppercase tracking-wider mb-1'
 
   function upd<K extends keyof Investimento>(k: K, v: Investimento[K]) {
     setForm(f => ({ ...f, [k]: v }))
@@ -53,7 +53,7 @@ export function InvestimentoModal({
           <span className="text-sm font-semibold font-[Sora] text-white">
             {isEdit ? 'Editar ativo' : 'Novo ativo'}
           </span>
-          <button onClick={onClose} className="text-[#555] hover:text-white">
+          <button onClick={onClose} className="text-ink-3 hover:text-white">
             <X size={15} />
           </button>
         </div>
@@ -154,7 +154,7 @@ export function InvestimentoModal({
           {isRF && (
             <>
               <div className="border-t border-line pt-3">
-                <div className="text-[11px] text-[#0EA5E9] uppercase tracking-wider mb-3">
+                <div className="text-[11px] text-brand uppercase tracking-wider mb-3">
                   Dados da aplicação
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -251,7 +251,7 @@ export function InvestimentoModal({
           {/* Renda Variável */}
           {isVariavel && (
             <div className="border-t border-line pt-3">
-              <div className="text-[11px] text-[#0EA5E9] uppercase tracking-wider mb-3">
+              <div className="text-[11px] text-brand uppercase tracking-wider mb-3">
                 Posição atual
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -316,7 +316,7 @@ export function InvestimentoModal({
           {/* Cripto e Fundos */}
           {(form.tipo === 'cripto' || form.tipo === 'fundos' || form.tipo === 'outros') && (
             <div className="border-t border-line pt-3">
-              <div className="text-[11px] text-[#0EA5E9] uppercase tracking-wider mb-3">
+              <div className="text-[11px] text-brand uppercase tracking-wider mb-3">
                 Posição
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -361,14 +361,14 @@ export function InvestimentoModal({
         <div className="flex gap-2 px-5 py-4 border-t border-line sticky bottom-0 bg-bg-2">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-[#555] border border-line rounded-xl hover:text-white"
+            className="px-4 py-2 text-sm text-ink-3 border border-line rounded-xl hover:text-white"
           >
             Cancelar
           </button>
           <button
             onClick={handleSave}
             disabled={saving || !form.nome?.trim()}
-            className="flex-1 py-2 text-sm font-semibold bg-[#0EA5E9] text-black rounded-xl hover:bg-[#38bdf8] disabled:opacity-40"
+            className="flex-1 py-2 text-sm font-semibold bg-brand text-black rounded-xl hover:bg-[#38bdf8] disabled:opacity-40"
           >
             {saving ? 'Salvando…' : isEdit ? 'Salvar alterações' : 'Adicionar ativo'}
           </button>

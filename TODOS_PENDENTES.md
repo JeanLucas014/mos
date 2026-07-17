@@ -17,23 +17,29 @@ Nenhum item pendente de decisão de produto neste momento. Se novos
 TODO/FIXME/HACK forem introduzidos no futuro, adicione aqui: arquivo,
 linha e descrição, antes de resolver ou descartar.
 
-## B3 — Padronizar tokens de cor (parcial)
+## B3 — Padronizar tokens de cor (concluído, com 11 exceções documentadas)
 
 O item B3 do audit pedia para substituir `#0EA5E9`/`#555`/`#aaa` hardcoded
-pelos tokens do design system (`text-brand`, `text-ink-3`, etc.). O escopo
-real é ~433 ocorrências no projeto todo — bem maior que os 3 arquivos
-citados como exemplo no audit (ConfigTab, MesTab, Tarefas/index).
+pelos tokens do design system. Escopo final: 433 → 11 ocorrências restantes
+(309 → 11 na segunda rodada, depois de 124 já resolvidas nos 3 arquivos
+originais). As 11 que ficaram são intencionais, não esquecidas:
 
-Por decisão do usuário, o trabalho foi limitado a esses 3 arquivos/pastas
-(commit `cd581b3`). As demais ~300 ocorrências espalhadas por outras
-páginas/componentes ficam pendentes — muitas são constantes de paleta
-locais por arquivo (`const C = { b: '#0EA5E9', ... }`) usadas com
-concatenação de alpha (`C.b + '18'`), que exigem uma abordagem diferente
-(não dá pra trocar direto por `var(--brand)`, pois não é possível
-concatenar sufixo hex numa referência `var()`). Se for retomar, vale
-separar em duas frentes: (1) classes Tailwind arbitrary-value simples
-(substituição direta, como feito aqui) e (2) paletas locais com alpha
-(precisam de CSS vars dedicadas por opacidade, ou `color-mix()`).
+- **Defaults de dados** (nunca devem virar token, são valores armazenados):
+  `EventModal.tsx:52`, `RotinaTab.tsx:14`, `Agenda/index.tsx:267`,
+  `Tarefas/index.tsx:171,244`, `ProjectModal.tsx:19` (cor padrão de
+  evento/rotina/projeto/tarefa) e `ProjectModal.tsx:6` (paleta de swatches
+  selecionáveis — os valores em si são os dados).
+- **Concatenação de alpha** (quebraria com `var()`, precisa de CSS var
+  dedicada por opacidade ou `color-mix()`): `GoalsPage.tsx:432` (`c` vira
+  `${c}50` na linha 434), `ShoppingPage.tsx:130` (`+ '22'`),
+  `SistemasPage.tsx` (paleta local `const C = {...}` inteira, usada com
+  `+ 'NN'` em vários lugares), `GoalsPage.tsx:18` (`AREA_COLOR.carreira`
+  flui por `aColor()` até o mesmo padrão de concat).
+
+Todo o resto (~298 ocorrências) foi convertido para tokens do design
+system (`text-brand`, `bg-brand`, `border-brand`, `text-ink-3`,
+`text-ink-2`, `var(--blue)`, `var(--text2)`), verificado sem regressão
+via `tsc` + build + grep por padrões de concat quebrados.
 
 ## B15 — Virtualização de listas longas (não implementado)
 

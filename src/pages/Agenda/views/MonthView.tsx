@@ -39,7 +39,7 @@ export function MonthView({ events, currentDate, onSelectEvent, onSelectSlot }: 
       {/* Day headers */}
       <div className="grid grid-cols-7 mb-1">
         {DAYS_PT.map(d => (
-          <div key={d} className="text-center text-[10px] text-[#555] uppercase tracking-wider py-1">
+          <div key={d} className="text-center text-[10px] text-ink-3 uppercase tracking-wider py-1">
             {d}
           </div>
         ))}
@@ -60,7 +60,7 @@ export function MonthView({ events, currentDate, onSelectEvent, onSelectSlot }: 
                 <>
                   <div className={['rounded-full flex items-center justify-center font-bold mb-0.5',
                     'text-[10px] sm:text-xs w-5 h-5 sm:w-6 sm:h-6',
-                    isToday ? 'bg-[#0EA5E9] text-black' : 'text-[#888]',
+                    isToday ? 'bg-brand text-black' : 'text-[#888]',
                   ].join(' ')}>
                     {day.getDate()}
                   </div>
@@ -74,7 +74,7 @@ export function MonthView({ events, currentDate, onSelectEvent, onSelectSlot }: 
                       </div>
                     ))}
                     {dayEvs.length > (window.innerWidth < 640 ? 1 : 3) && (
-                      <div className="text-[9px] text-[#555]">+{dayEvs.length - (window.innerWidth < 640 ? 1 : 3)} mais</div>
+                      <div className="text-[9px] text-ink-3">+{dayEvs.length - (window.innerWidth < 640 ? 1 : 3)} mais</div>
                     )}
                   </div>
                 </>

@@ -151,7 +151,7 @@ export function ExtratoView({ trees }: Props) {
             style={segment === s.id ? { borderColor: s.color + '80', color: s.color } : {}}
             className={[
               'flex-1 py-1.5 text-xs rounded-lg border transition-colors',
-              segment === s.id ? '' : 'border-line text-[#555] hover:text-white',
+              segment === s.id ? '' : 'border-line text-ink-3 hover:text-white',
             ].join(' ')}
           >
             {s.label}
@@ -167,16 +167,16 @@ export function ExtratoView({ trees }: Props) {
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Buscar por nome…"
-            className="w-full bg-bg-2 border border-line rounded-lg pl-8 pr-3 py-2 text-sm text-white outline-none focus:border-[#0EA5E9]/60"
+            className="w-full bg-bg-2 border border-line rounded-lg pl-8 pr-3 py-2 text-sm text-white outline-none focus:border-brand/60"
           />
         </div>
 
         <div className="relative shrink-0">
-          <ArrowUpDown size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#555] pointer-events-none" />
+          <ArrowUpDown size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-3 pointer-events-none" />
           <select
             value={sortOption}
             onChange={e => setSortOption(e.target.value as SortOption)}
-            className="bg-bg-2 border border-line rounded-lg pl-7 pr-2.5 py-2 text-xs text-[#ccc] outline-none cursor-pointer appearance-none max-w-[150px] focus:border-[#0EA5E9]/60"
+            className="bg-bg-2 border border-line rounded-lg pl-7 pr-2.5 py-2 text-xs text-[#ccc] outline-none cursor-pointer appearance-none max-w-[150px] focus:border-brand/60"
           >
             {SORT_OPTIONS.map(o => (
               <option key={o.id} value={o.id}>{o.label}</option>
@@ -186,7 +186,7 @@ export function ExtratoView({ trees }: Props) {
       </div>
 
       {/* Summary */}
-      <div className="flex items-center justify-between mb-3 text-xs text-[#555]">
+      <div className="flex items-center justify-between mb-3 text-xs text-ink-3">
         <span>{filteredItems.length} lançamento{filteredItems.length !== 1 ? 's' : ''}</span>
         <span className="tabular-nums font-medium" style={{ color: activeColor }}>{BRL(total)}</span>
       </div>
@@ -200,7 +200,7 @@ export function ExtratoView({ trees }: Props) {
             const item = block.item
             return (
               <div key={item.id} className={['flex items-center gap-3 py-2.5', borderTopClass].join(' ')}>
-                <span className="text-xs text-[#555] tabular-nums w-9 shrink-0">{fmtDate(item.data)}</span>
+                <span className="text-xs text-ink-3 tabular-nums w-9 shrink-0">{fmtDate(item.data)}</span>
                 <div className="flex-1 min-w-0 text-sm text-[#ddd] truncate">{item.nome}</div>
                 <span className="tabular-nums text-sm font-medium shrink-0" style={{ color: activeColor }}>
                   {BRL(item.valor)}
@@ -225,7 +225,7 @@ export function ExtratoView({ trees }: Props) {
                 <div key={child.id} className="flex items-center gap-3 py-1.5">
                   <span className="w-9 shrink-0" />
                   <span className="text-[11px] text-[#444] w-3.5 shrink-0 text-center">↳</span>
-                  <span className="text-[11px] text-[#555] tabular-nums w-7 shrink-0">{fmtDate(child.data)}</span>
+                  <span className="text-[11px] text-ink-3 tabular-nums w-7 shrink-0">{fmtDate(child.data)}</span>
                   <div className="flex-1 min-w-0 text-[13px] text-[#999] truncate">{child.nome}</div>
                   <span className="tabular-nums text-[13px] shrink-0 opacity-75" style={{ color: activeColor }}>
                     {BRL(child.valor)}
@@ -237,7 +237,7 @@ export function ExtratoView({ trees }: Props) {
         })}
 
         {blocks.length === 0 && (
-          <div className="text-center py-12 text-[#555] text-sm">
+          <div className="text-center py-12 text-ink-3 text-sm">
             {query ? 'Nenhum resultado para essa busca.' : 'Nenhum lançamento neste mês.'}
           </div>
         )}

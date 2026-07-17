@@ -38,7 +38,7 @@ export function YearStats({ workouts, year }: { workouts: Sport[]; year: string 
             {modalityCounts.map(m => (
               <div key={m.key} className="text-center">
                 <div className="text-lg font-bold text-white" style={{ fontFamily: 'Sora, sans-serif' }}>{m.count}</div>
-                <div className="text-xs text-[#555]">{m.label}</div>
+                <div className="text-xs text-ink-3">{m.label}</div>
               </div>
             ))}
           </div>
@@ -48,7 +48,7 @@ export function YearStats({ workouts, year }: { workouts: Sport[]; year: string 
         {stats.map(s => (
           <div key={s.label} className="border border-[#1f1f1f] rounded-xl p-3" style={{ background: 'var(--bg2)' }}>
             <div className="text-[9px] sm:text-[10px] uppercase tracking-widest font-bold text-[#444] mb-1.5">{s.label}</div>
-            <div className="text-xl sm:text-2xl font-bold" style={{ fontFamily: 'Sora, sans-serif', color: '#0EA5E9', wordBreak: 'break-word' }}>{s.value}</div>
+            <div className="text-xl sm:text-2xl font-bold" style={{ fontFamily: 'Sora, sans-serif', color: 'var(--blue)', wordBreak: 'break-word' }}>{s.value}</div>
           </div>
         ))}
       </div>

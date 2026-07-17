@@ -52,7 +52,7 @@ export function PerfilTab() {
       <section className="space-y-3">
         {/* Avatar + name display */}
         <div className="rounded-xl border border-line p-5 flex items-center gap-5" style={{ background: 'var(--bg2)' }}>
-          <div className="flex-shrink-0 flex items-center justify-center rounded-full text-white" style={{ width: 64, height: 64, background: '#0EA5E9', fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 24 }}>
+          <div className="flex-shrink-0 flex items-center justify-center rounded-full text-white" style={{ width: 64, height: 64, background: 'var(--blue)', fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 24 }}>
             {initials(displayName, email)}
           </div>
           <div className="flex-1 min-w-0">

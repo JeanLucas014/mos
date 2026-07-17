@@ -162,7 +162,7 @@ function GoalRow({
   }
 
   const pct = Math.max(0, Math.min(100, goal.progress ?? 0))
-  const colorPct = pct >= 75 ? '#34d399' : pct >= 40 ? '#0EA5E9' : '#fbbf24'
+  const colorPct = pct >= 75 ? '#34d399' : pct >= 40 ? 'var(--blue)' : '#fbbf24'
   const ac = aColor(goal.area)
 
   return (
@@ -335,7 +335,7 @@ function AddModal({
             <input
               type="range" min={0} max={100} value={progress}
               onChange={(e) => setProgress(parseInt(e.target.value))}
-              className="w-full" style={{ accentColor: '#0EA5E9', cursor: 'pointer' }}
+              className="w-full" style={{ accentColor: 'var(--blue)', cursor: 'pointer' }}
             />
           </div>
 
@@ -437,7 +437,7 @@ export function GoalsPage() {
                 onClick={() => setAreaFilter(a)}
                 style={{
                   padding: '5px 14px', borderRadius: 20, fontSize: 11, fontWeight: active ? 600 : 400,
-                  background: active ? (a === 'todas' ? '#0EA5E9' : c + '18') : 'transparent',
+                  background: active ? (a === 'todas' ? 'var(--blue)' : c + '18') : 'transparent',
                   border: active ? `1px solid ${c}50` : '1px solid rgba(255,255,255,.08)',
                   color: active ? (a === 'todas' ? '#fff' : c) : 'var(--text2)',
                   cursor: 'pointer', textTransform: 'capitalize',

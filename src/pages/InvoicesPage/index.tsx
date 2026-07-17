@@ -32,7 +32,7 @@ export function InvoicesPage() {
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 7,
               padding: '9px 16px',
-              background: 'linear-gradient(135deg, #0EA5E9, #0284c7)',
+              background: 'linear-gradient(135deg, var(--blue), #0284c7)',
               border: 'none', borderRadius: 10,
               color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer',
             }}

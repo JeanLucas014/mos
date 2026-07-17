@@ -13,7 +13,7 @@ export function SimuladorTab({ taxas }: { taxas: Taxa[] }) {
   const [percentualCDI, setPercentualCDI] = useState('115')
 
   const inp =
-    'w-full bg-bg border border-line rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#0EA5E9]/60'
+    'w-full bg-bg border border-line rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-brand/60'
 
   const resultado = useMemo(() => {
     const VI  = parseFloat(valorInicial) || 0
@@ -60,11 +60,11 @@ export function SimuladorTab({ taxas }: { taxas: Taxa[] }) {
   return (
     <div className="space-y-5">
       <div className="bg-bg-2 border border-line rounded-xl p-5 space-y-4">
-        <div className="text-xs text-[#555] uppercase tracking-wider font-[Sora]">Parâmetros</div>
+        <div className="text-xs text-ink-3 uppercase tracking-wider font-[Sora]">Parâmetros</div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label className="block text-[11px] text-[#555] uppercase tracking-wider mb-1">
+            <label className="block text-[11px] text-ink-3 uppercase tracking-wider mb-1">
               Valor inicial (R$)
             </label>
             <input
@@ -75,7 +75,7 @@ export function SimuladorTab({ taxas }: { taxas: Taxa[] }) {
             />
           </div>
           <div>
-            <label className="block text-[11px] text-[#555] uppercase tracking-wider mb-1">
+            <label className="block text-[11px] text-ink-3 uppercase tracking-wider mb-1">
               Aporte mensal (R$)
             </label>
             <input
@@ -86,7 +86,7 @@ export function SimuladorTab({ taxas }: { taxas: Taxa[] }) {
             />
           </div>
           <div>
-            <label className="block text-[11px] text-[#555] uppercase tracking-wider mb-1">
+            <label className="block text-[11px] text-ink-3 uppercase tracking-wider mb-1">
               Prazo (anos)
             </label>
             <input
@@ -101,7 +101,7 @@ export function SimuladorTab({ taxas }: { taxas: Taxa[] }) {
         </div>
 
         <div>
-          <label className="block text-[11px] text-[#555] uppercase tracking-wider mb-2">
+          <label className="block text-[11px] text-ink-3 uppercase tracking-wider mb-2">
             Indexador
           </label>
           <div className="flex gap-2 flex-wrap">
@@ -111,9 +111,9 @@ export function SimuladorTab({ taxas }: { taxas: Taxa[] }) {
                 onClick={() => setTaxa(t.id)}
                 className="px-3 py-1.5 text-xs rounded-lg border transition-colors"
                 style={{
-                  borderColor: taxa === t.id ? '#0EA5E9' : 'var(--border)',
+                  borderColor: taxa === t.id ? 'var(--blue)' : 'var(--border)',
                   background: taxa === t.id ? 'rgba(14,165,233,.12)' : 'transparent',
-                  color: taxa === t.id ? '#0EA5E9' : 'var(--text3)',
+                  color: taxa === t.id ? 'var(--blue)' : 'var(--text3)',
                 }}
               >
                 {t.label}
@@ -124,7 +124,7 @@ export function SimuladorTab({ taxas }: { taxas: Taxa[] }) {
 
         {taxa === 'CDI' && (
           <div>
-            <label className="block text-[11px] text-[#555] uppercase tracking-wider mb-1">
+            <label className="block text-[11px] text-ink-3 uppercase tracking-wider mb-1">
               % do CDI
             </label>
             <input
@@ -138,7 +138,7 @@ export function SimuladorTab({ taxas }: { taxas: Taxa[] }) {
         )}
         {(taxa === 'IPCA_MAIS' || taxa === 'PERSONALIZADO') && (
           <div>
-            <label className="block text-[11px] text-[#555] uppercase tracking-wider mb-1">
+            <label className="block text-[11px] text-ink-3 uppercase tracking-wider mb-1">
               {taxa === 'IPCA_MAIS' ? 'IPCA + (% a.a.)' : 'Taxa anual (%)'}
             </label>
             <input
@@ -155,12 +155,12 @@ export function SimuladorTab({ taxas }: { taxas: Taxa[] }) {
       {/* Resultado */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
-          { label: 'Montante final',  value: BRL(resultado.montante),      color: '#0EA5E9' },
+          { label: 'Montante final',  value: BRL(resultado.montante),      color: 'var(--blue)' },
           { label: 'Total aportado',  value: BRL(resultado.totalAportado), color: 'var(--text2)' },
           { label: 'Rendimento',      value: BRL(resultado.rendimento),    color: '#22c55e' },
         ].map((c, i) => (
           <div key={i} className="bg-bg-2 border border-line rounded-xl p-4">
-            <div className="text-[11px] text-[#555] uppercase tracking-wider mb-1">{c.label}</div>
+            <div className="text-[11px] text-ink-3 uppercase tracking-wider mb-1">{c.label}</div>
             <div
               className="text-xl font-bold tabular-nums"
               style={{ color: c.color, fontFamily: 'JetBrains Mono, monospace' }}
@@ -171,7 +171,7 @@ export function SimuladorTab({ taxas }: { taxas: Taxa[] }) {
         ))}
       </div>
 
-      <div className="bg-bg-2 border border-line rounded-xl p-4 text-center text-xs text-[#555]">
+      <div className="bg-bg-2 border border-line rounded-xl p-4 text-center text-xs text-ink-3">
         Taxa efetiva:{' '}
         <span className="text-white font-medium">
           {resultado.taxaAnual.toFixed(2)}% a.a.

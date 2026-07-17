@@ -108,20 +108,20 @@ export function PluggyConnect() {
       {/* Conexões ativas */}
       {connections.length > 0 && (
         <div className="space-y-0 mb-4">
-          <div className="text-[10px] text-[#555] uppercase tracking-wider font-[Sora] mb-2">Conectados</div>
+          <div className="text-[10px] text-ink-3 uppercase tracking-wider font-[Sora] mb-2">Conectados</div>
           {connections.map(conn => (
             <div key={conn.id} className="group flex items-center gap-3 py-2.5 border-b border-[#1f1f1f]">
               <CheckCircle size={13} className="text-[#22c55e] shrink-0" />
               <div className="flex-1 min-w-0">
                 <div className="text-sm text-white font-medium">{conn.bank_name}</div>
-                <div className="text-[10px] text-[#555]">
+                <div className="text-[10px] text-ink-3">
                   {conn.account_type === 'credit' ? 'Cartão crédito' : 'Débito'} ·
                   desde {formatDateBR(conn.created_at)}
                 </div>
               </div>
               <button
                 onClick={() => handleDisconnect(conn.id)}
-                className="opacity-0 group-hover:opacity-100 transition-opacity text-[#555] hover:text-[#ef4444]"
+                className="opacity-0 group-hover:opacity-100 transition-opacity text-ink-3 hover:text-[#ef4444]"
               >
                 <Trash2 size={12} />
               </button>
@@ -131,7 +131,7 @@ export function PluggyConnect() {
       )}
 
       {/* Botões para conectar */}
-      <div className="text-[10px] text-[#555] uppercase tracking-wider font-[Sora] mb-2">Conectar banco</div>
+      <div className="text-[10px] text-ink-3 uppercase tracking-wider font-[Sora] mb-2">Conectar banco</div>
       {BANKS.map(bank => {
         const connected = connections.some(c => c.bank_name === bank.name)
         const isLoading = pendingBank?.name === bank.name
@@ -151,13 +151,13 @@ export function PluggyConnect() {
             <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: bank.color }} />
             <div className="flex-1 min-w-0">
               <div className="text-sm text-white font-medium">{bank.name}</div>
-              <div className="text-[10px] text-[#555]">{bank.desc}</div>
+              <div className="text-[10px] text-ink-3">{bank.desc}</div>
             </div>
             {connected
               ? <CheckCircle size={13} className="text-[#22c55e] shrink-0" />
               : isLoading
-              ? <Loader2 size={13} className="animate-spin text-[#0EA5E9] shrink-0" />
-              : <Link2 size={13} className="text-[#0EA5E9] shrink-0" />
+              ? <Loader2 size={13} className="animate-spin text-brand shrink-0" />
+              : <Link2 size={13} className="text-brand shrink-0" />
             }
           </button>
         )

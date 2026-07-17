@@ -19,9 +19,9 @@ export function HelpModal({ content, onClose }: Props) {
         <div className="flex items-center justify-between px-5 py-4 border-b border-[#1f1f1f] sticky top-0 bg-[#111111]">
           <div>
             <span className="text-sm font-semibold font-[Sora] text-white">{content.title}</span>
-            <p className="text-[11px] text-[#555] mt-0.5">{content.subtitle}</p>
+            <p className="text-[11px] text-ink-3 mt-0.5">{content.subtitle}</p>
           </div>
-          <button onClick={onClose} className="text-[#555] hover:text-white transition-colors shrink-0">
+          <button onClick={onClose} className="text-ink-3 hover:text-white transition-colors shrink-0">
             <X size={16} />
           </button>
         </div>
@@ -46,7 +46,7 @@ export function HelpModal({ content, onClose }: Props) {
         <div className="px-5 py-4 border-t border-[#1f1f1f] sticky bottom-0 bg-[#111111]">
           <button
             onClick={onClose}
-            className="w-full py-2.5 bg-[#0EA5E9] text-black font-semibold text-sm rounded-xl hover:bg-[#38bdf8] transition-colors"
+            className="w-full py-2.5 bg-brand text-black font-semibold text-sm rounded-xl hover:bg-[#38bdf8] transition-colors"
           >
             Entendi
           </button>

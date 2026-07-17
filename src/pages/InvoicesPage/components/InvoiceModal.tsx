@@ -153,7 +153,7 @@ export function InvoiceModal({ initial, onClose }: ModalProps) {
             disabled={saving}
             style={{
               flex: 1, padding: '12px', borderRadius: 10,
-              background: 'linear-gradient(135deg, #0EA5E9, #0284c7)',
+              background: 'linear-gradient(135deg, var(--blue), #0284c7)',
               border: 'none', color: '#fff', fontSize: 13, fontWeight: 600,
               cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1,
             }}

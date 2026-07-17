@@ -133,11 +133,11 @@ export function TaskModal({ task, projects, onSave, onClose, onDelete }: Props) 
           </span>
           <div className="flex items-center gap-2">
             {!isNew && onDelete && (
-              <button onClick={onDelete} className="text-[#555] hover:text-[#ef4444] transition-colors">
+              <button onClick={onDelete} className="text-ink-3 hover:text-[#ef4444] transition-colors">
                 <Trash2 size={14} />
               </button>
             )}
-            <button onClick={onClose} className="text-[#555] hover:text-white transition-colors">
+            <button onClick={onClose} className="text-ink-3 hover:text-white transition-colors">
               <X size={15} />
             </button>
           </div>
@@ -155,7 +155,7 @@ export function TaskModal({ task, projects, onSave, onClose, onDelete }: Props) 
                 onClick={() => setActiveTab(tab.id as 'details' | 'comments')}
                 className={[
                   'px-4 py-2.5 text-xs font-medium border-b-2 -mb-px transition-colors',
-                  activeTab === tab.id ? 'text-[#0EA5E9] border-[#0EA5E9]' : 'text-[#555] border-transparent',
+                  activeTab === tab.id ? 'text-brand border-brand' : 'text-ink-3 border-transparent',
                 ].join(' ')}
               >
                 {tab.label}
@@ -183,14 +183,14 @@ export function TaskModal({ task, projects, onSave, onClose, onDelete }: Props) 
                 onChange={e => setDesc(e.target.value)}
                 placeholder="Descrição (opcional)"
                 rows={2}
-                className="w-full bg-transparent text-sm text-[#aaa] outline-none resize-none placeholder:text-[#2a2a2a]"
+                className="w-full bg-transparent text-sm text-ink-2 outline-none resize-none placeholder:text-[#2a2a2a]"
               />
 
               <div className="border-t border-[#1f1f1f] pt-4 space-y-3">
                 {/* Priority */}
                 <div className="flex items-center gap-2">
-                  <Flag size={14} className="text-[#555] shrink-0" />
-                  <span className="text-xs text-[#555] w-20 shrink-0">Prioridade</span>
+                  <Flag size={14} className="text-ink-3 shrink-0" />
+                  <span className="text-xs text-ink-3 w-20 shrink-0">Prioridade</span>
                   <div className="flex gap-1">
                     {priorities.map(p => {
                       const c = PRIORITY_CFG[p]
@@ -214,12 +214,12 @@ export function TaskModal({ task, projects, onSave, onClose, onDelete }: Props) 
 
                 {/* Project */}
                 <div className="flex items-center gap-2">
-                  <FolderOpen size={14} className="text-[#555] shrink-0" />
-                  <span className="text-xs text-[#555] w-20 shrink-0">Projeto</span>
+                  <FolderOpen size={14} className="text-ink-3 shrink-0" />
+                  <span className="text-xs text-ink-3 w-20 shrink-0">Projeto</span>
                   <select
                     value={projectId ?? ''}
                     onChange={e => setProjectId(e.target.value || null)}
-                    className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-[#0EA5E9]/60"
+                    className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-brand/60"
                   >
                     <option value="">Inbox (sem projeto)</option>
                     {projects.map(p => (
@@ -230,28 +230,28 @@ export function TaskModal({ task, projects, onSave, onClose, onDelete }: Props) 
 
                 {/* Due date */}
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Calendar size={14} className="text-[#555] shrink-0" />
-                  <span className="text-xs text-[#555] w-20 shrink-0">Vencimento</span>
+                  <Calendar size={14} className="text-ink-3 shrink-0" />
+                  <span className="text-xs text-ink-3 w-20 shrink-0">Vencimento</span>
                   <DatePicker value={dueDate} onChange={setDueDate} />
                   {dueDate && (
                     <input
                       type="time"
                       value={dueTime}
                       onChange={e => setDueTime(e.target.value)}
-                      className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-[#0EA5E9]/60"
+                      className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-brand/60"
                     />
                   )}
                 </div>
 
                 {/* Recurrence */}
                 <div className="flex items-start gap-2">
-                  <RotateCcw size={14} className="text-[#555] shrink-0 mt-1.5" />
-                  <span className="text-xs text-[#555] w-20 shrink-0 mt-1.5">Repetir</span>
+                  <RotateCcw size={14} className="text-ink-3 shrink-0 mt-1.5" />
+                  <span className="text-xs text-ink-3 w-20 shrink-0 mt-1.5">Repetir</span>
                   <div className="flex-1 space-y-2">
                     <select
                       value={recurrence}
                       onChange={e => setRecurrence(e.target.value)}
-                      className="w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-[#0EA5E9]/60"
+                      className="w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-brand/60"
                     >
                       {RECURRENCE_OPTIONS.map(o => (
                         <option key={o.id} value={o.id}>{o.label}</option>
@@ -259,7 +259,7 @@ export function TaskModal({ task, projects, onSave, onClose, onDelete }: Props) 
                     </select>
                     {recurrence === 'weekly' && (
                       <div className="space-y-1.5">
-                        <div className="text-[10px] text-[#555]">Dias da semana:</div>
+                        <div className="text-[10px] text-ink-3">Dias da semana:</div>
                         <div className="flex gap-1.5">
                           {WEEK_DAYS.map(d => (
                             <button
@@ -270,8 +270,8 @@ export function TaskModal({ task, projects, onSave, onClose, onDelete }: Props) 
                               className={[
                                 'w-8 h-8 text-xs rounded-full border transition-colors font-medium',
                                 recDays.includes(d.id)
-                                  ? 'border-[#0EA5E9] bg-[#0EA5E9]/20 text-[#0EA5E9]'
-                                  : 'border-[#1f1f1f] text-[#555] hover:text-white',
+                                  ? 'border-brand bg-brand/20 text-brand'
+                                  : 'border-[#1f1f1f] text-ink-3 hover:text-white',
                               ].join(' ')}
                             >
                               {d.label}
@@ -293,20 +293,20 @@ export function TaskModal({ task, projects, onSave, onClose, onDelete }: Props) 
                 <div key={c.id} className="group flex gap-2">
                   <div className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-2">
                     <div className="text-sm text-[#ddd]">{c.content}</div>
-                    <div className="text-[10px] text-[#555] mt-1">
+                    <div className="text-[10px] text-ink-3 mt-1">
                       {c.created_at ? new Date(c.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}
                     </div>
                   </div>
                   <button
                     onClick={() => handleDeleteComment(c.id)}
-                    className="opacity-0 group-hover:opacity-100 text-[#555] hover:text-[#ef4444] transition-all self-start mt-2"
+                    className="opacity-0 group-hover:opacity-100 text-ink-3 hover:text-[#ef4444] transition-all self-start mt-2"
                   >
                     <Trash2 size={12} />
                   </button>
                 </div>
               ))}
               {comments.length === 0 && (
-                <div className="text-center py-8 text-[#555] text-sm">Nenhum comentário.</div>
+                <div className="text-center py-8 text-ink-3 text-sm">Nenhum comentário.</div>
               )}
               <div className="flex gap-2 pt-2">
                 <input
@@ -314,12 +314,12 @@ export function TaskModal({ task, projects, onSave, onClose, onDelete }: Props) 
                   onChange={e => setNewComment(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleAddComment()}
                   placeholder="Adicionar comentário..."
-                  className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#0EA5E9]/60"
+                  className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-brand/60"
                 />
                 <button
                   onClick={handleAddComment}
                   disabled={!newComment.trim()}
-                  className="px-3 bg-[#0EA5E9] text-black rounded-lg font-semibold text-sm disabled:opacity-40"
+                  className="px-3 bg-brand text-black rounded-lg font-semibold text-sm disabled:opacity-40"
                 >
                   <Plus size={14} />
                 </button>
@@ -330,13 +330,13 @@ export function TaskModal({ task, projects, onSave, onClose, onDelete }: Props) 
 
         {/* Footer */}
         <div className="flex items-center justify-between px-5 py-3 border-t border-[#1f1f1f]">
-          <button onClick={onClose} className="text-sm text-[#555] hover:text-white transition-colors">
+          <button onClick={onClose} className="text-sm text-ink-3 hover:text-white transition-colors">
             Cancelar
           </button>
           <button
             onClick={handleSave}
             disabled={saving || !title.trim()}
-            className="px-4 py-2 text-sm font-semibold bg-[#0EA5E9] text-black rounded-lg hover:bg-[#38bdf8] disabled:opacity-40 transition-colors"
+            className="px-4 py-2 text-sm font-semibold bg-brand text-black rounded-lg hover:bg-[#38bdf8] disabled:opacity-40 transition-colors"
           >
             {saving ? 'Salvando…' : isNew ? 'Criar tarefa' : 'Salvar'}
           </button>

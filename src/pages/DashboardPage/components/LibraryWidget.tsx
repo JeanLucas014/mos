@@ -32,15 +32,15 @@ export function LibraryWidget() {
               )}
               {current.total_pages && current.pages_read ? (
                 <>
-                  <Bar pct={(current.pages_read / current.total_pages) * 100} color="#0EA5E9" />
-                  <div className="text-right mt-0.5" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: '#0EA5E9' }}>
+                  <Bar pct={(current.pages_read / current.total_pages) * 100} color="var(--blue)" />
+                  <div className="text-right mt-0.5" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--blue)' }}>
                     {current.pages_read}/{current.total_pages}p
                   </div>
                 </>
               ) : current.progress ? (
                 <>
-                  <Bar pct={current.progress} color="#0EA5E9" />
-                  <div className="text-right mt-0.5" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: '#0EA5E9' }}>
+                  <Bar pct={current.progress} color="var(--blue)" />
+                  <div className="text-right mt-0.5" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--blue)' }}>
                     {current.progress}%
                   </div>
                 </>

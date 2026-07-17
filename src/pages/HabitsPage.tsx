@@ -447,7 +447,7 @@ export function HabitsPage() {
                             className="h-full rounded-full transition-all duration-300"
                             style={{
                               width: `${pct}%`,
-                              background: pct === 100 ? '#34d399' : pct >= 50 ? '#0EA5E9' : '#fbbf24',
+                              background: pct === 100 ? '#34d399' : pct >= 50 ? 'var(--blue)' : '#fbbf24',
                             }}
                           />
                         </div>
@@ -561,7 +561,7 @@ export function HabitsPage() {
                         className="h-full rounded-full"
                         style={{
                           width: `${pct * 100}%`,
-                          background: pct === 1 ? '#34d399' : pct >= 0.5 ? '#0EA5E9' : '#fbbf24',
+                          background: pct === 1 ? '#34d399' : pct >= 0.5 ? 'var(--blue)' : '#fbbf24',
                           transition: 'width 0.3s',
                         }}
                       />

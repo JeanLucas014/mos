@@ -45,7 +45,7 @@ export function CarteiraTab({
           {
             label: 'Patrimônio total',
             value: BRL(patrimonioTotal),
-            color: '#0EA5E9',
+            color: 'var(--blue)',
             sub: `${items.length} ativo${items.length !== 1 ? 's' : ''}`,
           },
           {
@@ -62,14 +62,14 @@ export function CarteiraTab({
           },
         ].map((c, i) => (
           <div key={i} className="bg-bg-2 border border-line rounded-xl p-4">
-            <div className="text-[11px] text-[#555] uppercase tracking-wider mb-1">{c.label}</div>
+            <div className="text-[11px] text-ink-3 uppercase tracking-wider mb-1">{c.label}</div>
             <div
               className="text-xl font-bold tabular-nums"
               style={{ color: c.color, fontFamily: 'JetBrains Mono, monospace' }}
             >
               {c.value}
             </div>
-            <div className="text-[11px] text-[#555] mt-1">{c.sub}</div>
+            <div className="text-[11px] text-ink-3 mt-1">{c.sub}</div>
           </div>
         ))}
       </div>
@@ -81,12 +81,12 @@ export function CarteiraTab({
 
       {/* Header da lista */}
       <div className="flex items-center justify-between">
-        <span className="text-xs text-[#555] uppercase tracking-wider font-[Sora]">
+        <span className="text-xs text-ink-3 uppercase tracking-wider font-[Sora]">
           Meus ativos
         </span>
         <button
           onClick={onNovoAtivo}
-          className="flex items-center gap-1.5 text-sm text-[#0EA5E9] hover:text-white transition-colors"
+          className="flex items-center gap-1.5 text-sm text-brand hover:text-white transition-colors"
         >
           <Plus size={14} /> Adicionar ativo
         </button>
@@ -118,13 +118,13 @@ export function CarteiraTab({
                 >
                   {BRL(totalTipo)}
                 </span>
-                <span className="text-[10px] text-[#555]">
+                <span className="text-[10px] text-ink-3">
                   {ativos.length} ativo{ativos.length !== 1 ? 's' : ''}
                 </span>
                 {isOpen ? (
-                  <ChevronDown size={14} className="text-[#555]" />
+                  <ChevronDown size={14} className="text-ink-3" />
                 ) : (
-                  <ChevronRight size={14} className="text-[#555]" />
+                  <ChevronRight size={14} className="text-ink-3" />
                 )}
               </button>
 
@@ -160,14 +160,14 @@ export function CarteiraTab({
       )}
 
       {items.length === 0 && (
-        <div className="flex flex-col items-center py-16 text-center text-[#555]">
+        <div className="flex flex-col items-center py-16 text-center text-ink-3">
           <p className="text-sm mb-1">Nenhum investimento cadastrado</p>
           <p className="text-xs mb-4">
             Adicione ações, renda fixa, criptos e muito mais
           </p>
           <button
             onClick={onNovoAtivo}
-            className="bg-[#0EA5E9] text-black text-sm font-semibold px-4 py-2 rounded-xl"
+            className="bg-brand text-black text-sm font-semibold px-4 py-2 rounded-xl"
           >
             Adicionar primeiro ativo
           </button>

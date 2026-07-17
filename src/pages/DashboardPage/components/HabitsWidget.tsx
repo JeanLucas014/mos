@@ -8,7 +8,7 @@ import { Sk, Bar, Widget, BigStat } from './shared'
 export function HabitsWidget() {
   const { isLoading, total, doneToday } = useDashHabits()
   const pct   = total > 0 ? (doneToday / total) * 100 : 0
-  const color = pct >= 80 ? '#34d399' : pct >= 50 ? '#0EA5E9' : '#fbbf24'
+  const color = pct >= 80 ? '#34d399' : pct >= 50 ? 'var(--blue)' : '#fbbf24'
 
   return (
     <Widget icon={<Flame size={14} />} title="Habitos" to="/habitos">

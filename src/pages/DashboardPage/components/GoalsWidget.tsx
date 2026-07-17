@@ -12,7 +12,7 @@ export function GoalsWidget() {
     ? Math.round(goals.reduce((s, g) => s + g.progress, 0) / goals.length)
     : 0
   const top2     = [...goals].sort((a, b) => b.progress - a.progress).slice(0, 2)
-  const colorAvg = avgPct >= 75 ? '#34d399' : avgPct >= 40 ? '#0EA5E9' : '#fbbf24'
+  const colorAvg = avgPct >= 75 ? '#34d399' : avgPct >= 40 ? 'var(--blue)' : '#fbbf24'
 
   return (
     <Widget icon={<Target size={14} />} title="Metas" to="/metas">
@@ -34,7 +34,7 @@ export function GoalsWidget() {
                   <span
                     style={{
                       fontFamily: 'JetBrains Mono, monospace', fontSize: 10, fontWeight: 700, flexShrink: 0,
-                      color: g.progress >= 75 ? '#34d399' : g.progress >= 40 ? '#0EA5E9' : '#fbbf24',
+                      color: g.progress >= 75 ? '#34d399' : g.progress >= 40 ? 'var(--blue)' : '#fbbf24',
                     }}
                   >
                     {g.label ?? `${g.progress}%`}

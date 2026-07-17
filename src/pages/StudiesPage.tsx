@@ -13,7 +13,7 @@ type StudyStatus = 'ativo' | 'no prazo' | 'concluido'
 
 /* ── helpers ──────────────────────────────────────────────────────── */
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
-  ativo:     { label: 'Ativo',    color: '#0EA5E9', bg: 'rgba(14,165,233,.14)' },
+  ativo:     { label: 'Ativo',    color: 'var(--blue)', bg: 'rgba(14,165,233,.14)' },
   'no prazo':{ label: 'No prazo', color: '#34d399', bg: 'rgba(52,211,153,.12)' },
   concluido: { label: 'Concluído',color: 'var(--text2)',    bg: 'rgba(255,255,255,.06)' },
 }
@@ -57,7 +57,7 @@ function Pill({ status }: { status: string }) {
 /* ── Progress bar ─────────────────────────────────────────────────── */
 function ProgressBar({
   value,
-  color = '#0EA5E9',
+  color = 'var(--blue)',
   onChange,
 }: {
   value: number
@@ -181,7 +181,7 @@ function StudyRow({
       {/* Progress */}
       <ProgressBar
         value={study.progress ?? 0}
-        color={study.status === 'concluido' ? '#34d399' : '#0EA5E9'}
+        color={study.status === 'concluido' ? '#34d399' : 'var(--blue)'}
         onChange={(v) => onProgressChange(study.id, v)}
       />
     </div>

@@ -35,7 +35,7 @@ export function AparenciaTab() {
                 fontFamily: 'inherit',
               }}
             >
-              <Icon size={16} color={active ? '#0EA5E9' : 'var(--text3)'} />
+              <Icon size={16} color={active ? 'var(--blue)' : 'var(--text3)'} />
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 14, fontWeight: 600, color: active ? 'var(--text)' : 'var(--text3)' }}>
                   {opt.label}
@@ -47,7 +47,7 @@ export function AparenciaTab() {
               {active && (
                 <div style={{
                   width: 8, height: 8, borderRadius: '50%',
-                  background: '#0EA5E9', flexShrink: 0,
+                  background: 'var(--blue)', flexShrink: 0,
                 }} />
               )}
             </button>

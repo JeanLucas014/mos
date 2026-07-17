@@ -61,7 +61,7 @@ export default function FinanceiroPage() {
 
   if (loading) return (
     <div className="flex items-center justify-center h-48">
-      <div className="w-5 h-5 rounded-full border-2 border-[#0EA5E9] border-t-transparent animate-spin" />
+      <div className="w-5 h-5 rounded-full border-2 border-brand border-t-transparent animate-spin" />
     </div>
   )
 
@@ -73,7 +73,7 @@ export default function FinanceiroPage() {
           <h1 className="text-xl font-semibold font-[Sora] text-white">Financeiro</h1>
           <button
             onClick={() => setShowGuide(true)}
-            className="text-[#555] hover:text-[#0EA5E9] transition-colors"
+            className="text-ink-3 hover:text-brand transition-colors"
             title="Como funciona"
           >
             <HelpCircle size={15} />
@@ -82,7 +82,7 @@ export default function FinanceiroPage() {
         <select
           value={selectedYear}
           onChange={e => setSelectedYear(Number(e.target.value))}
-          className="bg-bg-2 border border-line text-white text-sm rounded-lg px-3 py-1.5 outline-none focus:border-[#0EA5E9]/60 transition-colors max-w-[120px] sm:max-w-none"
+          className="bg-bg-2 border border-line text-white text-sm rounded-lg px-3 py-1.5 outline-none focus:border-brand/60 transition-colors max-w-[120px] sm:max-w-none"
         >
           {anos.map(a => <option key={a.id} value={a.ano}>{a.ano}</option>)}
         </select>
@@ -97,8 +97,8 @@ export default function FinanceiroPage() {
             className={[
               'px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition-colors shrink-0',
               activeTab === t.id
-                ? 'text-[#0EA5E9] border-[#0EA5E9]'
-                : 'text-[#555] border-transparent hover:text-[#999]',
+                ? 'text-brand border-brand'
+                : 'text-ink-3 border-transparent hover:text-[#999]',
             ].join(' ')}
           >
             {t.label}
@@ -108,9 +108,9 @@ export default function FinanceiroPage() {
 
       {/* Content */}
       {!ano && activeTab !== 'config' ? (
-        <div className="text-center py-20 text-[#555]">
+        <div className="text-center py-20 text-ink-3">
           <p className="mb-3">Nenhum ano configurado.</p>
-          <button onClick={() => setActiveTab('config')} className="text-[#0EA5E9] text-sm hover:underline">
+          <button onClick={() => setActiveTab('config')} className="text-brand text-sm hover:underline">
             Criar ano em Configurações →
           </button>
         </div>

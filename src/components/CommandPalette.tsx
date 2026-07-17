@@ -21,7 +21,7 @@ interface Result {
 }
 
 const TYPE_CONFIG = {
-  tarefa:     { label: 'Tarefa',     color: '#0EA5E9', icon: <CheckSquare  size={14} /> },
+  tarefa:     { label: 'Tarefa',     color: 'var(--blue)', icon: <CheckSquare  size={14} /> },
   evento:     { label: 'Evento',     color: '#a78bfa', icon: <Calendar     size={14} /> },
   lancamento: { label: 'Financeiro', color: '#22c55e', icon: <DollarSign   size={14} /> },
   livro:      { label: 'Biblioteca', color: '#f97316', icon: <BookOpen     size={14} /> },

@@ -32,7 +32,7 @@ export function ProjectModal({ project, onSave, onDelete, onClose }: Props) {
           <span className="text-sm font-semibold font-[Sora] text-white">
             {isNew ? 'Novo projeto' : 'Editar projeto'}
           </span>
-          <button onClick={onClose} className="text-[#555] hover:text-white transition-colors">
+          <button onClick={onClose} className="text-ink-3 hover:text-white transition-colors">
             <X size={14} />
           </button>
         </div>
@@ -43,11 +43,11 @@ export function ProjectModal({ project, onSave, onDelete, onClose }: Props) {
           onKeyDown={e => e.key === 'Enter' && name.trim() && onSave({ ...project, name: name.trim(), color })}
           placeholder="Nome do projeto"
           autoFocus
-          className="w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#0EA5E9]/60"
+          className="w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-brand/60"
         />
 
         <div>
-          <div className="text-[10px] text-[#555] mb-2 uppercase tracking-wider">Cor</div>
+          <div className="text-[10px] text-ink-3 mb-2 uppercase tracking-wider">Cor</div>
           <div className="flex gap-2 flex-wrap">
             {COLORS.map(c => (
               <button
@@ -73,7 +73,7 @@ export function ProjectModal({ project, onSave, onDelete, onClose }: Props) {
                   onClose()
                 }
               }}
-              className="text-[#555] hover:text-[#ef4444] transition-colors p-1"
+              className="text-ink-3 hover:text-[#ef4444] transition-colors p-1"
               title="Excluir projeto"
             >
               <Trash2 size={14} />
@@ -82,14 +82,14 @@ export function ProjectModal({ project, onSave, onDelete, onClose }: Props) {
           <div className="flex-1" />
           <button
             onClick={onClose}
-            className="px-3 py-1.5 text-sm text-[#555] border border-[#1f1f1f] rounded-lg hover:text-white transition-colors"
+            className="px-3 py-1.5 text-sm text-ink-3 border border-[#1f1f1f] rounded-lg hover:text-white transition-colors"
           >
             Cancelar
           </button>
           <button
             onClick={() => name.trim() && onSave({ ...project, name: name.trim(), color })}
             disabled={!name.trim()}
-            className="px-4 py-1.5 text-sm font-semibold bg-[#0EA5E9] text-black rounded-lg disabled:opacity-40 hover:bg-[#38bdf8] transition-colors"
+            className="px-4 py-1.5 text-sm font-semibold bg-brand text-black rounded-lg disabled:opacity-40 hover:bg-[#38bdf8] transition-colors"
           >
             Salvar
           </button>

@@ -20,7 +20,7 @@ export function AlocacaoChart({ porTipo, patrimonioTotal }: AlocacaoChartProps) 
 
   return (
     <div className="bg-bg-2 border border-line rounded-xl p-4">
-      <div className="text-xs text-[#555] uppercase tracking-wider font-[Sora] mb-3">
+      <div className="text-xs text-ink-3 uppercase tracking-wider font-[Sora] mb-3">
         Alocação por classe
       </div>
       <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -57,14 +57,14 @@ export function AlocacaoChart({ porTipo, patrimonioTotal }: AlocacaoChartProps) 
                     className="w-2.5 h-2.5 rounded-sm shrink-0"
                     style={{ background: c?.color }}
                   />
-                  <span className="text-xs text-[#aaa] flex-1">{c?.label}</span>
+                  <span className="text-xs text-ink-2 flex-1">{c?.label}</span>
                   <span
                     className="text-xs tabular-nums text-white font-medium"
                     style={{ fontFamily: 'JetBrains Mono, monospace' }}
                   >
                     {BRL(val)}
                   </span>
-                  <span className="text-[10px] text-[#555] w-10 text-right">
+                  <span className="text-[10px] text-ink-3 w-10 text-right">
                     {pct.toFixed(1)}%
                   </span>
                 </div>

@@ -90,7 +90,7 @@ export function BookCard({
             className="absolute bottom-1.5 right-1.5"
             style={{
               fontSize: 8, fontWeight: 700, fontFamily: 'Manrope, sans-serif',
-              background: 'rgba(0,0,0,.65)', color: '#aaa',
+              background: 'rgba(0,0,0,.65)', color: 'var(--text2)',
               padding: '2px 5px', borderRadius: 4, letterSpacing: '.03em',
             }}
           >
@@ -153,11 +153,11 @@ export function BookCard({
                     style={{
                       position: 'absolute', top: 0, left: 0, height: '100%',
                       width: `${Math.min(100, (book.pages_read / book.total_pages) * 100)}%`,
-                      background: '#0EA5E9', borderRadius: 4,
+                      background: 'var(--blue)', borderRadius: 4,
                     }}
                   />
                 </div>
-                <div style={{ fontSize: 9, color: '#0EA5E9', textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', marginTop: 2 }}>
+                <div style={{ fontSize: 9, color: 'var(--blue)', textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', marginTop: 2 }}>
                   {book.pages_read}/{book.total_pages}p
                 </div>
               </>
@@ -169,9 +169,9 @@ export function BookCard({
                   max={100}
                   value={book.progress ?? 0}
                   onChange={(e) => onProgress(book.id, parseInt(e.target.value))}
-                  style={{ width: '100%', accentColor: '#0EA5E9', cursor: 'pointer', height: 3 }}
+                  style={{ width: '100%', accentColor: 'var(--blue)', cursor: 'pointer', height: 3 }}
                 />
-                <div style={{ fontSize: 9, color: '#0EA5E9', textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', marginTop: 1 }}>
+                <div style={{ fontSize: 9, color: 'var(--blue)', textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', marginTop: 1 }}>
                   {book.progress ?? 0}%
                 </div>
               </>

@@ -39,7 +39,7 @@ export default function OnboardingPage() {
         {/* Logo */}
         <div className="flex justify-center mb-8">
           <span
-            style={{ fontFamily: 'Sora, sans-serif', fontWeight: 900, fontSize: 28, color: '#0EA5E9', letterSpacing: '-0.04em' }}
+            style={{ fontFamily: 'Sora, sans-serif', fontWeight: 900, fontSize: 28, color: 'var(--blue)', letterSpacing: '-0.04em' }}
           >
             mos
           </span>
@@ -57,7 +57,7 @@ export default function OnboardingPage() {
             </p>
             <button
               onClick={() => setStep(1)}
-              className="bg-[#0EA5E9] text-black font-semibold px-8 py-3 rounded-xl hover:bg-[#38bdf8] transition-colors"
+              className="bg-brand text-black font-semibold px-8 py-3 rounded-xl hover:bg-[#38bdf8] transition-colors"
             >
               Começar
             </button>
@@ -76,7 +76,7 @@ export default function OnboardingPage() {
             <div className="space-y-6 mb-10 max-h-[50vh] overflow-y-auto px-1">
               {groups.map(group => (
                 <div key={group}>
-                  <div className="text-[11px] text-[#555] uppercase tracking-wider font-[Sora] mb-2">
+                  <div className="text-[11px] text-ink-3 uppercase tracking-wider font-[Sora] mb-2">
                     {group}
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -89,21 +89,21 @@ export default function OnboardingPage() {
                           className="flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-colors"
                           style={{
                             background: isOn ? 'rgba(14,165,233,.08)' : 'var(--bg2)',
-                            borderColor: isOn ? '#0EA5E9' : 'var(--border)',
+                            borderColor: isOn ? 'var(--blue)' : 'var(--border)',
                           }}
                         >
                           <div
                             className="w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-colors"
                             style={{
-                              background: isOn ? '#0EA5E9' : 'transparent',
-                              borderColor: isOn ? '#0EA5E9' : '#333',
+                              background: isOn ? 'var(--blue)' : 'transparent',
+                              borderColor: isOn ? 'var(--blue)' : '#333',
                             }}
                           >
                             {isOn && <Check size={12} color="#000" strokeWidth={3} />}
                           </div>
                           <div className="min-w-0">
                             <div className="text-sm font-medium text-white truncate">{mod.label}</div>
-                            <div className="text-[11px] text-[#555] truncate">{mod.description}</div>
+                            <div className="text-[11px] text-ink-3 truncate">{mod.description}</div>
                           </div>
                         </button>
                       )
@@ -116,14 +116,14 @@ export default function OnboardingPage() {
             <div className="flex items-center justify-between">
               <button
                 onClick={() => setStep(0)}
-                className="text-sm text-[#555] hover:text-white transition-colors"
+                className="text-sm text-ink-3 hover:text-white transition-colors"
               >
                 Voltar
               </button>
               <button
                 onClick={handleFinish}
                 disabled={saving}
-                className="bg-[#0EA5E9] text-black font-semibold px-8 py-3 rounded-xl hover:bg-[#38bdf8] disabled:opacity-50 transition-colors"
+                className="bg-brand text-black font-semibold px-8 py-3 rounded-xl hover:bg-[#38bdf8] disabled:opacity-50 transition-colors"
               >
                 {saving ? 'Configurando...' : 'Entrar no MOS'}
               </button>

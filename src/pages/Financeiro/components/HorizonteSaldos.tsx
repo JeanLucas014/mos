@@ -137,7 +137,7 @@ export function HorizonteSaldos({ ano }: Props) {
                 height: ROW_H,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 10,
-                color: isToday ? '#0EA5E9' : 'var(--text3)',
+                color: isToday ? 'var(--blue)' : 'var(--text3)',
                 fontWeight: isToday ? 700 : 400,
                 fontVariantNumeric: 'tabular-nums',
                 borderBottom: '1px solid #111',
@@ -182,7 +182,7 @@ export function HorizonteSaldos({ ano }: Props) {
                     background: cellBg(val),
                     color: val !== null ? '#fff' : 'transparent',
                     borderBottom: '1px solid rgba(0,0,0,0.18)',
-                    outline: isToday ? '2px solid #0EA5E9' : 'none',
+                    outline: isToday ? '2px solid var(--blue)' : 'none',
                     outlineOffset: '-2px',
                   }}>
                     {val !== null ? fmt(val) : ''}
@@ -198,7 +198,7 @@ export function HorizonteSaldos({ ano }: Props) {
 
   if (loading) return (
     <div className="flex justify-center py-8">
-      <div className="w-4 h-4 rounded-full border-2 border-[#0EA5E9] border-t-transparent animate-spin" />
+      <div className="w-4 h-4 rounded-full border-2 border-brand border-t-transparent animate-spin" />
     </div>
   )
 
@@ -224,7 +224,7 @@ export function HorizonteSaldos({ ano }: Props) {
           ].map(l => (
             <div key={l.label} className="flex items-center gap-1.5 whitespace-nowrap">
               <span className="inline-block w-2.5 h-2.5 rounded-[2px]" style={{ background: l.bg }} />
-              <span className="text-[10px] text-[#555]">{l.label}</span>
+              <span className="text-[10px] text-ink-3">{l.label}</span>
             </div>
           ))}
         </div>
@@ -245,7 +245,7 @@ export function HorizonteSaldos({ ano }: Props) {
               className={[
                 'flex-1 py-2 text-[10px] font-bold font-[Sora] whitespace-nowrap',
                 'border-b-2 -mb-px transition-colors',
-                mobilePage === i ? 'text-[#0EA5E9] border-[#0EA5E9]' : 'text-[#444] border-transparent',
+                mobilePage === i ? 'text-brand border-brand' : 'text-[#444] border-transparent',
               ].join(' ')}
             >
               {l}

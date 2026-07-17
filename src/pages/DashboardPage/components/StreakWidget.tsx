@@ -7,7 +7,7 @@ import { Sk, Widget } from './shared'
 ══════════════════════════════════════════════════════════════════ */
 export function StreakWidget() {
   const { isLoading, topStreak } = useDashHabits()
-  const color = topStreak.streak >= 14 ? '#f59e0b' : topStreak.streak >= 7 ? '#fbbf24' : '#0EA5E9'
+  const color = topStreak.streak >= 14 ? '#f59e0b' : topStreak.streak >= 7 ? '#fbbf24' : 'var(--blue)'
 
   return (
     <Widget icon={<Zap size={14} />} title="Maior Streak" to="/habitos">

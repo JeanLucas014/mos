@@ -76,7 +76,7 @@ export function LoginPage() {
               onClick={() => { setMode(m); setError(''); setSuccess('') }}
               className={[
                 'flex-1 py-2.5 text-sm font-medium transition-colors',
-                mode === m ? 'bg-[#1f1f1f] text-white' : 'text-[#555] hover:text-white',
+                mode === m ? 'bg-[#1f1f1f] text-white' : 'text-ink-3 hover:text-white',
               ].join(' ')}
             >
               {m === 'login' ? 'Entrar' : 'Criar conta'}
@@ -176,7 +176,7 @@ export function LoginPage() {
         <div className="mt-4 pt-4 border-t border-[#1f1f1f]">
           <button
             onClick={handleDemo}
-            className="w-full py-2.5 text-sm text-[#555] hover:text-white border border-[#1f1f1f] rounded-xl transition-colors hover:border-[#0EA5E9]/40 flex items-center justify-center gap-2"
+            className="w-full py-2.5 text-sm text-ink-3 hover:text-white border border-[#1f1f1f] rounded-xl transition-colors hover:border-brand/40 flex items-center justify-center gap-2"
           >
             <Eye size={14} color="var(--text3)" />
             Explorar versão demo

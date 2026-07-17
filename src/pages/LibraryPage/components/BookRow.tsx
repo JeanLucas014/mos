@@ -46,7 +46,7 @@ export function BookRow({ book, onFavorite, onDelete, onClick }: {
 
       {/* Categoria */}
       {book.category && (
-        <span className="hidden sm:inline text-[10px] text-[#555] shrink-0">{book.category}</span>
+        <span className="hidden sm:inline text-[10px] text-ink-3 shrink-0">{book.category}</span>
       )}
 
       {/* Stars */}
@@ -75,7 +75,7 @@ export function BookRow({ book, onFavorite, onDelete, onClick }: {
           if (window.confirm(`Remover "${book.title}"?`)) onDelete(book.id)
         }}
         aria-label="Remover livro"
-        className="opacity-0 group-hover:opacity-100 transition-opacity text-[#555] hover:text-red-400 text-base w-6 flex items-center justify-center shrink-0"
+        className="opacity-0 group-hover:opacity-100 transition-opacity text-ink-3 hover:text-red-400 text-base w-6 flex items-center justify-center shrink-0"
       >×</button>
     </div>
   )

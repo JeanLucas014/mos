@@ -41,7 +41,7 @@ export function AtivoRow({ inv, cfg, valorPos, rent, onEdit, onArchive }: AtivoR
             </span>
           )}
           {inv.subtipo && (
-            <span className="text-[10px] text-[#555]">
+            <span className="text-[10px] text-ink-3">
               {inv.subtipo}
             </span>
           )}
@@ -99,13 +99,13 @@ export function AtivoRow({ inv, cfg, valorPos, rent, onEdit, onArchive }: AtivoR
       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
           onClick={() => onEdit(inv)}
-          className="text-[#555] hover:text-[#0EA5E9] p-1"
+          className="text-ink-3 hover:text-brand p-1"
         >
           <Pencil size={12} />
         </button>
         <button
           onClick={() => onArchive(inv)}
-          className="text-[#555] hover:text-[#ef4444] p-1"
+          className="text-ink-3 hover:text-[#ef4444] p-1"
         >
           <Trash2 size={12} />
         </button>

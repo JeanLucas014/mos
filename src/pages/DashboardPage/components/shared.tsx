@@ -9,7 +9,7 @@ export function Sk({ w = 'w-full', h = 'h-3' }: { w?: string; h?: string }) {
   return <div className={`${w} ${h} bg-bg-3 rounded animate-pulse`} />
 }
 
-export function Bar({ pct, color = '#0EA5E9' }: { pct: number; color?: string }) {
+export function Bar({ pct, color = 'var(--blue)' }: { pct: number; color?: string }) {
   return (
     <div className="w-full rounded-full overflow-hidden" style={{ height: 4, background: 'var(--border)' }}>
       <div

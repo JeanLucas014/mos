@@ -13,7 +13,7 @@ export function HelpButton({ pageId }: { pageId: string }) {
     <>
       <button
         onClick={reopen}
-        className="text-[#555] hover:text-[#0EA5E9] transition-colors shrink-0"
+        className="text-ink-3 hover:text-brand transition-colors shrink-0"
         title="Como funciona"
       >
         <HelpCircle size={15} />

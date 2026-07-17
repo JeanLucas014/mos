@@ -62,8 +62,8 @@ export function DatePicker({ value, onChange }: Props) {
         className={[
           'flex items-center gap-1.5 text-xs px-2 py-1.5 rounded-lg border transition-colors',
           value
-            ? 'border-[#0EA5E9]/40 text-[#0EA5E9]'
-            : 'border-[#1f1f1f] text-[#555] hover:text-white',
+            ? 'border-brand/40 text-brand'
+            : 'border-[#1f1f1f] text-ink-3 hover:text-white',
         ].join(' ')}
       >
         <Calendar size={12} />
@@ -71,7 +71,7 @@ export function DatePicker({ value, onChange }: Props) {
         {value && (
           <span
             onClick={e => { e.stopPropagation(); onChange(null) }}
-            className="text-[#555] hover:text-[#ef4444] cursor-pointer"
+            className="text-ink-3 hover:text-[#ef4444] cursor-pointer"
           >
             <X size={10} />
           </span>
@@ -89,10 +89,10 @@ export function DatePicker({ value, onChange }: Props) {
               <button
                 key={s.label}
                 onClick={() => selectDate(s.date)}
-                className="w-full flex items-center justify-between px-2 py-1.5 text-xs rounded-lg hover:bg-[#1f1f1f] text-[#aaa] hover:text-white transition-colors"
+                className="w-full flex items-center justify-between px-2 py-1.5 text-xs rounded-lg hover:bg-[#1f1f1f] text-ink-2 hover:text-white transition-colors"
               >
                 <span>{s.label}</span>
-                <span className="text-[#555]">{DAYS_PT[s.date.getDay()]}</span>
+                <span className="text-ink-3">{DAYS_PT[s.date.getDay()]}</span>
               </button>
             ))}
           </div>
@@ -100,11 +100,11 @@ export function DatePicker({ value, onChange }: Props) {
           {/* Calendar */}
           <div className="border-t border-[#1f1f1f] pt-3">
             <div className="flex items-center justify-between mb-2">
-              <button onClick={prevMonth} className="text-[#555] hover:text-white px-1 text-base leading-none">‹</button>
+              <button onClick={prevMonth} className="text-ink-3 hover:text-white px-1 text-base leading-none">‹</button>
               <span className="text-xs font-semibold text-white">
                 {MONTHS_PT[viewDate.getMonth()]} {viewDate.getFullYear()}
               </span>
-              <button onClick={nextMonth} className="text-[#555] hover:text-white px-1 text-base leading-none">›</button>
+              <button onClick={nextMonth} className="text-ink-3 hover:text-white px-1 text-base leading-none">›</button>
             </div>
 
             <div className="grid grid-cols-7 gap-0.5 mb-1">
@@ -126,10 +126,10 @@ export function DatePicker({ value, onChange }: Props) {
                     onClick={() => selectDate(d)}
                     className={[
                       'text-[11px] py-1 rounded-lg transition-colors font-medium',
-                      selected ? 'bg-[#0EA5E9] text-black' :
-                      isToday  ? 'border border-[#0EA5E9] text-[#0EA5E9]' :
+                      selected ? 'bg-brand text-black' :
+                      isToday  ? 'border border-brand text-brand' :
                       past     ? 'text-[#444] hover:bg-[#1f1f1f]' :
-                                 'text-[#aaa] hover:bg-[#1f1f1f]',
+                                 'text-ink-2 hover:bg-[#1f1f1f]',
                     ].join(' ')}
                   >
                     {day}

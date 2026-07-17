@@ -77,7 +77,7 @@ export function MotoAddModal({
         {err && <div style={{ color:C.r, fontSize:12, marginBottom:10 }}>{err}</div>}
 
         <div style={{ display:'flex', gap:8 }}>
-          <button onClick={handleSubmit} disabled={saving} style={{ flex:1, padding:'12px', borderRadius:10, background:'linear-gradient(135deg, #0EA5E9, #0284c7)', border:'none', color:'#fff', fontSize:13, fontWeight:600, cursor:saving?'not-allowed':'pointer', opacity:saving?0.7:1 }}>
+          <button onClick={handleSubmit} disabled={saving} style={{ flex:1, padding:'12px', borderRadius:10, background:'linear-gradient(135deg, var(--blue), #0284c7)', border:'none', color:'#fff', fontSize:13, fontWeight:600, cursor:saving?'not-allowed':'pointer', opacity:saving?0.7:1 }}>
             {saving ? 'Salvando...' : 'Salvar'}
           </button>
           <button onClick={onClose} style={{ padding:'12px 20px', borderRadius:10, background:'rgba(255,255,255,.04)', border:'1px solid '+C.border, color:C.dm, fontSize:13, cursor:'pointer' }}>

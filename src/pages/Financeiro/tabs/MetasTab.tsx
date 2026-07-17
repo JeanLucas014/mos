@@ -56,15 +56,15 @@ export function MetasTab() {
     setShowForm(true)
   }
 
-  if (loading) return <div className="flex justify-center py-16"><div className="w-5 h-5 rounded-full border-2 border-[#0EA5E9] border-t-transparent animate-spin" /></div>
+  if (loading) return <div className="flex justify-center py-16"><div className="w-5 h-5 rounded-full border-2 border-brand border-t-transparent animate-spin" /></div>
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <span className="text-sm text-[#555]">{metas.length} metas</span>
+        <span className="text-sm text-ink-3">{metas.length} metas</span>
         <button
           onClick={() => { setEditing(null); setForm({ nome: '', alvo: '', atual: '' }); setShowForm(true) }}
-          className="flex items-center gap-1.5 text-sm text-[#0EA5E9] hover:text-white transition-colors"
+          className="flex items-center gap-1.5 text-sm text-brand hover:text-white transition-colors"
         >
           <Plus size={14} /> Nova meta
         </button>
@@ -74,18 +74,18 @@ export function MetasTab() {
         <div className="bg-bg-2 border border-line rounded-xl p-4 space-y-3">
           <div className="text-sm font-medium text-white">{editing ? 'Editar meta' : 'Nova meta'}</div>
           <input placeholder="Nome da meta" value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })}
-            className="w-full bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60" />
+            className="w-full bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-brand/60" />
           <div className="flex gap-2">
             <input placeholder="Valor alvo" value={form.alvo} onChange={e => setForm({ ...form, alvo: e.target.value })}
-              className="flex-1 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums" />
+              className="flex-1 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-brand/60 tabular-nums" />
             <input placeholder="Atual" value={form.atual} onChange={e => setForm({ ...form, atual: e.target.value })}
-              className="flex-1 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums" />
+              className="flex-1 bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-brand/60 tabular-nums" />
           </div>
           <div className="flex gap-2">
             <button onClick={() => { setShowForm(false); setEditing(null) }}
-              className="px-4 py-1.5 text-sm text-[#555] border border-line rounded-lg hover:text-white">Cancelar</button>
+              className="px-4 py-1.5 text-sm text-ink-3 border border-line rounded-lg hover:text-white">Cancelar</button>
             <button onClick={save}
-              className="flex-1 py-1.5 text-sm font-medium bg-[#0EA5E9] text-black rounded-lg hover:bg-[#38bdf8]">Salvar</button>
+              className="flex-1 py-1.5 text-sm font-medium bg-brand text-black rounded-lg hover:bg-[#38bdf8]">Salvar</button>
           </div>
         </div>
       )}
@@ -97,25 +97,25 @@ export function MetasTab() {
             <div className="flex items-start justify-between mb-3">
               <div>
                 <div className="text-sm font-medium text-white">{meta.nome}</div>
-                <div className="text-xs text-[#555] mt-0.5 tabular-nums">
-                  <span style={{ color: '#0EA5E9' }}>{BRL(meta.atual)}</span>
+                <div className="text-xs text-ink-3 mt-0.5 tabular-nums">
+                  <span style={{ color: 'var(--blue)' }}>{BRL(meta.atual)}</span>
                   <span className="mx-1">/</span>
                   {BRL(meta.alvo)}
                 </div>
               </div>
               <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => openEdit(meta)} aria-label="Editar meta" className="text-[#555] hover:text-[#0EA5E9]"><Pencil size={13} /></button>
-                <button onClick={() => del(meta.id)} aria-label="Excluir meta" className="text-[#555] hover:text-[#ef4444]"><Trash2 size={13} /></button>
+                <button onClick={() => openEdit(meta)} aria-label="Editar meta" className="text-ink-3 hover:text-brand"><Pencil size={13} /></button>
+                <button onClick={() => del(meta.id)} aria-label="Excluir meta" className="text-ink-3 hover:text-[#ef4444]"><Trash2 size={13} /></button>
               </div>
             </div>
             {/* Progress bar */}
             <div className="h-1.5 bg-[#1f1f1f] rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-500"
-                style={{ width: `${pct}%`, background: pct >= 100 ? '#22c55e' : '#0EA5E9' }}
+                style={{ width: `${pct}%`, background: pct >= 100 ? '#22c55e' : 'var(--blue)' }}
               />
             </div>
-            <div className="flex justify-between mt-1.5 text-[10px] text-[#555]">
+            <div className="flex justify-between mt-1.5 text-[10px] text-ink-3">
               <span>{pct.toFixed(0)}%</span>
               <span>{pct >= 100 ? '✓ Concluída' : `Faltam ${BRL(meta.alvo - meta.atual)}`}</span>
             </div>
@@ -125,7 +125,7 @@ export function MetasTab() {
                 type="number"
                 defaultValue={meta.atual}
                 onBlur={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) updateAtual(meta, v) }}
-                className="flex-1 bg-bg border border-line rounded-lg px-2 py-1 text-xs text-white outline-none focus:border-[#0EA5E9]/60 tabular-nums"
+                className="flex-1 bg-bg border border-line rounded-lg px-2 py-1 text-xs text-white outline-none focus:border-brand/60 tabular-nums"
                 placeholder="Atualizar valor atual"
               />
             </div>
@@ -134,8 +134,8 @@ export function MetasTab() {
       })}
 
       {metas.length === 0 && !showForm && (
-        <div className="text-center py-12 text-[#555] text-sm">
-          Nenhuma meta ainda. <button onClick={() => setShowForm(true)} className="text-[#0EA5E9] hover:underline">Criar →</button>
+        <div className="text-center py-12 text-ink-3 text-sm">
+          Nenhuma meta ainda. <button onClick={() => setShowForm(true)} className="text-brand hover:underline">Criar →</button>
         </div>
       )}
     </div>

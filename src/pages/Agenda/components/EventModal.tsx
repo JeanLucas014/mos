@@ -133,11 +133,11 @@ export function EventModal({ event, onSave, onDelete, onClose }: Props) {
           </div>
           <div className="flex-1" />
           {!isNew && onDelete && (
-            <button onClick={onDelete} className="text-[#555] hover:text-[#ef4444] transition-colors">
+            <button onClick={onDelete} className="text-ink-3 hover:text-[#ef4444] transition-colors">
               <Trash2 size={14} />
             </button>
           )}
-          <button onClick={onClose} className="text-[#555] hover:text-white transition-colors">
+          <button onClick={onClose} className="text-ink-3 hover:text-white transition-colors">
             <X size={15} />
           </button>
         </div>
@@ -154,12 +154,12 @@ export function EventModal({ event, onSave, onDelete, onClose }: Props) {
           />
 
           {/* All day */}
-          <label className="flex items-center gap-2 text-xs text-[#555] cursor-pointer select-none">
+          <label className="flex items-center gap-2 text-xs text-ink-3 cursor-pointer select-none">
             <input
               type="checkbox"
               checked={allDay}
               onChange={e => setAllDay(e.target.checked)}
-              className="accent-[#0EA5E9]"
+              className="accent-brand"
             />
             Dia inteiro
           </label>
@@ -167,12 +167,12 @@ export function EventModal({ event, onSave, onDelete, onClose }: Props) {
           {/* Start / End */}
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <Clock size={14} className="text-[#555] shrink-0" />
+              <Clock size={14} className="text-ink-3 shrink-0" />
               <input
                 type={allDay ? 'date' : 'datetime-local'}
                 value={allDay ? startAt.slice(0, 10) : startAt}
                 onChange={e => setStartAt(allDay ? e.target.value + 'T00:00' : e.target.value)}
-                className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-[#0EA5E9]/60"
+                className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-brand/60"
               />
             </div>
             {!allDay && (
@@ -182,7 +182,7 @@ export function EventModal({ event, onSave, onDelete, onClose }: Props) {
                   type="datetime-local"
                   value={endAt}
                   onChange={e => setEndAt(e.target.value)}
-                  className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-[#0EA5E9]/60"
+                  className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-brand/60"
                 />
               </div>
             )}
@@ -190,18 +190,18 @@ export function EventModal({ event, onSave, onDelete, onClose }: Props) {
 
           {/* Location */}
           <div className="flex items-center gap-2">
-            <MapPin size={14} className="text-[#555] shrink-0" />
+            <MapPin size={14} className="text-ink-3 shrink-0" />
             <input
               value={location}
               onChange={e => setLocation(e.target.value)}
               placeholder="Local (opcional)"
-              className="flex-1 bg-transparent text-sm text-[#aaa] outline-none placeholder:text-[#2a2a2a]"
+              className="flex-1 bg-transparent text-sm text-ink-2 outline-none placeholder:text-[#2a2a2a]"
             />
           </div>
 
           {/* Recorrência */}
           <div className="flex items-start gap-2">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-[#555] shrink-0 mt-0.5">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-ink-3 shrink-0 mt-0.5">
               <path d="M2 8a6 6 0 1 0 6-6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
               <path d="M2 4v4h4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
@@ -213,7 +213,7 @@ export function EventModal({ event, onSave, onDelete, onClose }: Props) {
                   setShowCustom(e.target.value === 'CUSTOM')
                 }}
                 className="w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-2.5 py-1.5
-                           text-xs text-white outline-none focus:border-[#0EA5E9]/60"
+                           text-xs text-white outline-none focus:border-brand/60"
               >
                 {RECURRENCE_OPTIONS.map(o => (
                   <option key={o.id} value={o.id}>{o.label}</option>
@@ -225,19 +225,19 @@ export function EventModal({ event, onSave, onDelete, onClose }: Props) {
                 <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-xl p-3 space-y-3">
                   {/* Repetir a cada N */}
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] text-[#555]">Repetir a cada</span>
+                    <span className="text-[11px] text-ink-3">Repetir a cada</span>
                     <input
                       type="number" min={1} max={99}
                       value={recInterval}
                       onChange={e => setRecInterval(Number(e.target.value))}
                       className="w-14 bg-[#111111] border border-[#1f1f1f] rounded-lg px-2 py-1
-                                 text-xs text-white text-center outline-none focus:border-[#0EA5E9]/60"
+                                 text-xs text-white text-center outline-none focus:border-brand/60"
                     />
                     <select
                       value={recFreq}
                       onChange={e => setRecFreq(e.target.value)}
                       className="flex-1 bg-[#111111] border border-[#1f1f1f] rounded-lg px-2 py-1
-                                 text-xs text-white outline-none focus:border-[#0EA5E9]/60"
+                                 text-xs text-white outline-none focus:border-brand/60"
                     >
                       <option value="DAILY">dia(s)</option>
                       <option value="WEEKLY">semana(s)</option>
@@ -249,7 +249,7 @@ export function EventModal({ event, onSave, onDelete, onClose }: Props) {
                   {/* Dias da semana (só quando freq=WEEKLY) */}
                   {recFreq === 'WEEKLY' && (
                     <div>
-                      <div className="text-[11px] text-[#555] mb-1.5">Repetir:</div>
+                      <div className="text-[11px] text-ink-3 mb-1.5">Repetir:</div>
                       <div className="flex gap-1">
                         {WEEK_DAYS.map(d => (
                           <button
@@ -276,20 +276,20 @@ export function EventModal({ event, onSave, onDelete, onClose }: Props) {
 
                   {/* Termina em */}
                   <div>
-                    <div className="text-[11px] text-[#555] mb-1.5">Termina em</div>
+                    <div className="text-[11px] text-ink-3 mb-1.5">Termina em</div>
                     <div className="space-y-1.5">
-                      <label className="flex items-center gap-2 text-xs text-[#aaa] cursor-pointer">
+                      <label className="flex items-center gap-2 text-xs text-ink-2 cursor-pointer">
                         <input type="radio" name="recEnd" value="never"
                           checked={recEnd === 'never'}
                           onChange={() => setRecEnd('never')}
-                          className="accent-[#0EA5E9]" />
+                          className="accent-brand" />
                         Nunca
                       </label>
-                      <label className="flex items-center gap-2 text-xs text-[#aaa] cursor-pointer">
+                      <label className="flex items-center gap-2 text-xs text-ink-2 cursor-pointer">
                         <input type="radio" name="recEnd" value="date"
                           checked={recEnd === 'date'}
                           onChange={() => setRecEnd('date')}
-                          className="accent-[#0EA5E9]" />
+                          className="accent-brand" />
                         Em
                         {recEnd === 'date' && (
                           <input
@@ -297,7 +297,7 @@ export function EventModal({ event, onSave, onDelete, onClose }: Props) {
                             value={recEndDate}
                             onChange={e => setRecEndDate(e.target.value)}
                             className="ml-1 bg-[#111111] border border-[#1f1f1f] rounded-lg px-2 py-0.5
-                                       text-xs text-white outline-none focus:border-[#0EA5E9]/60"
+                                       text-xs text-white outline-none focus:border-brand/60"
                           />
                         )}
                       </label>
@@ -308,7 +308,7 @@ export function EventModal({ event, onSave, onDelete, onClose }: Props) {
 
               {/* Label descritiva */}
               {rrule && rrule !== 'CUSTOM' && (
-                <div className="text-[11px] text-[#0EA5E9]">
+                <div className="text-[11px] text-brand">
                   {RECURRENCE_OPTIONS.find(o => o.id === rrule)?.label}
                 </div>
               )}
@@ -317,20 +317,20 @@ export function EventModal({ event, onSave, onDelete, onClose }: Props) {
 
           {/* Description */}
           <div className="flex items-start gap-2">
-            <AlignLeft size={14} className="text-[#555] shrink-0 mt-0.5" />
+            <AlignLeft size={14} className="text-ink-3 shrink-0 mt-0.5" />
             <textarea
               value={desc}
               onChange={e => setDesc(e.target.value)}
               placeholder="Descrição (opcional)"
               rows={2}
-              className="flex-1 bg-transparent text-sm text-[#aaa] outline-none resize-none placeholder:text-[#2a2a2a]"
+              className="flex-1 bg-transparent text-sm text-ink-2 outline-none resize-none placeholder:text-[#2a2a2a]"
             />
           </div>
 
           {/* Tags */}
           {allTags.length > 0 && (
             <div className="flex items-start gap-2">
-              <Tag size={14} className="text-[#555] shrink-0 mt-0.5" />
+              <Tag size={14} className="text-ink-3 shrink-0 mt-0.5" />
               <div className="flex flex-wrap gap-1.5">
                 {allTags.map(t => {
                   const active = tags.includes(t.id)
@@ -359,13 +359,13 @@ export function EventModal({ event, onSave, onDelete, onClose }: Props) {
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-[#1f1f1f]">
-          <button onClick={onClose} className="px-3 py-1.5 text-sm text-[#555] hover:text-white transition-colors">
+          <button onClick={onClose} className="px-3 py-1.5 text-sm text-ink-3 hover:text-white transition-colors">
             Cancelar
           </button>
           <button
             onClick={handleSave}
             disabled={saving || !title.trim()}
-            className="px-4 py-1.5 text-sm font-semibold bg-[#0EA5E9] text-black rounded-lg hover:bg-[#38bdf8] disabled:opacity-40 transition-colors"
+            className="px-4 py-1.5 text-sm font-semibold bg-brand text-black rounded-lg hover:bg-[#38bdf8] disabled:opacity-40 transition-colors"
           >
             {saving ? 'Salvando…' : isNew ? 'Criar' : 'Salvar'}
           </button>
