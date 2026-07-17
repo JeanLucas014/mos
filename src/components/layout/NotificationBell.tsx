@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
-import { Bell } from 'lucide-react'
+import { Bell, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { useAppNotifications } from '../../hooks/useNotifications'
+import { useAppNotifications, useDismissNotification } from '../../hooks/useNotifications'
 
 const TYPE_LABELS: Record<string, string> = {
   tarefa_vencida: 'Tarefa vencida',
@@ -14,7 +14,9 @@ const TYPE_LABELS: Record<string, string> = {
 
 export function NotificationBell() {
   const [open, setOpen] = useState(false)
+  const [hoveredId, setHoveredId] = useState<string | null>(null)
   const { data: notifications = [] } = useAppNotifications()
+  const dismiss = useDismissNotification()
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -82,9 +84,10 @@ export function NotificationBell() {
                       padding: '12px 16px',
                       borderBottom: '1px solid var(--border)',
                       display: 'flex', alignItems: 'flex-start', gap: 10,
+                      background: hoveredId === n.id ? 'var(--bg3)' : 'transparent',
                     }}
-                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg3)')}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    onMouseEnter={() => setHoveredId(n.id)}
+                    onMouseLeave={() => setHoveredId(null)}
                   >
                     <div style={{
                       width: 6, height: 6, borderRadius: '50%',
@@ -100,6 +103,22 @@ export function NotificationBell() {
                         {n.body}
                       </div>
                     </div>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        dismiss.mutate(n.id)
+                      }}
+                      style={{
+                        opacity: hoveredId === n.id ? 1 : 0,
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        padding: 4, color: 'var(--text3)', flexShrink: 0,
+                        transition: 'opacity 0.15s',
+                      }}
+                      aria-label="Dispensar notificação"
+                    >
+                      <X size={12} />
+                    </button>
                   </div>
                 </Link>
               ))

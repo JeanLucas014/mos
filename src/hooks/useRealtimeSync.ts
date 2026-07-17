@@ -46,7 +46,13 @@ export function useRealtimeSync() {
 
         if (table === 'habit_logs') qc.invalidateQueries({ queryKey: ['habit_logs'] })
         if (table === 'fin_recorrentes') qc.invalidateQueries({ queryKey: ['dash_recorrentes'] })
-        if (table === 'fin_lancamentos') qc.invalidateQueries({ queryKey: ['dash_financas_score'] })
+        if (table === 'fin_lancamentos') {
+          qc.invalidateQueries({ queryKey: ['dash_financas_score'] })
+          // dash_recorrentes também lê fin_lancamentos (pra saber quais
+          // recorrências já foram pagas no mês) — sem isso o card de
+          // Financeiro não limpava o alerta de "vencida" ao marcar como paga.
+          qc.invalidateQueries({ queryKey: ['dash_recorrentes'] })
+        }
         if (table === 'tasks') {
           qc.invalidateQueries({ queryKey: ['dash_tasks'] })
           qc.invalidateQueries({ queryKey: ['dash_tasks_score'] })

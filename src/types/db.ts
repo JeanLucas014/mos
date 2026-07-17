@@ -194,6 +194,27 @@ export type Database = {
         }
         Relationships: []
       }
+      dismissed_notifications: {
+        Row: {
+          dismissed_at: string
+          id: string
+          notification_id: string
+          user_id: string
+        }
+        Insert: {
+          dismissed_at?: string
+          id?: string
+          notification_id: string
+          user_id: string
+        }
+        Update: {
+          dismissed_at?: string
+          id?: string
+          notification_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           category: string | null

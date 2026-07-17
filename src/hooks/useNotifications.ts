@@ -225,7 +225,14 @@ export function useAppNotifications() {
         }
       }
 
-      return notifications
+      const { data: dismissed } = await supabase
+        .from('dismissed_notifications')
+        .select('notification_id')
+        .eq('user_id', user!.id)
+
+      const dismissedIds = new Set((dismissed ?? []).map(d => d.notification_id))
+
+      return notifications.filter(n => !dismissedIds.has(n.id))
     },
     enabled: !!user,
     // useRealtimeSync invalida esta query quando tasks/calendar_events/
@@ -233,5 +240,24 @@ export function useAppNotifications() {
     // segurança passiva (ex: se o Realtime cair e a reconciliação ainda não
     // rodou), não é mais o mecanismo principal de atualização.
     staleTime: 1000 * 60 * 10,
+  })
+}
+
+// ── Dispensar notificação individualmente ────────────────────────
+export function useDismissNotification() {
+  const { user } = useAuth()
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (notificationId: string) => {
+      const { error } = await supabase.from('dismissed_notifications').insert({
+        user_id: user!.id,
+        notification_id: notificationId,
+      })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['app_notifications', user?.id] })
+    },
   })
 }
