@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { todayLocal, addDaysLocal } from '@/lib/dates'
 import { Plus, Sun, Calendar, CalendarDays, FolderOpen, ChevronDown, ChevronRight, History, Settings } from 'lucide-react'
@@ -8,6 +8,7 @@ import { TaskModal } from './components/TaskModal'
 import { ProjectModal } from './components/ProjectModal'
 import { HelpButton } from '@/components/help/HelpButton'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { useRealtimeStore } from '@/stores/useRealtimeStore'
 
 type ModalState = { task: Partial<Task> } | null
 
@@ -31,6 +32,15 @@ export default function TarefasPage() {
   const [projectsOpen, setProjectsOpen]           = useState(true)
 
   useEffect(() => { loadAll() }, [])
+
+  // Recarrega quando outra aba/dispositivo muda `tasks` (useRealtimeSync).
+  // Pula a primeira execução — o mount acima já carrega os dados.
+  const tasksVersion = useRealtimeStore(s => s.versions.tasks)
+  const skipFirstSync = useRef(true)
+  useEffect(() => {
+    if (skipFirstSync.current) { skipFirstSync.current = false; return }
+    loadAll()
+  }, [tasksVersion])
 
   async function loadAll() {
     const [{ data: t }, { data: p }] = await Promise.all([
