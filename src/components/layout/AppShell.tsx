@@ -7,6 +7,14 @@ import { MOSChat } from '../chat/MOSChat'
 import { ErrorBoundary } from '../ErrorBoundary'
 import { useUIStore } from '../../stores/useUIStore'
 import { useUserSettings } from '../../hooks/useUserSettings'
+import { useRealtimeSync } from '../../hooks/useRealtimeSync'
+
+/** Sem render — só monta o hook de sincronização em tempo real uma vez por
+ * sessão autenticada (mesmo padrão do ThemeApplier em App.tsx). */
+function RealtimeSync() {
+  useRealtimeSync()
+  return null
+}
 
 export function AppShell() {
   const sidebarOpen      = useUIStore((s) => s.sidebarOpen)
@@ -20,6 +28,7 @@ export function AppShell() {
 
   return (
     <>
+    <RealtimeSync />
     <CommandPalette />
     <div className="flex h-screen overflow-hidden bg-bg">
       {/* Sidebar — fixed drawer on mobile, static column on lg+ */}
