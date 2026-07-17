@@ -64,3 +64,28 @@ no navegador** — o ambiente de preview desta sessão não completa o
 login demo (provável restrição de rede para alcançar o Supabase Auth
 a partir daqui). Recomenda-se testar manualmente: Biblioteca → modo
 lista → com e sem filtro de status → scroll com muitos livros.
+
+## Migração pra Supabase Realtime (implementada, com nota de arquitetura)
+
+Implementado `useRealtimeSync` (hook central, 1 channel, postgres_changes
+em `tasks`/`calendar_events`/`fin_lancamentos`/`fin_recorrentes`/
+`habit_logs`) substituindo o polling de 5min do sino de notificações e
+dando atualização quase-instantânea entre abas/dispositivos.
+
+**Nota de arquitetura pra quem for mexer nisso depois:** só `habit_logs`
+usa React Query de verdade nas páginas consumidoras — `tasks`
+(`Tarefas/index.tsx`), `calendar_events` (`Agenda/index.tsx`) e
+`fin_lancamentos` (`useMesData.ts`) ainda são `useState` + `reload()`
+manual. Por isso existe `useRealtimeStore` (contador de versão por
+tabela) como ponte pras 3 páginas raw-state, em vez de tudo passar por
+`queryClient.invalidateQueries`. Se essas 3 páginas forem migradas pra
+React Query no futuro (projeto separado, maior escopo), dá pra
+simplificar `useRealtimeSync` pra só invalidar queryKeys e aposentar
+`useRealtimeStore` inteiro — mas isso não é pré-requisito, só uma
+simplificação possível depois.
+
+**Não testado manualmente nesta sessão** (mesma limitação de preview
+acima): recomenda-se testar com duas abas logadas simultaneamente —
+marcar tarefa/hábito, criar evento, lançar algo no Financeiro numa
+aba e confirmar que a outra atualiza sem F5 em ~1s (contando o
+debounce de 300ms).
