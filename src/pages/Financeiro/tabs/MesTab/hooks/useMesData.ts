@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import type {
@@ -6,6 +6,7 @@ import type {
   FinCategoria, FinCartao, DiaTotais,
 } from '../../../types'
 import { daysInMonth, buildTree, sumLeaves } from '../utils'
+import { useRealtimeStore } from '@/stores/useRealtimeStore'
 
 /**
  * Camada de leitura do mês: busca categorias/cartões/lançamentos, calcula o
@@ -22,6 +23,15 @@ export function useMesData(ano: FinAno, month: number) {
   const { user } = useAuth()
 
   useEffect(() => { loadAll() }, [ano.id, month])
+
+  // Recarrega quando outra aba/dispositivo muda fin_lancamentos (useRealtimeSync).
+  // Pula a primeira execução — o mount acima já carrega os dados.
+  const lancamentosVersion = useRealtimeStore(s => s.versions.fin_lancamentos)
+  const skipFirstSync = useRef(true)
+  useEffect(() => {
+    if (skipFirstSync.current) { skipFirstSync.current = false; return }
+    loadAll()
+  }, [lancamentosVersion])
 
   async function loadAll() {
     setLoading(true)
