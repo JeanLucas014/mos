@@ -58,7 +58,13 @@ export function useNotificationPrefs() {
         .eq('user_id', user!.id)
       if (error) throw error
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['notification_prefs'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['notification_prefs'] })
+      // app_notifications lê `prefs` dentro da queryFn (closure) — a key em
+      // si não muda mais quando as prefs mudam (ver useAppNotifications),
+      // então precisa invalidar explicitamente aqui pra recalcular.
+      qc.invalidateQueries({ queryKey: ['app_notifications'] })
+    },
   })
 
   return { prefs: query.data ?? DEFAULT_PREFS, update }
@@ -68,10 +74,12 @@ export function useNotificationPrefs() {
 export function useAppNotifications() {
   const { user } = useAuth()
   const { prefs } = useNotificationPrefs()
-  const prefsKey = JSON.stringify(prefs)
 
   return useQuery({
-    queryKey: ['app_notifications', user?.id, prefsKey],
+    // Key fixa (sem embutir as prefs) — assim useRealtimeSync e a mutation
+    // de useNotificationPrefs conseguem invalidar essa query de fora sem
+    // precisar recalcular um JSON.stringify das prefs atuais.
+    queryKey: ['app_notifications', user?.id],
     queryFn: async () => {
       const today = todayLocal()
       const now = new Date()
@@ -220,8 +228,10 @@ export function useAppNotifications() {
       return notifications
     },
     enabled: !!user,
-    // refresh periódico é razoável para notificações, mas não agressivo
-    staleTime: 1000 * 60 * 3,
-    refetchInterval: 1000 * 60 * 5,
+    // useRealtimeSync invalida esta query quando tasks/calendar_events/
+    // fin_recorrentes/habit_logs mudam — staleTime alto só como rede de
+    // segurança passiva (ex: se o Realtime cair e a reconciliação ainda não
+    // rodou), não é mais o mecanismo principal de atualização.
+    staleTime: 1000 * 60 * 10,
   })
 }
