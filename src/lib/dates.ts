@@ -50,3 +50,33 @@ export function formatDateTimeBR(date: string | Date): string {
 export function formatMonthYearBR(date: string | Date): string {
   return toDate(date).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
 }
+
+/**
+ * Semana começa no domingo (0) ou na segunda (1) — configurável em
+ * Configurações > Aparência, padrão segunda. Usado pela Agenda (WeekView,
+ * MonthView, label de intervalo da semana) pra todo cálculo de início de
+ * semana ficar consistente com a preferência do usuário.
+ */
+export type WeekStart = 0 | 1
+
+export function startOfWeek(d: Date, weekStartsOn: WeekStart = 1): Date {
+  const r = new Date(d)
+  const day = d.getDay() // 0=Dom .. 6=Sáb
+  const diff = (day - weekStartsOn + 7) % 7
+  r.setDate(d.getDate() - diff)
+  r.setHours(0, 0, 0, 0)
+  return r
+}
+
+/** Posição (0-6) do primeiro dia do mês na grade do MonthView, dado o dia
+ * em que a semana começa. */
+export function monthGridOffset(firstOfMonth: Date, weekStartsOn: WeekStart): number {
+  return (firstOfMonth.getDay() - weekStartsOn + 7) % 7
+}
+
+/** Cabeçalho de dias da semana (abreviado, pt-BR) na ordem certa pro
+ * weekStartsOn escolhido. */
+export function weekdayHeaders(weekStartsOn: WeekStart): string[] {
+  const labels = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+  return weekStartsOn === 0 ? labels : [...labels.slice(1), labels[0]]
+}

@@ -5,6 +5,7 @@ import {
   type DragStartEvent, type DragMoveEvent, type DragEndEvent,
 } from '@dnd-kit/core'
 import type { CalendarEvent } from '../types'
+import { startOfWeek, type WeekStart } from '../../../lib/dates'
 
 const DAYS_PT    = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 const DAYS_SHORT = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
@@ -12,17 +13,10 @@ const DAYS_SHORT = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
 interface Props {
   events: CalendarEvent[]
   currentDate: Date
+  weekStartsOn: WeekStart
   onSelectEvent: (e: Partial<CalendarEvent>) => void
   onSelectSlot: (start: Date) => void
   onMoveEvent: (event: CalendarEvent, newStart: Date, newEnd: Date) => void
-}
-
-function startOfWeek(d: Date): Date {
-  const r = new Date(d)
-  const day = d.getDay()
-  r.setDate(d.getDate() - day)
-  r.setHours(0, 0, 0, 0)
-  return r
 }
 
 function isSameDay(a: Date, b: Date): boolean {
@@ -257,7 +251,7 @@ function DayColumn({
   )
 }
 
-export function WeekView({ events, currentDate, onSelectEvent, onSelectSlot, onMoveEvent }: Props) {
+export function WeekView({ events, currentDate, weekStartsOn, onSelectEvent, onSelectSlot, onMoveEvent }: Props) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640)
   const scrollRef  = useRef<HTMLDivElement>(null)
   const rowRef     = useRef<HTMLDivElement>(null)
@@ -274,7 +268,7 @@ export function WeekView({ events, currentDate, onSelectEvent, onSelectSlot, onM
   const TIME_W = isMobile ? 44 : 52
   const DAY_W  = 88 // mobile — sugestão de 84-96px por coluna
 
-  const weekStart = startOfWeek(currentDate)
+  const weekStart = startOfWeek(currentDate, weekStartsOn)
   const days = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(weekStart)
     d.setDate(weekStart.getDate() + i)

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
-import { formatMonthYearBR } from '@/lib/dates'
+import { formatMonthYearBR, startOfWeek, type WeekStart } from '@/lib/dates'
 import { Plus, ChevronLeft, ChevronRight, Calendar, List, Grid3x3, CalendarDays, Check, X } from 'lucide-react'
 import type { CalendarEvent, CalendarView, Rotina } from './types'
 import { WeekView }   from './views/WeekView'
@@ -13,6 +13,7 @@ import { RecurrenceDialog, type RecurrenceScope } from './components/RecurrenceD
 import { expandRecurringEvents } from './utils/expandRecurrence'
 import { HelpButton } from '@/components/help/HelpButton'
 import { useRealtimeStore } from '@/stores/useRealtimeStore'
+import { useWeekStart } from '@/hooks/useWeekStart'
 
 type Tab = 'agenda' | 'rotina'
 
@@ -29,13 +30,12 @@ function addDays(d: Date, n: number): Date {
   return r
 }
 
-function headerLabel(view: CalendarView, d: Date): string {
+function headerLabel(view: CalendarView, d: Date, weekStartsOn: WeekStart): string {
   if (view === 'mes') {
     return formatMonthYearBR(d)
   }
   if (view === 'semana') {
-    const start = new Date(d)
-    start.setDate(d.getDate() - d.getDay())
+    const start = startOfWeek(d, weekStartsOn)
     const end = addDays(start, 6)
     return `${start.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} – ${end.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}`
   }
@@ -136,6 +136,7 @@ function Toast({ msg, ok, onClose }: { msg: string; ok: boolean; onClose: () => 
 }
 
 export default function AgendaPage() {
+  const { weekStartsOn } = useWeekStart()
   const [tab,               setTab]               = useState<Tab>('agenda')
   const [view,              setView]              = useState<CalendarView>('semana')
   const [currentDate,       setCurrentDate]       = useState(new Date())
@@ -463,6 +464,7 @@ export default function AgendaPage() {
   const sharedViewProps = {
     events,
     currentDate,
+    weekStartsOn,
     onSelectEvent: handleSelectEvent,
     onSelectSlot:  (start: Date) => openNewEvent(start),
     onMoveEvent:   handleMoveEvent,
@@ -500,7 +502,7 @@ export default function AgendaPage() {
                 <ChevronRight size={16} />
               </button>
               <span className="text-xs sm:text-sm font-semibold text-white capitalize truncate min-w-0">
-                {headerLabel(view, currentDate)}
+                {headerLabel(view, currentDate, weekStartsOn)}
               </span>
               <div className="flex-1" />
               <button

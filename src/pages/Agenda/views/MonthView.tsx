@@ -1,10 +1,10 @@
 import type { CalendarEvent } from '../types'
-
-const DAYS_PT = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
+import { monthGridOffset, weekdayHeaders, type WeekStart } from '../../../lib/dates'
 
 interface Props {
   events: CalendarEvent[]
   currentDate: Date
+  weekStartsOn: WeekStart
   onSelectEvent: (e: Partial<CalendarEvent>) => void
   onSelectSlot: (start: Date) => void
 }
@@ -15,14 +15,14 @@ function isSameDay(a: Date, b: Date): boolean {
     a.getFullYear() === b.getFullYear()
 }
 
-export function MonthView({ events, currentDate, onSelectEvent, onSelectSlot }: Props) {
+export function MonthView({ events, currentDate, weekStartsOn, onSelectEvent, onSelectSlot }: Props) {
   const today   = new Date()
   const year    = currentDate.getFullYear()
   const month   = currentDate.getMonth()
   const first   = new Date(year, month, 1)
   const last    = new Date(year, month + 1, 0)
-  const rawOffset = first.getDay()
-  const offset    = rawOffset === 0 ? 6 : rawOffset - 1
+  const offset  = monthGridOffset(first, weekStartsOn)
+  const DAYS_PT = weekdayHeaders(weekStartsOn)
 
   const cells: (Date | null)[] = [
     ...Array(offset).fill(null),
