@@ -137,7 +137,7 @@ export default function TarefasPage() {
   }
 
   const viewLabel = (() => {
-    if (viewId === 'inbox')      return 'Hoje'
+    if (viewId === 'inbox')      return 'Inbox'
     if (viewId === 'hoje')       return 'Hoje'
     if (viewId === 'proximos7')  return 'Próximos 7 dias'
     if (viewId === 'historico')  return 'Histórico'
@@ -151,7 +151,7 @@ export default function TarefasPage() {
   const t7Str = addDaysLocal(todayStr, 7)
 
   const NAV_VIEWS: { id: ViewId; label: string; icon: React.ReactNode; count: number }[] = [
-    { id: 'inbox',     label: 'Hoje',            icon: <CalendarDays size={14} />, count: tasks.filter(t => !t.parent_id && !t.completed_at && t.due_date === todayStr).length || tasks.filter(t => !t.parent_id && !t.completed_at && !t.due_date).length },
+    { id: 'inbox',     label: 'Inbox',           icon: <CalendarDays size={14} />, count: tasks.filter(t => !t.parent_id && !t.completed_at && t.due_date === todayStr).length || tasks.filter(t => !t.parent_id && !t.completed_at && !t.due_date).length },
     { id: 'hoje',      label: 'Hoje',            icon: <Sun size={14} />,      count: tasks.filter(t => !t.parent_id && !t.completed_at && t.due_date != null && t.due_date <= todayStr).length },
     { id: 'proximos7', label: 'Próximos 7 dias', icon: <Calendar size={14} />, count: tasks.filter(t => !t.parent_id && !t.completed_at && t.due_date != null && t.due_date <= t7Str).length },
     { id: 'historico', label: 'Histórico',       icon: <History size={14} />,  count: tasks.filter(t => !!t.completed_at && !t.parent_id).length },
@@ -367,7 +367,7 @@ export default function TarefasPage() {
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#0a0a0a] border-t border-[#1f1f1f] flex"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
         {[
-          { id: 'inbox',     label: 'Hoje',   Icon: CalendarDays },
+          { id: 'inbox',     label: 'Inbox',   Icon: CalendarDays },
           { id: 'hoje',      label: 'Hoje',   Icon: Sun      },
           { id: 'proximos7', label: '7 dias', Icon: Calendar },
           { id: 'projetos',  label: 'Projetos', Icon: FolderOpen },
