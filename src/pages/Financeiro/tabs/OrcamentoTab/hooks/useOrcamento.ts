@@ -15,6 +15,38 @@ function daysInMonth(year: number, month: number) {
   return new Date(year, month, 0).getDate()
 }
 
+/** Réplica exata da lógica de árvore de MesTab/utils.ts (buildTree +
+ * sumLeaves): valor de um grupo = soma recursiva dos filhos; natureza
+ * de um item agrupado é a do NÓ RAIZ, não a de cada folha individual.
+ * Precisa ser bit-a-bit igual à aba Mês pra "entradas reais"/"saídas
+ * reais" do Orçamento nunca divergir do que a aba Mês mostra pro mesmo
+ * período — reimplementado localmente (em vez de importar de MesTab)
+ * porque só precisamos do total do mês, não da árvore completa; mesmo
+ * padrão de reimplementação local já usado em HorizonteSaldos.tsx. */
+interface LancNode {
+  id: string
+  parent_id: string | null
+  natureza: string
+  valor: number | null
+  is_grupo: boolean | null
+  categoria_id: string | null
+  children: LancNode[]
+}
+function buildRoots(rows: Omit<LancNode, 'children'>[]): LancNode[] {
+  const map = new Map<string, LancNode>()
+  for (const r of rows) map.set(r.id, { ...r, children: [] })
+  const roots: LancNode[] = []
+  for (const node of map.values()) {
+    if (node.parent_id && map.has(node.parent_id)) map.get(node.parent_id)!.children.push(node)
+    else roots.push(node)
+  }
+  return roots
+}
+function sumLeavesValor(node: LancNode): number {
+  if (!node.is_grupo) return Number(node.valor) || 0
+  return node.children.reduce((s, c) => s + sumLeavesValor(c), 0)
+}
+
 const DEFAULT_CONFIG: Omit<OrcamentoConfig, 'id' | 'user_id' | 'created_at' | 'updated_at'> = {
   meta_guardar_tipo: 'percentual',
   meta_guardar_valor: 0,
@@ -82,30 +114,44 @@ export function useOrcamento(ano: FinAno, month: number) {
       const endDate = `${ano.ano}-${pad2(month)}-${pad2(lastDay)}`
       const { data, error } = await supabase
         .from('fin_lancamentos')
-        .select('categoria_id, natureza, valor, is_grupo')
+        .select('id, parent_id, categoria_id, natureza, valor, is_grupo')
         .eq('ano_id', ano.id)
         .gte('data', startDate)
         .lte('data', endDate)
       if (error) throw error
 
-      // Gotcha já conhecido do projeto: dados importados do Notion têm
-      // is_grupo=null, então filtra !r.is_grupo em JS (não .eq no banco).
-      // 'saida' (aba Mês) E 'diario' (aba Diário) contam como realizado —
-      // mesmo motivo do fix acima: excluir 'diario' aqui zerava o
-      // realizado de qualquer grupo vinculado a categoria do Diário.
+      const rows = (data ?? []) as Omit<LancNode, 'children'>[]
+
+      // byCategoria (realizado por grupo de orçamento): soma direta por
+      // categoria_id de cada FOLHA — categoria só existe de fato em
+      // lançamentos individuais, não em cabeçalhos de grupo. Gotcha já
+      // conhecido do projeto: dados importados do Notion têm is_grupo=null,
+      // então filtra !r.is_grupo em JS (não .eq no banco). 'saida' (aba Mês)
+      // E 'diario' (aba Diário) contam como realizado — excluir 'diario'
+      // zerava o realizado de grupo vinculado a categoria do Diário.
       const byCategoria: Record<string, number> = {}
+      for (const r of rows) {
+        if (r.is_grupo) continue
+        if ((r.natureza !== 'saida' && r.natureza !== 'diario') || !r.categoria_id) continue
+        byCategoria[r.categoria_id] = (byCategoria[r.categoria_id] ?? 0) + (Number(r.valor) || 0)
+      }
+
+      // entradasReais/saidasReais: MESMA lógica de árvore que a aba Mês
+      // usa pro totE/totS (buildTree + sumLeaves) — soma recursiva dos
+      // filhos de um grupo, bucketada pela natureza do nó RAIZ. Uma soma
+      // "flat" por natureza de cada linha (em vez da árvore) diverge
+      // sempre que um item agrupado tem uma folha com natureza diferente
+      // do grupo-pai — exatamente o tipo de divergência que fazia esta
+      // aba mostrar um total de saídas diferente do card Saídas da aba Mês.
+      const roots = buildRoots(rows)
       let entradasReais = 0
       let saidasReais = 0
-      for (const r of (data ?? []) as { categoria_id: string | null; natureza: string; valor: number | null; is_grupo: boolean | null }[]) {
-        if (r.is_grupo) continue
-        const v = Number(r.valor) || 0
-
-        if (r.natureza === 'entrada') entradasReais += v
-        if (r.natureza === 'saida') saidasReais += v
-
-        if ((r.natureza !== 'saida' && r.natureza !== 'diario') || !r.categoria_id) continue
-        byCategoria[r.categoria_id] = (byCategoria[r.categoria_id] ?? 0) + v
+      for (const root of roots) {
+        const v = sumLeavesValor(root)
+        if (root.natureza === 'entrada') entradasReais += v
+        else if (root.natureza === 'saida') saidasReais += v
       }
+
       return { byCategoria, entradasReais, saidasReais }
     },
   })

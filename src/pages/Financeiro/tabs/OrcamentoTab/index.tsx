@@ -126,13 +126,13 @@ export function OrcamentoTab({ ano, initialMonth }: Props) {
       {/* Top cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
         <div className="bg-bg-2 border border-line rounded-xl p-3.5">
-          <div className="text-[10px] text-ink-3 uppercase tracking-wider font-[Sora] mb-1.5">Entradas previstas</div>
-          <div className="text-base sm:text-lg font-bold tabular-nums text-[#22c55e]">{BRL(orc.entradasPrevistas)}</div>
+          <div className="text-[10px] text-ink-3 uppercase tracking-wider font-[Sora] mb-1.5">Entradas</div>
+          <div className="text-base sm:text-lg font-bold tabular-nums text-[#22c55e]">{BRL(orc.entradasReais)}</div>
         </div>
         <div className="bg-bg-2 border border-line rounded-xl p-3.5">
           <button onClick={() => setOverrideTarget({ tipo: 'meta_guardar' })} className="w-full text-left">
             <div className="text-[10px] text-ink-3 uppercase tracking-wider font-[Sora] mb-1.5">
-              Guardar este mês{orc.isMetaGuardarAjustada ? ' ·' : ''}
+              Investimento{orc.isMetaGuardarAjustada ? ' ·' : ''}
             </div>
             <div className="text-base sm:text-lg font-bold tabular-nums" style={{ color: 'var(--blue)' }}>
               {BRL(orc.guardarMes)}
