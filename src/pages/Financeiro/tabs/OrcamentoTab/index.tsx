@@ -34,7 +34,7 @@ export function OrcamentoTab({ ano, initialMonth }: Props) {
   const variaveis = orc.grupos.filter(g => g.tipo === 'variavel')
 
   const categoriasVinculadasIds = new Set(orc.grupos.flatMap(g => g.categorias_vinculadas))
-  const categoriasSemGrupo = orc.categoriasSaida.filter(c => !categoriasVinculadasIds.has(c.id))
+  const categoriasSemGrupo = orc.categoriasGasto.filter(c => !categoriasVinculadasIds.has(c.id))
 
   function handleSaveGrupo(fields: { nome: string; tipo: OrcamentoGrupoTipo; valorPrevistoPadrao: number; categoriasVinculadas: string[] }) {
     if (grupoModal?.mode === 'edit') {
@@ -166,7 +166,7 @@ export function OrcamentoTab({ ano, initialMonth }: Props) {
         <GrupoModal
           grupo={grupoModal.mode === 'edit' ? grupoModal.grupo : null}
           initialTipo={grupoModal.mode === 'create' ? grupoModal.tipo : undefined}
-          categorias={orc.categoriasSaida}
+          categorias={orc.categoriasGasto}
           onSave={handleSaveGrupo}
           onDelete={grupoModal.mode === 'edit' ? () => {
             if (window.confirm(`Remover o grupo "${grupoModal.grupo.nome}"?`)) {

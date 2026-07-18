@@ -61,10 +61,14 @@ export function useOrcamento(ano: FinAno, month: number) {
     },
   })
 
+  // Categorias de "gasto" — saida (aba Mês) E diario (aba Diário). Filtrar
+  // só 'saida' aqui escondia do seletor de vínculo do orçamento toda
+  // categoria usada exclusivamente no Diário (natureza='diario'), que são
+  // exatamente as categorias de gasto variável do dia a dia.
   const categoriasQuery = useQuery({
-    queryKey: ['fin_categorias_saida'],
+    queryKey: ['fin_categorias_gasto'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('fin_categorias').select('*').eq('natureza', 'saida').order('nome')
+      const { data, error } = await supabase.from('fin_categorias').select('*').in('natureza', ['saida', 'diario']).order('nome')
       if (error) throw error
       return (data ?? []) as FinCategoria[]
     },
@@ -86,10 +90,13 @@ export function useOrcamento(ano: FinAno, month: number) {
 
       // Gotcha já conhecido do projeto: dados importados do Notion têm
       // is_grupo=null, então filtra !r.is_grupo em JS (não .eq no banco).
+      // 'saida' (aba Mês) E 'diario' (aba Diário) contam como realizado —
+      // mesmo motivo do fix acima: excluir 'diario' aqui zerava o
+      // realizado de qualquer grupo vinculado a categoria do Diário.
       const byCategoria: Record<string, number> = {}
       for (const r of (data ?? []) as { categoria_id: string | null; natureza: string; valor: number | null; is_grupo: boolean | null }[]) {
         if (r.is_grupo) continue
-        if (r.natureza !== 'saida' || !r.categoria_id) continue
+        if ((r.natureza !== 'saida' && r.natureza !== 'diario') || !r.categoria_id) continue
         const v = Number(r.valor) || 0
         byCategoria[r.categoria_id] = (byCategoria[r.categoria_id] ?? 0) + v
       }
@@ -252,7 +259,7 @@ export function useOrcamento(ano: FinAno, month: number) {
     config,
     grupos,
     entradas,
-    categoriasSaida: categoriasQuery.data ?? [],
+    categoriasGasto: categoriasQuery.data ?? [],
     entradasPrevistas,
     guardarMes,
     metaGuardarValor,
