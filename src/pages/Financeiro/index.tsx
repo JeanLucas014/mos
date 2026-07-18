@@ -4,16 +4,18 @@ import { supabase } from '@/lib/supabase'
 import type { FinAno } from './types'
 import { AnoTab } from './tabs/AnoTab'
 import { MesTab } from './tabs/MesTab'
+import { OrcamentoTab } from './tabs/OrcamentoTab'
 import { MetasTab } from './tabs/MetasTab'
 import { InvestimentosTab } from './tabs/InvestimentosTab'
 import { ConfigTab } from './tabs/ConfigTab'
 import { FinanceiroGuide } from './components/FinanceiroGuide'
 import { HelpCircle } from 'lucide-react'
 
-type Tab = 'ano' | 'mes' | 'metas' | 'investimentos' | 'config'
+type Tab = 'ano' | 'mes' | 'orcamento' | 'metas' | 'investimentos' | 'config'
 const TABS: { id: Tab; label: string }[] = [
   { id: 'ano', label: 'Ano' },
   { id: 'mes', label: 'Mês' },
+  { id: 'orcamento', label: 'Orçamento' },
   { id: 'metas', label: 'Metas' },
   { id: 'investimentos', label: 'Investimentos' },
   { id: 'config', label: 'Configurações' },
@@ -118,6 +120,7 @@ export default function FinanceiroPage() {
         <>
           {activeTab === 'ano'          && ano && <AnoTab ano={ano} onGoToMonth={goToMonth} />}
           {activeTab === 'mes'          && ano && <MesTab ano={ano} initialMonth={selectedMonth} />}
+          {activeTab === 'orcamento'    && ano && <OrcamentoTab ano={ano} initialMonth={selectedMonth} />}
           {activeTab === 'metas'        && <MetasTab />}
           {activeTab === 'investimentos' && <InvestimentosTab />}
           {activeTab === 'config'       && <ConfigTab anos={anos} onReload={loadAnos} />}

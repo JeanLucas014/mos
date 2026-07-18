@@ -52,6 +52,9 @@ export function useRealtimeSync() {
           // recorrências já foram pagas no mês) — sem isso o card de
           // Financeiro não limpava o alerta de "vencida" ao marcar como paga.
           qc.invalidateQueries({ queryKey: ['dash_recorrentes'] })
+          // Orçamento: "realizado" de cada grupo é somado a partir de
+          // fin_lancamentos — mesmo padrão de invalidação acima.
+          qc.invalidateQueries({ queryKey: ['orcamento_realizado'] })
         }
         if (table === 'tasks') {
           qc.invalidateQueries({ queryKey: ['dash_tasks'] })
