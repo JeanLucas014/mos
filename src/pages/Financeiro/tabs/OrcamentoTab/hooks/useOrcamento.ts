@@ -94,13 +94,19 @@ export function useOrcamento(ano: FinAno, month: number) {
       // mesmo motivo do fix acima: excluir 'diario' aqui zerava o
       // realizado de qualquer grupo vinculado a categoria do Diário.
       const byCategoria: Record<string, number> = {}
+      let entradasReais = 0
+      let saidasReais = 0
       for (const r of (data ?? []) as { categoria_id: string | null; natureza: string; valor: number | null; is_grupo: boolean | null }[]) {
         if (r.is_grupo) continue
-        if ((r.natureza !== 'saida' && r.natureza !== 'diario') || !r.categoria_id) continue
         const v = Number(r.valor) || 0
+
+        if (r.natureza === 'entrada') entradasReais += v
+        if (r.natureza === 'saida') saidasReais += v
+
+        if ((r.natureza !== 'saida' && r.natureza !== 'diario') || !r.categoria_id) continue
         byCategoria[r.categoria_id] = (byCategoria[r.categoria_id] ?? 0) + v
       }
-      return byCategoria
+      return { byCategoria, entradasReais, saidasReais }
     },
   })
 
@@ -226,7 +232,9 @@ export function useOrcamento(ano: FinAno, month: number) {
   const config = configQuery.data ?? { ...DEFAULT_CONFIG, id: '', user_id: user?.id ?? '', created_at: '', updated_at: '' }
   const grupos = gruposQuery.data ?? []
   const entradas = entradasQuery.data ?? []
-  const realizadoPorCategoria = realizadoQuery.data ?? {}
+  const realizadoPorCategoria = realizadoQuery.data?.byCategoria ?? {}
+  const entradasReais = realizadoQuery.data?.entradasReais ?? 0
+  const saidasReais = realizadoQuery.data?.saidasReais ?? 0
 
   function previstoGrupo(g: OrcamentoGrupo): number {
     const ov = overrideFor('grupo', g.id)
@@ -246,9 +254,17 @@ export function useOrcamento(ano: FinAno, month: number) {
 
   const metaGuardarOverride = overrideFor('meta_guardar', null)
   const metaGuardarValor = metaGuardarOverride ? Number(metaGuardarOverride.valor_override) : Number(config.meta_guardar_valor)
+  // Percentual incide sobre as entradas REAIS do mês (o que de fato entrou),
+  // não sobre as previstas — mantém consistência com o card Resultado, que
+  // também parte das entradas reais.
   const guardarMes = config.meta_guardar_tipo === 'percentual'
-    ? entradasPrevistas * (metaGuardarValor / 100)
+    ? entradasReais * (metaGuardarValor / 100)
     : metaGuardarValor
+
+  // Resultado = entradas reais - meta de guardar do mês - saídas reais
+  // (fin_lancamentos natureza='saida', TODAS — não só as vinculadas a
+  // algum grupo de orçamento).
+  const resultadoMes = entradasReais - guardarMes - saidasReais
 
   const isLoading = configQuery.isLoading || gruposQuery.isLoading || entradasQuery.isLoading
     || overridesQuery.isLoading || categoriasQuery.isLoading || realizadoQuery.isLoading
@@ -261,7 +277,10 @@ export function useOrcamento(ano: FinAno, month: number) {
     entradas,
     categoriasGasto: categoriasQuery.data ?? [],
     entradasPrevistas,
+    entradasReais,
+    saidasReais,
     guardarMes,
+    resultadoMes,
     metaGuardarValor,
     isMetaGuardarAjustada: !!metaGuardarOverride,
     previstoGrupo,

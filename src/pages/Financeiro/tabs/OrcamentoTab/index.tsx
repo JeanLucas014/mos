@@ -124,7 +124,7 @@ export function OrcamentoTab({ ano, initialMonth }: Props) {
       </div>
 
       {/* Top cards */}
-      <div className="grid grid-cols-2 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
         <div className="bg-bg-2 border border-line rounded-xl p-3.5">
           <div className="text-[10px] text-ink-3 uppercase tracking-wider font-[Sora] mb-1.5">Entradas previstas</div>
           <div className="text-base sm:text-lg font-bold tabular-nums text-[#22c55e]">{BRL(orc.entradasPrevistas)}</div>
@@ -141,6 +141,15 @@ export function OrcamentoTab({ ano, initialMonth }: Props) {
               )}
             </div>
           </button>
+        </div>
+        <div className="bg-bg-2 border border-line rounded-xl p-3.5 col-span-2 sm:col-span-1">
+          <div className="text-[10px] text-ink-3 uppercase tracking-wider font-[Sora] mb-1.5">Resultado</div>
+          <div
+            className="text-base sm:text-lg font-bold tabular-nums"
+            style={{ color: orc.resultadoMes >= 0 ? '#22c55e' : '#ef4444' }}
+          >
+            {orc.resultadoMes < 0 ? '−' : ''}R$ {Math.abs(orc.resultadoMes).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
         </div>
       </div>
 
