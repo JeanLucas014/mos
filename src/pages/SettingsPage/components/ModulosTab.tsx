@@ -1,5 +1,5 @@
 import { useUserSettings } from '@/hooks/useUserSettings'
-import { MODULES } from '@/lib/modules'
+import { MODULES, isModuleVisible } from '@/lib/modules'
 import { Toggle } from '@/components/ui/Toggle'
 
 /* ══════════════════════════════════════════════════════════════════
@@ -8,8 +8,13 @@ import { Toggle } from '@/components/ui/Toggle'
 export function ModulosTab() {
   const { data: settings, isLoading: settingsLoading, toggleModule } = useUserSettings()
   const enabled = settings?.enabled_modules ?? []
+  const isAdmin = settings?.is_admin ?? false
 
-  const visibleModules = MODULES.filter(m => !m.hidden || enabled.includes(m.id))
+  // adminOnly usa isModuleVisible (mesma checagem do Sidebar); hidden
+  // "normal" só aparece aqui uma vez já habilitado, pra permitir desligar.
+  const visibleModules = MODULES.filter(m =>
+    m.adminOnly ? isModuleVisible(m.id, m.adminOnly, enabled, isAdmin) : (!m.hidden || enabled.includes(m.id)),
+  )
   const groups = Array.from(new Set(visibleModules.map(m => m.group)))
 
   return (
@@ -24,7 +29,11 @@ export function ModulosTab() {
               <div className="text-[10px] text-ink-3 uppercase tracking-wider font-[Sora] mb-1.5 px-0.5">{group}</div>
               <div className="bg-bg-2 border border-line rounded-xl overflow-hidden">
                 {visibleModules.filter(m => m.group === group).map(mod => {
-                  const isOn = enabled.includes(mod.id)
+                  // adminOnly já está sempre visível+ativo pra quem chegou até
+                  // aqui (isModuleVisible não depende de enabled_modules pra
+                  // esses) — o toggle vira só um indicador, igual core.
+                  const isOn = mod.adminOnly ? true : enabled.includes(mod.id)
+                  const locked = mod.core || mod.adminOnly
                   return (
                     <div key={mod.id} className="flex items-center justify-between px-4 py-3.5 border-b border-line last:border-0">
                       <div className="flex-1 min-w-0 pr-4">
@@ -33,8 +42,8 @@ export function ModulosTab() {
                       </div>
                       <Toggle
                         on={isOn}
-                        disabled={mod.core}
-                        onClick={() => !mod.core && toggleModule.mutate(mod.id)}
+                        disabled={locked}
+                        onClick={() => !locked && toggleModule.mutate(mod.id)}
                       />
                     </div>
                   )

@@ -1,7 +1,4 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
-import { useUserSettings } from '../hooks/useUserSettings'
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis,
   Tooltip, ResponsiveContainer, CartesianGrid,
@@ -74,19 +71,10 @@ function timeAgo(iso: string | null) {
 }
 
 export function AdminPage() {
-  const { user } = useAuth()
-  const { data: settings, isLoading: settingsLoading } = useUserSettings()
-  const navigate = useNavigate()
   const [stats, setStats] = useState<AdminStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
-
-  useEffect(() => {
-    if (user && !settingsLoading && !settings?.is_admin) {
-      navigate('/dashboard')
-    }
-  }, [user, settingsLoading, settings, navigate])
 
   async function load() {
     setLoading(true)
@@ -108,10 +96,8 @@ export function AdminPage() {
   }
 
   useEffect(() => {
-    if (settings?.is_admin) load()
-  }, [settings])
-
-  if (!settings?.is_admin) return null
+    load()
+  }, [])
 
   return (
     <div>

@@ -4,6 +4,7 @@ import { useTheme } from './hooks/useTheme'
 import { AppShell } from './components/layout/AppShell'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { RequireAuth } from './components/auth/RequireAuth'
+import { RequireAdmin } from './components/auth/RequireAdmin'
 import { LoginPage } from './components/auth/LoginPage'
 import OnboardingPage from './pages/OnboardingPage'
 
@@ -84,17 +85,17 @@ export default function App() {
         <Route path="habitos" element={<HabitsPage />} />
         <Route path="compras" element={<ShoppingPage />} />
         <Route path="financeiro" element={<FinanceiroPage />} />
-        <Route path="faturamento" element={<InvoicesPage />} />
+        <Route path="faturamento" element={<RequireAdmin><InvoicesPage /></RequireAdmin>} />
         <Route path="notas" element={<NotesPage />} />
         <Route path="biblioteca" element={<LibraryPage />} />
         <Route path="estudos" element={<StudiesPage />} />
         <Route path="senhas" element={<VaultPage />} />
         <Route path="esportes" element={<SportsPage />} />
-        <Route path="sistemas" element={<SistemasPage />} />
-        <Route path="sistemas/wp-speed-audit" element={<WPSpeedAudit />} />
+        <Route path="sistemas" element={<RequireAdmin><SistemasPage /></RequireAdmin>} />
+        <Route path="sistemas/wp-speed-audit" element={<RequireAdmin><WPSpeedAudit /></RequireAdmin>} />
         <Route path="integracoes" element={<IntegrationsPage />} />
         <Route path="configuracoes" element={<SettingsPage />} />
-        <Route path="admin" element={<AdminPage />} />
+        <Route path="admin" element={<RequireAdmin><AdminPage /></RequireAdmin>} />
       </Route>
     </Routes>
     </Suspense>

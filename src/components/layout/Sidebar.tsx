@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Settings, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useUIStore } from '../../stores/useUIStore'
 import { useUserSettings } from '../../hooks/useUserSettings'
+import { isModuleVisible } from '../../lib/modules'
 
 interface NavItem {
   path: string
@@ -10,6 +11,9 @@ interface NavItem {
   moduleId: string
   icon: React.ReactNode
   end?: boolean
+  /** Jean-only — visível independente de enabled_modules, só com is_admin.
+   * Ver RequireAdmin.tsx: mesma checagem usada no guard de rota. */
+  adminOnly?: boolean
 }
 interface NavGroup {
   label: string
@@ -136,6 +140,7 @@ const GROUPS: NavGroup[] = [
         path: '/faturamento',
         label: 'Faturamento',
         moduleId: 'faturamento',
+        adminOnly: true,
         icon: (
           <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
             <path d="M3.5 1.8h6L13 5v9.2H3.5V1.8z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
@@ -175,6 +180,7 @@ const GROUPS: NavGroup[] = [
         path: '/sistemas',
         label: 'Sistemas',
         moduleId: 'sistemas',
+        adminOnly: true,
         icon: (
           <svg className="w-[15px] h-[15px]" viewBox="0 0 16 16" fill="none">
             <rect x="1.5" y="2.5" width="13" height="9" rx="1.4" stroke="currentColor" strokeWidth="1.3" />
@@ -240,6 +246,7 @@ export function Sidebar() {
   const navigate = useNavigate()
   const { data: settings } = useUserSettings()
   const enabledModules = settings?.enabled_modules ?? GROUPS.flatMap(g => g.items.map(i => i.moduleId))
+  const isAdmin = settings?.is_admin ?? false
 
   async function handleSignOut() {
     await signOut()
@@ -267,7 +274,7 @@ export function Sidebar() {
       <nav className="flex-1 py-3 px-2 overflow-y-auto">
         {GROUPS.map((group) => {
           const visibleItems = group.items.filter(
-            item => enabledModules.includes(item.moduleId),
+            item => isModuleVisible(item.moduleId, item.adminOnly, enabledModules, isAdmin),
           )
           if (visibleItems.length === 0) return null
           return (
