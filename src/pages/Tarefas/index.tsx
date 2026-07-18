@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { todayLocal, addDaysLocal } from '@/lib/dates'
-import { Plus, Sun, Calendar, CalendarDays, FolderOpen, ChevronDown, ChevronRight, History, Settings } from 'lucide-react'
+import { Plus, Sun, Calendar, FolderOpen, ChevronDown, ChevronRight, History, Settings } from 'lucide-react'
 import type { Task, TaskProject, ViewId } from './types'
 import { TaskItem } from './components/TaskItem'
 import { TaskModal } from './components/TaskModal'
@@ -12,7 +12,7 @@ import { useRealtimeStore } from '@/stores/useRealtimeStore'
 
 type ModalState = { task: Partial<Task> } | null
 
-const SYSTEM_VIEWS = ['inbox', 'hoje', 'proximos7', 'historico']
+const SYSTEM_VIEWS = ['hoje', 'proximos7', 'historico']
 
 function fmtDateHeader(iso: string): string {
   return new Date(iso + 'T00:00:00').toLocaleDateString('pt-BR', {
@@ -23,7 +23,7 @@ function fmtDateHeader(iso: string): string {
 export default function TarefasPage() {
   const [tasks, setTasks]           = useState<Task[]>([])
   const [projects, setProjects]     = useState<TaskProject[]>([])
-  const [viewId, setViewId]         = useState<ViewId>('inbox')
+  const [viewId, setViewId]         = useState<ViewId>('hoje')
   const [modal, setModal]           = useState<ModalState>(null)
   const [editingProject, setEditingProject] = useState<TaskProject | null>(null)
   const [quickTitle, setQuickTitle] = useState('')
@@ -57,10 +57,6 @@ export default function TarefasPage() {
     const t7 = addDaysLocal(todayStr, 7)
     const pendingTasks = tasks.filter(t => !t.parent_id && !t.completed_at)
     switch (view) {
-      case 'inbox': {
-        const todayTasks = pendingTasks.filter(t => t.due_date === todayStr)
-        return todayTasks.length > 0 ? todayTasks : pendingTasks.filter(t => !t.due_date)
-      }
       case 'hoje':      return pendingTasks.filter(t => t.due_date != null && t.due_date <= todayStr)
       case 'proximos7': return pendingTasks.filter(t => t.due_date != null && t.due_date <= t7)
       case 'historico': return [...tasks.filter(t => !!t.completed_at && !t.parent_id)]
@@ -92,7 +88,7 @@ export default function TarefasPage() {
   async function handleDeleteProject(id: string) {
     await supabase.from('task_projects').delete().eq('id', id)
     setProjects(prev => prev.filter(p => p.id !== id))
-    if (viewId === id) setViewId('inbox')
+    if (viewId === id) setViewId('hoje')
     setEditingProject(null)
   }
 
@@ -137,7 +133,6 @@ export default function TarefasPage() {
   }
 
   const viewLabel = (() => {
-    if (viewId === 'inbox')      return 'Inbox'
     if (viewId === 'hoje')       return 'Hoje'
     if (viewId === 'proximos7')  return 'Próximos 7 dias'
     if (viewId === 'historico')  return 'Histórico'
@@ -151,7 +146,6 @@ export default function TarefasPage() {
   const t7Str = addDaysLocal(todayStr, 7)
 
   const NAV_VIEWS: { id: ViewId; label: string; icon: React.ReactNode; count: number }[] = [
-    { id: 'inbox',     label: 'Inbox',           icon: <CalendarDays size={14} />, count: tasks.filter(t => !t.parent_id && !t.completed_at && t.due_date === todayStr).length || tasks.filter(t => !t.parent_id && !t.completed_at && !t.due_date).length },
     { id: 'hoje',      label: 'Hoje',            icon: <Sun size={14} />,      count: tasks.filter(t => !t.parent_id && !t.completed_at && t.due_date != null && t.due_date <= todayStr).length },
     { id: 'proximos7', label: 'Próximos 7 dias', icon: <Calendar size={14} />, count: tasks.filter(t => !t.parent_id && !t.completed_at && t.due_date != null && t.due_date <= t7Str).length },
     { id: 'historico', label: 'Histórico',       icon: <History size={14} />,  count: tasks.filter(t => !!t.completed_at && !t.parent_id).length },
@@ -335,7 +329,7 @@ export default function TarefasPage() {
                   task={task}
                   subtasks={subtasksOf(task.id)}
                   project={projectOf(task)}
-                  showProject={viewId === 'inbox' || viewId === 'hoje' || viewId === 'proximos7'}
+                  showProject={viewId === 'hoje' || viewId === 'proximos7'}
                   onComplete={handleComplete}
                   onDelete={handleDelete}
                   onClick={t => setModal({ task: t })}
@@ -367,7 +361,6 @@ export default function TarefasPage() {
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#0a0a0a] border-t border-[#1f1f1f] flex"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
         {[
-          { id: 'inbox',     label: 'Inbox',   Icon: CalendarDays },
           { id: 'hoje',      label: 'Hoje',   Icon: Sun      },
           { id: 'proximos7', label: '7 dias', Icon: Calendar },
           { id: 'projetos',  label: 'Projetos', Icon: FolderOpen },

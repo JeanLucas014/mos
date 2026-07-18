@@ -49,4 +49,4 @@ export interface TaskComment {
   created_at: string | null
 }
 
-export type ViewId = 'inbox' | 'hoje' | 'proximos7' | 'historico' | string // string = project_id
+export type ViewId = 'hoje' | 'proximos7' | 'historico' | string // string = project_id
