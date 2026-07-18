@@ -911,6 +911,7 @@ export type Database = {
       notes: {
         Row: {
           body: string | null
+          body_json: Json | null
           created_at: string
           id: string
           title: string | null
@@ -919,6 +920,7 @@ export type Database = {
         }
         Insert: {
           body?: string | null
+          body_json?: Json | null
           created_at?: string
           id?: string
           title?: string | null
@@ -927,6 +929,7 @@ export type Database = {
         }
         Update: {
           body?: string | null
+          body_json?: Json | null
           created_at?: string
           id?: string
           title?: string | null

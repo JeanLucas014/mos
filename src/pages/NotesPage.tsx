@@ -1,12 +1,18 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import type { JSONContent } from '@tiptap/react'
 import { useNotes } from '../hooks/useNotes'
+import { useAuth } from '../contexts/AuthContext'
 import { HelpButton } from '@/components/help/HelpButton'
 import { ErrorState } from '@/components/ui/ErrorState'
+import { NoteEditor } from './Notas/components/NoteEditor'
+import { emptyDoc, textToTiptapDoc } from '@/lib/tiptapContent'
+import type { Json } from '@/types/db'
 
 export function NotesPage() {
+  const { user } = useAuth()
   const { data: notes, isLoading, isError, addNote, updateNote, deleteNote } = useNotes()
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [body, setBody] = useState('')
+  const [content, setContent] = useState<JSONContent>(emptyDoc())
   const [title, setTitle] = useState('')
   const [saved, setSaved] = useState(false)
   const [showList, setShowList] = useState(true) // mobile: toggle between list and editor
@@ -16,17 +22,25 @@ export function NotesPage() {
 
   useEffect(() => {
     if (selected) {
-      setBody(selected.body ?? '')
+      const doc = selected.body_json
+        ? (selected.body_json as unknown as JSONContent)
+        : textToTiptapDoc(selected.body)
+      setContent(doc)
       setTitle(selected.title ?? '')
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected?.id])
 
   const saveNote = useCallback(
-    (id: string, newTitle: string, newBody: string) => {
+    (id: string, newTitle: string, bodyJson?: JSONContent, plainText?: string) => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
       debounceRef.current = setTimeout(() => {
         updateNote.mutate(
-          { id, title: newTitle, body: newBody },
+          {
+            id,
+            title: newTitle,
+            ...(bodyJson !== undefined ? { bodyJson: bodyJson as unknown as Json, body: plainText } : {}),
+          },
           {
             onSuccess: () => {
               setSaved(true)
@@ -39,14 +53,14 @@ export function NotesPage() {
     [updateNote],
   )
 
-  function handleBodyChange(value: string) {
-    setBody(value)
-    if (selectedId) saveNote(selectedId, title, value)
+  function handleContentChange(doc: JSONContent, plainText: string) {
+    setContent(doc)
+    if (selectedId) saveNote(selectedId, title, doc, plainText)
   }
 
   function handleTitleChange(value: string) {
     setTitle(value)
-    if (selectedId) saveNote(selectedId, value, body)
+    if (selectedId) saveNote(selectedId, value)
   }
 
   function handleNewNote() {
@@ -170,13 +184,13 @@ export function NotesPage() {
         {/* Mobile: visible when showList=false; Desktop: always visible */}
         <div
           className={[
-            'flex-1 flex flex-col',
+            'flex-1 flex flex-col min-w-0 min-h-0',
             !showList ? 'flex' : 'hidden lg:flex',
           ].join(' ')}
         >
           {selected ? (
             <>
-              <div className="flex items-center gap-2 px-4 border-b border-line" style={{ minHeight: 48 }}>
+              <div className="flex items-center gap-2 px-4 border-b border-line flex-shrink-0" style={{ minHeight: 48 }}>
                 {/* Back button — mobile only */}
                 <button
                   onClick={() => setShowList(true)}
@@ -203,17 +217,11 @@ export function NotesPage() {
                   </span>
                 )}
               </div>
-              <textarea
-                value={body}
-                onChange={(e) => handleBodyChange(e.target.value)}
-                className="flex-1 bg-bg resize-none p-4 text-ink focus:outline-none"
-                style={{
-                  fontFamily: 'JetBrains Mono, Manrope, sans-serif',
-                  fontSize: 13,
-                  lineHeight: 1.7,
-                  minHeight: 'calc(100vh - 200px)',
-                }}
-                placeholder="Comece a escrever..."
+              <NoteEditor
+                noteId={selected.id}
+                content={content}
+                userId={user?.id}
+                onChange={handleContentChange}
               />
             </>
           ) : (

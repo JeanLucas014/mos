@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
-import type { Database } from '../types/db'
+import type { Database, Json } from '../types/db'
+import { emptyDoc } from '../lib/tiptapContent'
 
 type Note = Database['public']['Tables']['notes']['Row']
 
@@ -27,7 +28,7 @@ export function useNotes() {
     mutationFn: async () => {
       const { data, error } = await supabase
         .from('notes')
-        .insert({ title: 'Sem título', body: '' })
+        .insert({ title: 'Sem título', body: '', body_json: emptyDoc() as unknown as Json })
         .select()
         .single()
       if (error) throw error
@@ -39,14 +40,15 @@ export function useNotes() {
   })
 
   const updateNote = useMutation({
-    mutationFn: async ({ id, title, body }: { id: string; title?: string; body?: string }) => {
-      const updates: { title?: string; body?: string } = {}
+    mutationFn: async ({ id, title, body, bodyJson }: { id: string; title?: string; body?: string; bodyJson?: Json }) => {
+      const updates: { title?: string; body?: string; body_json?: Json } = {}
       if (title !== undefined) updates.title = title
       if (body !== undefined) updates.body = body
+      if (bodyJson !== undefined) updates.body_json = bodyJson
       const { error } = await supabase.from('notes').update(updates).eq('id', id)
       if (error) throw error
     },
-    onMutate: async ({ id, title, body }) => {
+    onMutate: async ({ id, title, body, bodyJson }) => {
       await qc.cancelQueries({ queryKey: key })
       const prev = qc.getQueryData<Note[]>(key)
       qc.setQueryData<Note[]>(key, (old) =>
@@ -56,6 +58,7 @@ export function useNotes() {
                 ...n,
                 ...(title !== undefined ? { title } : {}),
                 ...(body !== undefined ? { body } : {}),
+                ...(bodyJson !== undefined ? { body_json: bodyJson } : {}),
                 updated_at: new Date().toISOString(),
               }
             : n,
