@@ -17,8 +17,6 @@ export function FinanceiroWidget() {
   const venceHoje = recorrentes.data?.venceHoje ?? []
   const alertas   = [...vencidas, ...venceHoje]
 
-  const today = new Date().getDate()
-
   return (
     <Link to="/financeiro" className="block rounded-2xl border border-line bg-bg-2 p-[18px] hover:border-line/60 transition-colors">
       {/* Header */}
@@ -73,7 +71,7 @@ export function FinanceiroWidget() {
                 <div>
                   <div style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--text)' }}>{r.nome}</div>
                   <div style={{ fontSize: 10.5, color: '#ef4444', marginTop: 1 }}>
-                    Venceu há {today - r.dia_previsto} dia(s)
+                    Venceu há {r.diasAtraso} dia(s)
                   </div>
                 </div>
                 {r.valor > 0 && (

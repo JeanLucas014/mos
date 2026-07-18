@@ -25,6 +25,13 @@ function monthStart(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
 }
 
+/** Último dia do mês corrente, formato 'YYYY-MM-DD'. */
+function monthEnd(): string {
+  const d = new Date()
+  const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+}
+
 
 function today(): string {
   return todayLocal()
@@ -308,18 +315,21 @@ export function useDashFinancas() {
   return useQuery({
     queryKey: ['dash_financas_score'],
     queryFn: async () => {
+      // Mesmo período e mesma fórmula da aba Mês do Financeiro
+      // (res = totE - totS - totD): mês INTEIRO, não só até hoje — e
+      // 'diario' entra na conta, não é ignorado. Antes este hook cortava
+      // em lte(hoje) e excluía 'diario' inteiramente, o que fazia o saldo
+      // do card do Dashboard divergir do "Resultado" da aba Mês.
       const start = monthStart()
+      const end = monthEnd()
       const { data, error } = await supabase.from('fin_lancamentos')
         .select('valor, natureza, is_grupo')
         .gte('data', start)
-        .lte('data', today())
+        .lte('data', end)
       if (error) throw error
 
       // filtrar is_grupo em JS — dados Notion têm is_grupo=null
-      // natureza válida: 'entrada' (receita) ou 'saida' (despesa); 'diario' = Notion, ignorar
-      const rows = (data ?? []).filter(
-        (r: any) => !r.is_grupo && r.valor != null && (r.natureza === 'entrada' || r.natureza === 'saida'),
-      )
+      const rows = (data ?? []).filter((r: any) => !r.is_grupo && r.valor != null)
 
       const receitas = rows
         .filter((r: any) => r.natureza === 'entrada')
@@ -329,10 +339,15 @@ export function useDashFinancas() {
         .filter((r: any) => r.natureza === 'saida')
         .reduce((s: number, r: any) => s + Number(r.valor), 0)
 
-      return { receitas, despesas, saldo: receitas - despesas }
+      const diario = rows
+        .filter((r: any) => r.natureza === 'diario')
+        .reduce((s: number, r: any) => s + Number(r.valor), 0)
+
+      return { receitas, despesas, diario, saldo: receitas - despesas - diario }
     },
     // dados financeiros do mês mudam pouco — refetch ao voltar pra tela
-    // é suficiente, não precisa de polling a cada minuto
+    // é suficiente, não precisa de polling a cada minuto. Realtime
+    // (useRealtimeSync) já invalida esta key quando fin_lancamentos muda.
     staleTime: 1000 * 60 * 2,
     refetchOnWindowFocus: true,
   })
@@ -396,10 +411,27 @@ export function useDashRecorrentes() {
   return useQuery({
     queryKey: ['dash_recorrentes'],
     queryFn: async () => {
-      const now        = new Date()
-      const todayDay   = now.getDate()
-      const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
-      const todayStr   = formatLocalDate(now)
+      const now         = new Date()
+      const year        = now.getFullYear()
+      const month       = now.getMonth() + 1
+      const lastDayMes  = new Date(year, month, 0).getDate()
+      const monthStartStr = `${year}-${String(month).padStart(2, '0')}-01`
+      const todayStr    = today() // todayLocal() — nunca toISOString().slice(0,10)
+
+      // dia_previsto vira uma data real DESTE mês (travada no último dia
+      // do mês se dia_previsto > dias do mês, ex: 31 em fevereiro), pra
+      // comparar como data de verdade em vez de número de dia solto — o
+      // número solto quebra perto da virada do mês (ex: dia_previsto=28,
+      // hoje=dia 2 do mês seguinte, "hoje - dia_previsto" dava -26).
+      function dueDateStr(diaPrevisto: number): string {
+        const day = Math.min(diaPrevisto, lastDayMes)
+        return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+      }
+      function diasAtraso(dueStr: string): number {
+        const due = new Date(dueStr + 'T00:00:00')
+        const hoje = new Date(todayStr + 'T00:00:00')
+        return Math.round((hoje.getTime() - due.getTime()) / 86_400_000)
+      }
 
       const [{ data: recorrentes, error }, { data: lancamentosPagos }] = await Promise.all([
         supabase
@@ -412,22 +444,26 @@ export function useDashRecorrentes() {
           .from('fin_lancamentos')
           .select('nome, data')
           .eq('pago', true)
-          .gte('data', monthStart)
+          .gte('data', monthStartStr)
           .lte('data', todayStr),
       ])
       if (error) throw error
 
-      const diasPagos = new Set(
-        (lancamentosPagos ?? []).map((l: any) => new Date(l.data + 'T12:00:00').getDate())
-      )
+      // Comparação por data exata (não mais só o número do dia) — evita
+      // falso-positivo cruzando meses diferentes.
+      const datasPagas = new Set((lancamentosPagos ?? []).map((l: any) => l.data as string))
       const nomesPagos = new Set(
         (lancamentosPagos ?? []).map((l: any) => l.nome?.toLowerCase().trim())
       )
-      const isPago = (r: any) =>
-        diasPagos.has(r.dia_previsto) || nomesPagos.has(r.nome?.toLowerCase().trim())
+      const isPago = (r: any, dueStr: string) =>
+        datasPagas.has(dueStr) || nomesPagos.has(r.nome?.toLowerCase().trim())
 
-      const vencidas  = (recorrentes ?? []).filter((r: any) => r.dia_previsto < todayDay  && !isPago(r))
-      const venceHoje = (recorrentes ?? []).filter((r: any) => r.dia_previsto === todayDay && !isPago(r))
+      const comData = (recorrentes ?? []).map((r: any) => ({ ...r, dueStr: dueDateStr(r.dia_previsto) }))
+
+      const vencidas = comData
+        .filter((r: any) => r.dueStr < todayStr && !isPago(r, r.dueStr))
+        .map((r: any) => ({ ...r, diasAtraso: diasAtraso(r.dueStr) }))
+      const venceHoje = comData.filter((r: any) => r.dueStr === todayStr && !isPago(r, r.dueStr))
 
       return { vencidas, venceHoje }
     },
