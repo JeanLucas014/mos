@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { formatMonthYearBR } from '@/lib/dates'
-import { Plus, ChevronLeft, ChevronRight, Calendar, List, Grid3x3, CalendarDays } from 'lucide-react'
+import { Plus, ChevronLeft, ChevronRight, Calendar, List, Grid3x3, CalendarDays, Check, X } from 'lucide-react'
 import type { CalendarEvent, CalendarView, Rotina } from './types'
 import { WeekView }   from './views/WeekView'
 import { MonthView }  from './views/MonthView'
@@ -78,6 +78,63 @@ function addExdate(currentRule: string | null, dateKey: string): string {
   return parts.join(';')
 }
 
+/* ── Helpers de manipulação de recurrence_rule pro drag-and-drop ── */
+const RRULE_WEEKDAYS = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA']
+
+function parseRruleParts(rule: string): Record<string, string> {
+  const map: Record<string, string> = {}
+  rule.split(';').forEach(part => {
+    const idx = part.indexOf('=')
+    if (idx > 0) map[part.slice(0, idx)] = part.slice(idx + 1)
+  })
+  return map
+}
+
+/** Scope "all": move o horário-base da série inteira. Se o dia da semana
+ * mudou (arraste horizontal), substitui o dia antigo pelo novo no BYDAY —
+ * sem isso, ocorrências futuras continuariam caindo no dia de semana
+ * original (expandRecurringEvents usa BYDAY, ou getDay() do start_at
+ * quando não há BYDAY explícito). */
+function moveWeeklyByday(rule: string, oldWeekday: number, newWeekday: number): string {
+  const parts  = parseRruleParts(rule)
+  const oldCode = RRULE_WEEKDAYS[oldWeekday]
+  const newCode = RRULE_WEEKDAYS[newWeekday]
+  let byDay = parts['BYDAY'] ? parts['BYDAY'].split(',').filter(Boolean) : []
+
+  if (byDay.length === 0) {
+    byDay = [newCode]
+  } else if (byDay.includes(oldCode)) {
+    byDay = byDay.map(d => d === oldCode ? newCode : d)
+  } else if (!byDay.includes(newCode)) {
+    byDay = [...byDay, newCode]
+  }
+  // dedupe preservando ordem
+  byDay = [...new Set(byDay)]
+
+  const segments = rule.split(';').filter(Boolean).filter(p => !p.startsWith('BYDAY='))
+  segments.push(`BYDAY=${byDay.join(',')}`)
+  return segments.join(';')
+}
+
+/* ── Toast (mesmo padrão usado em IntegrationsPage.tsx) ──────────── */
+function Toast({ msg, ok, onClose }: { msg: string; ok: boolean; onClose: () => void }) {
+  useEffect(() => { const t = setTimeout(onClose, 4000); return () => clearTimeout(t) }, [])
+  return (
+    <div style={{
+      position: 'fixed', bottom: 24, right: 24, zIndex: 600,
+      background: ok ? '#1a2a1a' : '#2a1010',
+      border: `1px solid ${ok ? '#34d39940' : '#f8717140'}`,
+      borderRadius: 12, padding: '12px 18px', display: 'flex', alignItems: 'center', gap: 10,
+      boxShadow: '0 8px 32px rgba(0,0,0,.5)',
+    }}>
+      {ok
+        ? <Check size={14} style={{ color: '#34d399', flexShrink: 0 }} />
+        : <X size={14} style={{ color: '#f87171', flexShrink: 0 }} />}
+      <span style={{ color: 'var(--text)', fontSize: 13 }}>{msg}</span>
+    </div>
+  )
+}
+
 export default function AgendaPage() {
   const [tab,               setTab]               = useState<Tab>('agenda')
   const [view,              setView]              = useState<CalendarView>('semana')
@@ -85,8 +142,10 @@ export default function AgendaPage() {
   const [events,            setEvents]            = useState<CalendarEvent[]>([])
   const [rotinas,           setRotinas]           = useState<Rotina[]>([])
   const [modal,             setModal]             = useState<Partial<CalendarEvent> | null>(null)
-  const [recurrenceDialog,  setRecurrenceDialog]  = useState<{ mode: 'edit' | 'delete'; event: Partial<CalendarEvent> } | null>(null)
+  const [recurrenceDialog,  setRecurrenceDialog]  = useState<{ mode: 'edit' | 'delete' | 'move'; event: Partial<CalendarEvent> } | null>(null)
   const [pendingSaveEvent,  setPendingSaveEvent]  = useState<Partial<CalendarEvent> | null>(null)
+  const [pendingMove,       setPendingMove]       = useState<{ event: CalendarEvent; newStart: Date; newEnd: Date } | null>(null)
+  const [toast,             setToast]             = useState<{ msg: string; ok: boolean } | null>(null)
 
   const loadEvents = useCallback(async () => {
     const from = new Date(); from.setDate(from.getDate() - 7)
@@ -251,6 +310,129 @@ export default function AgendaPage() {
     loadEvents()
   }
 
+  /* ── Move (drag-and-drop) ───────────────────────────────────── */
+  async function moveEvent(ev: CalendarEvent, newStart: Date, newEnd: Date, scope?: RecurrenceScope) {
+    const originalId   = getOriginalId(ev.id)
+    const instanceDate = getInstanceDate(ev.id)
+    const isRecurring  = !!ev.recurrence_rule || !!instanceDate
+
+    if (!isRecurring) {
+      // Evento avulso: move direto, sem diálogo.
+      await supabase.from('calendar_events').update({
+        start_at: newStart.toISOString(),
+        end_at:   newEnd.toISOString(),
+      }).eq('id', ev.id)
+      return
+    }
+
+    if (scope === 'this') {
+      // Cria evento avulso na nova data/horário, exclui a data original da série.
+      await supabase.from('calendar_events').insert({
+        title:           ev.title,
+        description:     ev.description,
+        start_at:        newStart.toISOString(),
+        end_at:           newEnd.toISOString(),
+        all_day:         ev.all_day,
+        color:           ev.color,
+        location:        ev.location,
+        recurrence_rule: null,
+        tags:            ev.tags,
+      })
+      const dateKey = (instanceDate ?? ev.start_at.slice(0, 10)).replace(/-/g, '')
+      const { data: parent } = await supabase
+        .from('calendar_events').select('recurrence_rule').eq('id', originalId).maybeSingle()
+      if (parent) {
+        const newRule = addExdate(parent.recurrence_rule, dateKey)
+        await supabase.from('calendar_events').update({ recurrence_rule: newRule }).eq('id', originalId)
+      }
+    } else if (scope === 'this_and_following') {
+      const originalDateStr = instanceDate ?? ev.start_at.slice(0, 10)
+      const until    = new Date(originalDateStr)
+      until.setDate(until.getDate() - 1)
+      const untilStr = until.toISOString().slice(0, 10).replace(/-/g, '') + 'T235959Z'
+      const { data: parent } = await supabase
+        .from('calendar_events').select('recurrence_rule').eq('id', originalId).maybeSingle()
+      if (parent) {
+        const cappedRule = (parent.recurrence_rule ?? '')
+          .split(';').filter((p: string) => !p.startsWith('UNTIL')).join(';')
+        await supabase.from('calendar_events').update({
+          recurrence_rule: cappedRule + `;UNTIL=${untilStr}`,
+        }).eq('id', originalId)
+
+        // Nova série a partir da nova data/horário, mesmo padrão de repetição
+        // (sem UNTIL herdado da série anterior).
+        const newSeriesRule = parent.recurrence_rule
+          ? parent.recurrence_rule.split(';').filter((p: string) => !p.startsWith('UNTIL') && !p.startsWith('EXDATE')).join(';')
+          : null
+        await supabase.from('calendar_events').insert({
+          title:           ev.title,
+          description:     ev.description,
+          start_at:        newStart.toISOString(),
+          end_at:           newEnd.toISOString(),
+          all_day:         ev.all_day,
+          color:           ev.color,
+          location:        ev.location,
+          recurrence_rule: newSeriesRule,
+          tags:            ev.tags,
+        })
+      }
+    } else if (scope === 'all') {
+      const { data: parent } = await supabase
+        .from('calendar_events').select('start_at, end_at, recurrence_rule').eq('id', originalId).maybeSingle()
+      if (parent) {
+        const oldWeekday = new Date(ev.start_at).getDay()
+        const newWeekday = newStart.getDay()
+        const duration   = new Date(parent.end_at).getTime() - new Date(parent.start_at).getTime()
+
+        // Só o horário do dia muda no anchor — o dia-da-semana da série é
+        // controlado pelo BYDAY (ajustado abaixo quando necessário), não
+        // pela data literal do evento raiz.
+        const masterStart = new Date(parent.start_at)
+        masterStart.setHours(newStart.getHours(), newStart.getMinutes(), 0, 0)
+        const masterEnd = new Date(masterStart.getTime() + duration)
+
+        let rule = parent.recurrence_rule ?? ''
+        const freq = parseRruleParts(rule)['FREQ'] ?? 'WEEKLY'
+        if (freq === 'WEEKLY' && oldWeekday !== newWeekday) {
+          rule = moveWeeklyByday(rule, oldWeekday, newWeekday)
+        } else if (freq !== 'WEEKLY') {
+          // Sem BYDAY relevante — desloca a data-âncora inteira.
+          masterStart.setTime(newStart.getTime())
+          masterEnd.setTime(newStart.getTime() + duration)
+        }
+
+        await supabase.from('calendar_events').update({
+          start_at:        masterStart.toISOString(),
+          end_at:           masterEnd.toISOString(),
+          recurrence_rule: rule || null,
+        }).eq('id', originalId)
+      }
+    }
+  }
+
+  async function handleMoveEvent(ev: CalendarEvent, newStart: Date, newEnd: Date) {
+    const isRecurring = !!ev.recurrence_rule || isSyntheticId(ev.id)
+
+    if (isRecurring) {
+      setPendingMove({ event: ev, newStart, newEnd })
+      setRecurrenceDialog({ mode: 'move', event: ev })
+      return
+    }
+
+    // Não recorrente: atualização otimista + reverte em caso de erro.
+    const prevEvents = events
+    setEvents(prev => prev.map(e => e.id === ev.id
+      ? { ...e, start_at: newStart.toISOString(), end_at: newEnd.toISOString() }
+      : e))
+    try {
+      await moveEvent(ev, newStart, newEnd)
+      loadEvents()
+    } catch {
+      setEvents(prevEvents)
+      setToast({ msg: 'Não foi possível mover o evento. Tente novamente.', ok: false })
+    }
+  }
+
   /* ── Handlers ───────────────────────────────────────────────── */
   function handleSelectEvent(ev: Partial<CalendarEvent>) {
     setModal(ev)
@@ -283,6 +465,7 @@ export default function AgendaPage() {
     currentDate,
     onSelectEvent: handleSelectEvent,
     onSelectSlot:  (start: Date) => openNewEvent(start),
+    onMoveEvent:   handleMoveEvent,
   }
 
   return (
@@ -348,15 +531,13 @@ export default function AgendaPage() {
       </div>
 
       {/* Body */}
-      <div className={`flex-1 overflow-hidden${view === 'semana' && tab === 'agenda' ? ' overflow-x-auto' : ''}`}>
+      <div className="flex-1 overflow-hidden">
         {tab === 'rotina' ? (
           <div className="h-full overflow-y-auto px-4 lg:px-6 py-5">
             <RotinaTab rotinas={rotinas} onReload={loadRotinas} />
           </div>
         ) : view === 'semana' ? (
-          <div className="min-w-[640px] h-full">
-            <WeekView {...sharedViewProps} />
-          </div>
+          <WeekView {...sharedViewProps} />
         ) : view === 'mes' ? (
           <MonthView {...sharedViewProps} />
         ) : view === 'dia' ? (
@@ -392,6 +573,17 @@ export default function AgendaPage() {
           onConfirm={async (scope) => {
             if (recurrenceDialog.mode === 'delete') {
               await deleteEvent(recurrenceDialog.event.id!, scope)
+            } else if (recurrenceDialog.mode === 'move') {
+              if (pendingMove) {
+                try {
+                  await moveEvent(pendingMove.event, pendingMove.newStart, pendingMove.newEnd, scope)
+                  loadEvents()
+                } catch {
+                  setToast({ msg: 'Não foi possível mover o evento. Tente novamente.', ok: false })
+                }
+              }
+              setPendingMove(null)
+              setRecurrenceDialog(null)
             } else {
               if (pendingSaveEvent) {
                 await saveEvent(pendingSaveEvent, scope)
@@ -400,9 +592,11 @@ export default function AgendaPage() {
               setRecurrenceDialog(null)
             }
           }}
-          onClose={() => { setRecurrenceDialog(null); setPendingSaveEvent(null) }}
+          onClose={() => { setRecurrenceDialog(null); setPendingSaveEvent(null); setPendingMove(null) }}
         />
       )}
+
+      {toast && <Toast msg={toast.msg} ok={toast.ok} onClose={() => setToast(null)} />}
     </div>
   )
 }
