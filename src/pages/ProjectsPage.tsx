@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, type FormEvent } from 'react'
+import { Pencil } from 'lucide-react'
 import { useProjects } from '../hooks/useProjects'
 import { useProjectChecklist } from '../hooks/useProjectChecklist'
 import type { Database } from '../types/db'
@@ -6,26 +7,13 @@ import { HelpButton } from '@/components/help/HelpButton'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { PROJECT_STATUS_ORDER, projectStatusCfg } from '@/lib/projectStatus'
 
 type Project = Database['public']['Tables']['projects']['Row']
 
-/* ── Status config ─────────────────────────────────────────────── */
-const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
-  'em dev':  { label: 'Em dev',  color: 'var(--blue)', bg: 'rgba(14,165,233,.14)' },
-  'início':  { label: 'Início',  color: '#fbbf24', bg: 'rgba(251,191,36,.12)' },
-  'ativo':   { label: 'Ativo',   color: '#34d399', bg: 'rgba(52,211,153,.12)' },
-  'live':    { label: 'Live',    color: '#059669', bg: 'rgba(5,150,105,.12)'  },
-  'pausado': { label: 'Pausado', color: 'var(--text2)',    bg: 'rgba(255,255,255,.06)' },
-}
-const STATUS_KEYS = Object.keys(STATUS_CFG)
-
-function statusCfg(s: string) {
-  return STATUS_CFG[s] ?? STATUS_CFG['ativo']
-}
-
 /* ── Pill ──────────────────────────────────────────────────────── */
 function Pill({ status }: { status: string }) {
-  const c = statusCfg(status)
+  const c = projectStatusCfg(status)
   return (
     <span
       style={{
@@ -171,6 +159,8 @@ function ProjectCard({
   onDelete: (id: string) => void
 }) {
   const [editStatus, setEditStatus] = useState(false)
+  const [editName, setEditName] = useState(false)
+  const [nameDraft, setNameDraft] = useState(project.name)
   const [expanded, setExpanded] = useState(false)
   const [notes, setNotes] = useState(project.notes ?? '')
 
@@ -181,26 +171,65 @@ function ProjectCard({
     }
   }
 
+  function commitName() {
+    const trimmed = nameDraft.trim()
+    if (trimmed && trimmed !== project.name) {
+      onUpdate(project.id, { name: trimmed })
+    } else {
+      setNameDraft(project.name)
+    }
+    setEditName(false)
+  }
+
+  function cancelNameEdit() {
+    setNameDraft(project.name)
+    setEditName(false)
+  }
+
   return (
     <div className="group bg-bg-2 border border-line rounded-card p-5 hover:border-white/10 transition-colors flex flex-col gap-3">
       {/* Top row: name + pill + delete */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <button
-            onClick={() => setExpanded((v) => !v)}
-            className="text-left w-full"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-          >
-            <div
-              className="text-ink font-bold truncate"
-              style={{ fontFamily: 'Sora, sans-serif', fontSize: 15 }}
-            >
-              {project.name}
-              <span style={{ fontSize: 9, marginLeft: 6, color: 'var(--text3)', verticalAlign: 'middle' }}>
-                {expanded ? '▲' : '▼'}
-              </span>
+          {editName ? (
+            <input
+              autoFocus
+              value={nameDraft}
+              onChange={(e) => setNameDraft(e.target.value)}
+              onBlur={commitName}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') commitName()
+                if (e.key === 'Escape') cancelNameEdit()
+              }}
+              className="w-full bg-bg border border-brand rounded-input px-2 text-ink font-bold outline-none"
+              style={{ fontFamily: 'Sora, sans-serif', fontSize: 15, minHeight: 28 }}
+            />
+          ) : (
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setExpanded((v) => !v)}
+                className="text-left min-w-0 flex-1"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+              >
+                <div
+                  className="text-ink font-bold truncate"
+                  style={{ fontFamily: 'Sora, sans-serif', fontSize: 15 }}
+                >
+                  {project.name}
+                  <span style={{ fontSize: 9, marginLeft: 6, color: 'var(--text3)', verticalAlign: 'middle' }}>
+                    {expanded ? '▲' : '▼'}
+                  </span>
+                </div>
+              </button>
+              <button
+                onClick={() => { setNameDraft(project.name); setEditName(true) }}
+                className="opacity-0 group-hover:opacity-100 transition-opacity text-ink-3 hover:text-ink flex-shrink-0"
+                title="Renomear projeto"
+              >
+                <Pencil size={12} />
+              </button>
             </div>
-          </button>
+          )}
           {project.meta && (
             <div
               className="text-ink-2 truncate mt-0.5"
@@ -224,8 +253,8 @@ function ProjectCard({
               className="bg-bg border border-brand rounded-input text-ink text-xs focus:outline-none"
               style={{ padding: '3px 6px', fontFamily: 'Manrope, sans-serif', minHeight: 28 }}
             >
-              {STATUS_KEYS.map((k) => (
-                <option key={k} value={k}>{STATUS_CFG[k].label}</option>
+              {PROJECT_STATUS_ORDER.map((k) => (
+                <option key={k} value={k}>{projectStatusCfg(k).label}</option>
               ))}
             </select>
           ) : (
@@ -263,7 +292,7 @@ function ProjectCard({
               style={{
                 height: '100%',
                 width: `${project.progress}%`,
-                background: statusCfg(project.status).color,
+                background: projectStatusCfg(project.status).color,
                 borderRadius: 4,
                 transition: 'width .2s',
               }}
@@ -319,7 +348,7 @@ function ProjectCard({
       <div className="flex items-center gap-4 mt-auto pt-1">
         {!project.delivered ? (
           <button
-            onClick={() => onUpdate(project.id, { delivered: true, status: 'live' })}
+            onClick={() => onUpdate(project.id, { delivered: true, status: 'concluido' })}
             className="text-ink-3 hover:text-ok transition-colors text-xs flex items-center gap-1"
             style={{ fontSize: 11 }}
           >
@@ -330,7 +359,7 @@ function ProjectCard({
           </button>
         ) : (
           <button
-            onClick={() => onUpdate(project.id, { delivered: false, status: 'ativo' })}
+            onClick={() => onUpdate(project.id, { delivered: false, status: 'em_andamento' })}
             className="text-ink-3 hover:text-ink transition-colors"
             style={{ fontSize: 11 }}
           >
@@ -354,7 +383,7 @@ function AddModal({
 }) {
   const [name, setName] = useState('')
   const [meta, setMeta] = useState('')
-  const [status, setStatus] = useState('em dev')
+  const [status, setStatus] = useState('planejamento')
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -426,8 +455,8 @@ function AddModal({
               className="w-full bg-bg border border-line rounded-input px-3 text-ink text-sm focus:outline-none focus:border-brand transition-colors"
               style={{ minHeight: 44 }}
             >
-              {STATUS_KEYS.map((k) => (
-                <option key={k} value={k}>{STATUS_CFG[k].label}</option>
+              {PROJECT_STATUS_ORDER.map((k) => (
+                <option key={k} value={k}>{projectStatusCfg(k).label}</option>
               ))}
             </select>
           </div>

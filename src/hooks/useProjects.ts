@@ -26,7 +26,7 @@ export function useProjects() {
         .insert({
           name: p.name,
           meta: p.meta ?? null,
-          status: p.status ?? 'ativo',
+          status: p.status ?? 'planejamento',
           progress: 0,
           delivered: false,
         })
