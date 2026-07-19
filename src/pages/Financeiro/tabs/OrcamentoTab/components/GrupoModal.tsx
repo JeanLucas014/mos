@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { X, Trash2 } from 'lucide-react'
 import type { FinCategoria } from '../../../types'
-import type { OrcamentoGrupo, OrcamentoGrupoTipo } from '../types'
+import type { OrcamentoGrupo, OrcamentoGrupoTipo, OrcamentoGrupoModo } from '../types'
 
 interface Props {
   grupo: OrcamentoGrupo | null // null = criar novo
   initialTipo?: OrcamentoGrupoTipo // usado só na criação, ao clicar "+ Grupo" de uma seção específica
   categorias: FinCategoria[]
-  onSave: (fields: { nome: string; tipo: OrcamentoGrupoTipo; valorPrevistoPadrao: number; categoriasVinculadas: string[] }) => void
+  onSave: (fields: { nome: string; tipo: OrcamentoGrupoTipo; modo: OrcamentoGrupoModo; valorPrevistoPadrao: number; categoriasVinculadas: string[] }) => void
   onDelete?: () => void
   onClose: () => void
 }
@@ -15,6 +15,7 @@ interface Props {
 export function GrupoModal({ grupo, initialTipo, categorias, onSave, onDelete, onClose }: Props) {
   const [nome, setNome] = useState(grupo?.nome ?? '')
   const [tipo, setTipo] = useState<OrcamentoGrupoTipo>(grupo?.tipo ?? initialTipo ?? 'fixo')
+  const [modo, setModo] = useState<OrcamentoGrupoModo>(grupo?.modo ?? 'manual')
   const [valor, setValor] = useState(String(grupo?.valor_previsto_padrao ?? 0))
   const [cats, setCats] = useState<string[]>(grupo?.categorias_vinculadas ?? [])
 
@@ -24,7 +25,7 @@ export function GrupoModal({ grupo, initialTipo, categorias, onSave, onDelete, o
 
   function handleSubmit() {
     if (!nome.trim()) return
-    onSave({ nome: nome.trim(), tipo, valorPrevistoPadrao: Number(valor) || 0, categoriasVinculadas: cats })
+    onSave({ nome: nome.trim(), tipo, modo, valorPrevistoPadrao: Number(valor) || 0, categoriasVinculadas: cats })
   }
 
   return (
@@ -74,7 +75,40 @@ export function GrupoModal({ grupo, initialTipo, categorias, onSave, onDelete, o
           </div>
 
           <div>
-            <label className="block text-ink-2 mb-1.5 text-xs font-semibold">Valor previsto padrão</label>
+            <label className="block text-ink-2 mb-1.5 text-xs font-semibold">Como calcular</label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setModo('manual')}
+                className={[
+                  'flex-1 py-1.5 text-xs rounded-lg border transition-colors',
+                  modo === 'manual' ? 'border-brand/50 text-brand' : 'border-line text-ink-3 hover:text-white',
+                ].join(' ')}
+              >
+                Valor manual
+              </button>
+              <button
+                type="button"
+                onClick={() => setModo('categoria')}
+                className={[
+                  'flex-1 py-1.5 text-xs rounded-lg border transition-colors',
+                  modo === 'categoria' ? 'border-brand/50 text-brand' : 'border-line text-ink-3 hover:text-white',
+                ].join(' ')}
+              >
+                Vinculado a categoria
+              </button>
+            </div>
+            <p className="text-[11px] text-ink-3 mt-1.5">
+              {modo === 'manual'
+                ? 'Valor fixo, sem cálculo automático — você atualiza quando quiser.'
+                : 'O realizado é somado automaticamente a partir dos lançamentos do mês corrente nas categorias escolhidas.'}
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-ink-2 mb-1.5 text-xs font-semibold">
+              {modo === 'manual' ? 'Valor previsto' : 'Valor previsto (meta)'}
+            </label>
             <input
               type="number"
               step="0.01"
@@ -84,30 +118,32 @@ export function GrupoModal({ grupo, initialTipo, categorias, onSave, onDelete, o
             />
           </div>
 
-          <div>
-            <label className="block text-ink-2 mb-1.5 text-xs font-semibold">
-              Categorias vinculadas
-            </label>
-            <p className="text-[11px] text-ink-3 mb-2">
-              Lançamentos nessas categorias contam como "realizado" deste grupo.
-            </p>
-            <div className="bg-bg border border-line rounded-lg max-h-40 overflow-y-auto">
-              {categorias.length === 0 ? (
-                <div className="text-xs text-ink-3 text-center py-4">Nenhuma categoria de saída cadastrada.</div>
-              ) : categorias.map(c => (
-                <label key={c.id} className="flex items-center gap-2 px-3 py-2 border-b border-line last:border-0 cursor-pointer hover:bg-bg-3">
-                  <input
-                    type="checkbox"
-                    checked={cats.includes(c.id)}
-                    onChange={() => toggleCat(c.id)}
-                    className="accent-brand"
-                  />
-                  {c.cor && <span className="w-2 h-2 rounded-full shrink-0" style={{ background: c.cor }} />}
-                  <span className="text-xs text-ink-2">{c.nome}</span>
-                </label>
-              ))}
+          {modo === 'categoria' && (
+            <div>
+              <label className="block text-ink-2 mb-1.5 text-xs font-semibold">
+                Categorias vinculadas
+              </label>
+              <p className="text-[11px] text-ink-3 mb-2">
+                Lançamentos nessas categorias, no mês corrente, contam como "realizado" deste grupo.
+              </p>
+              <div className="bg-bg border border-line rounded-lg max-h-40 overflow-y-auto">
+                {categorias.length === 0 ? (
+                  <div className="text-xs text-ink-3 text-center py-4">Nenhuma categoria de saída cadastrada.</div>
+                ) : categorias.map(c => (
+                  <label key={c.id} className="flex items-center gap-2 px-3 py-2 border-b border-line last:border-0 cursor-pointer hover:bg-bg-3">
+                    <input
+                      type="checkbox"
+                      checked={cats.includes(c.id)}
+                      onChange={() => toggleCat(c.id)}
+                      className="accent-brand"
+                    />
+                    {c.cor && <span className="w-2 h-2 rounded-full shrink-0" style={{ background: c.cor }} />}
+                    <span className="text-xs text-ink-2">{c.nome}</span>
+                  </label>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         <div className="flex gap-2 mt-5">

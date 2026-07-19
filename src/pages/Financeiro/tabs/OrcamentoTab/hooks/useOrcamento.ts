@@ -1,50 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import type { FinAno, FinCategoria } from '../../../types'
+import { todayLocal } from '@/lib/dates'
+import type { FinCategoria } from '../../../types'
 import type {
-  OrcamentoConfig, OrcamentoGrupo, OrcamentoEntrada, OrcamentoMesOverride,
-  OverrideTipoReferencia, MetaGuardarTipo, OrcamentoGrupoTipo,
+  OrcamentoConfig, OrcamentoGrupo, OrcamentoEntrada,
+  MetaGuardarTipo, OrcamentoGrupoTipo, OrcamentoGrupoModo,
 } from '../types'
 
 function pad2(n: number) { return String(n).padStart(2, '0') }
-export function mesRefStr(ano: number, month: number): string {
-  return `${ano}-${pad2(month)}-01`
-}
 function daysInMonth(year: number, month: number) {
   return new Date(year, month, 0).getDate()
-}
-
-/** Réplica exata da lógica de árvore de MesTab/utils.ts (buildTree +
- * sumLeaves): valor de um grupo = soma recursiva dos filhos; natureza
- * de um item agrupado é a do NÓ RAIZ, não a de cada folha individual.
- * Precisa ser bit-a-bit igual à aba Mês pra "entradas reais"/"saídas
- * reais" do Orçamento nunca divergir do que a aba Mês mostra pro mesmo
- * período — reimplementado localmente (em vez de importar de MesTab)
- * porque só precisamos do total do mês, não da árvore completa; mesmo
- * padrão de reimplementação local já usado em HorizonteSaldos.tsx. */
-interface LancNode {
-  id: string
-  parent_id: string | null
-  natureza: string
-  valor: number | null
-  is_grupo: boolean | null
-  categoria_id: string | null
-  children: LancNode[]
-}
-function buildRoots(rows: Omit<LancNode, 'children'>[]): LancNode[] {
-  const map = new Map<string, LancNode>()
-  for (const r of rows) map.set(r.id, { ...r, children: [] })
-  const roots: LancNode[] = []
-  for (const node of map.values()) {
-    if (node.parent_id && map.has(node.parent_id)) map.get(node.parent_id)!.children.push(node)
-    else roots.push(node)
-  }
-  return roots
-}
-function sumLeavesValor(node: LancNode): number {
-  if (!node.is_grupo) return Number(node.valor) || 0
-  return node.children.reduce((s, c) => s + sumLeavesValor(c), 0)
 }
 
 const DEFAULT_CONFIG: Omit<OrcamentoConfig, 'id' | 'user_id' | 'created_at' | 'updated_at'> = {
@@ -52,10 +18,25 @@ const DEFAULT_CONFIG: Omit<OrcamentoConfig, 'id' | 'user_id' | 'created_at' | 'u
   meta_guardar_valor: 0,
 }
 
-export function useOrcamento(ano: FinAno, month: number) {
+interface LancRow {
+  categoria_id: string | null
+  natureza: string
+  valor: number | null
+  is_grupo: boolean | null
+}
+
+/**
+ * Orçamento é um PLANO ÚNICO, sempre vigente — não existe "orçamento de
+ * julho" vs "de agosto". Os valores previstos (entradas, grupos, meta de
+ * investimento) são editáveis a qualquer momento, sem histórico por mês
+ * nem overrides mensais. A única coisa que muda com o calendário é o
+ * "realizado" dos grupos vinculados a categoria, que é sempre recalculado
+ * a partir dos lançamentos do MÊS CORRENTE (todayLocal()) — vira o mês,
+ * o realizado reseta sozinho sem precisar de nenhuma ação manual.
+ */
+export function useOrcamento() {
   const { user } = useAuth()
   const qc = useQueryClient()
-  const mesRef = mesRefStr(ano.ano, month)
 
   const configQuery = useQuery({
     queryKey: ['orcamento_config'],
@@ -84,19 +65,7 @@ export function useOrcamento(ano: FinAno, month: number) {
     },
   })
 
-  const overridesQuery = useQuery({
-    queryKey: ['orcamento_overrides', mesRef],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('orcamento_mes_overrides').select('*').eq('mes_ref', mesRef)
-      if (error) throw error
-      return (data ?? []) as OrcamentoMesOverride[]
-    },
-  })
-
-  // Categorias de "gasto" — saida (aba Mês) E diario (aba Diário). Filtrar
-  // só 'saida' aqui escondia do seletor de vínculo do orçamento toda
-  // categoria usada exclusivamente no Diário (natureza='diario'), que são
-  // exatamente as categorias de gasto variável do dia a dia.
+  // Categorias de "gasto" — saida (aba Mês) E diario (aba Diário).
   const categoriasQuery = useQuery({
     queryKey: ['fin_categorias_gasto'],
     queryFn: async () => {
@@ -106,29 +75,39 @@ export function useOrcamento(ano: FinAno, month: number) {
     },
   })
 
+  // Sem parâmetro de mês na queryKey de propósito: "realizado" é sempre
+  // o mês corrente no momento em que a query roda. Uma invalidação (ex:
+  // Realtime em fin_lancamentos) sempre refaz o cálculo pro mês atual,
+  // qualquer que ele seja no momento — nunca fica "preso" num mês antigo.
   const realizadoQuery = useQuery({
-    queryKey: ['orcamento_realizado', mesRef],
+    queryKey: ['orcamento_realizado'],
     queryFn: async () => {
-      const lastDay = daysInMonth(ano.ano, month)
-      const startDate = `${ano.ano}-${pad2(month)}-01`
-      const endDate = `${ano.ano}-${pad2(month)}-${pad2(lastDay)}`
+      const todayStr = todayLocal() // nunca toISOString().slice(0,10)
+      const [yearStr, monthStr] = todayStr.split('-')
+      const year = Number(yearStr)
+      const month = Number(monthStr)
+      const lastDay = daysInMonth(year, month)
+      const startDate = `${year}-${pad2(month)}-01`
+      const endDate = `${year}-${pad2(month)}-${pad2(lastDay)}`
+
+      // Sem filtro de ano_id de propósito — o Orçamento não é mais
+      // vinculado a um "ano" selecionado em outra aba; o intervalo de
+      // datas do mês corrente já é suficiente (RLS cuida do escopo por
+      // usuário).
       const { data, error } = await supabase
         .from('fin_lancamentos')
-        .select('id, parent_id, categoria_id, natureza, valor, is_grupo')
-        .eq('ano_id', ano.id)
+        .select('categoria_id, natureza, valor, is_grupo')
         .gte('data', startDate)
         .lte('data', endDate)
       if (error) throw error
 
-      const rows = (data ?? []) as Omit<LancNode, 'children'>[]
+      const rows = (data ?? []) as LancRow[]
 
-      // byCategoria (realizado por grupo de orçamento): soma direta por
-      // categoria_id de cada FOLHA — categoria só existe de fato em
-      // lançamentos individuais, não em cabeçalhos de grupo. Gotcha já
-      // conhecido do projeto: dados importados do Notion têm is_grupo=null,
-      // então filtra !r.is_grupo em JS (não .eq no banco). 'saida' (aba Mês)
-      // E 'diario' (aba Diário) contam como realizado — excluir 'diario'
-      // zerava o realizado de grupo vinculado a categoria do Diário.
+      // byCategoria (realizado por grupo em modo 'categoria'): soma
+      // direta por categoria_id de cada FOLHA. Gotcha já conhecido do
+      // projeto: dados importados do Notion têm is_grupo=null, então
+      // filtra !r.is_grupo em JS (não .eq no banco). 'saida' E 'diario'
+      // contam como realizado — exclui só 'entrada'.
       const byCategoria: Record<string, number> = {}
       for (const r of rows) {
         if (r.is_grupo) continue
@@ -136,67 +115,17 @@ export function useOrcamento(ano: FinAno, month: number) {
         byCategoria[r.categoria_id] = (byCategoria[r.categoria_id] ?? 0) + (Number(r.valor) || 0)
       }
 
-      // entradasReais/saidasReais: MESMA lógica de árvore que a aba Mês
-      // usa pro totE/totS (buildTree + sumLeaves) — soma recursiva dos
-      // filhos de um grupo, bucketada pela natureza do nó RAIZ. Uma soma
-      // "flat" por natureza de cada linha (em vez da árvore) diverge
-      // sempre que um item agrupado tem uma folha com natureza diferente
-      // do grupo-pai — exatamente o tipo de divergência que fazia esta
-      // aba mostrar um total de saídas diferente do card Saídas da aba Mês.
-      const roots = buildRoots(rows)
-      let entradasReais = 0
-      let saidasReais = 0
-      for (const root of roots) {
-        const v = sumLeavesValor(root)
-        if (root.natureza === 'entrada') entradasReais += v
-        else if (root.natureza === 'saida') saidasReais += v
-      }
-
-      return { byCategoria, entradasReais, saidasReais }
+      return { byCategoria }
     },
   })
 
-  // ── Overrides: valor específico do mês ──────────────────────────
-  function overrideFor(tipo: OverrideTipoReferencia, referenciaId: string | null): OrcamentoMesOverride | undefined {
-    return (overridesQuery.data ?? []).find(o =>
-      o.tipo_referencia === tipo && o.referencia_id === referenciaId,
-    )
-  }
-
-  const setOverride = useMutation({
-    mutationFn: async ({ tipo, referenciaId, valor }: { tipo: OverrideTipoReferencia; referenciaId: string | null; valor: number }) => {
-      const existing = overrideFor(tipo, referenciaId)
-      if (existing) {
-        const { error } = await supabase.from('orcamento_mes_overrides')
-          .update({ valor_override: valor }).eq('id', existing.id)
-        if (error) throw error
-      } else {
-        const { error } = await supabase.from('orcamento_mes_overrides').insert({
-          mes_ref: mesRef, tipo_referencia: tipo, referencia_id: referenciaId, valor_override: valor,
-        })
-        if (error) throw error
-      }
-    },
-    onSettled: () => qc.invalidateQueries({ queryKey: ['orcamento_overrides', mesRef] }),
-  })
-
-  const removeOverride = useMutation({
-    mutationFn: async ({ tipo, referenciaId }: { tipo: OverrideTipoReferencia; referenciaId: string | null }) => {
-      const existing = overrideFor(tipo, referenciaId)
-      if (!existing) return
-      const { error } = await supabase.from('orcamento_mes_overrides').delete().eq('id', existing.id)
-      if (error) throw error
-    },
-    onSettled: () => qc.invalidateQueries({ queryKey: ['orcamento_overrides', mesRef] }),
-  })
-
-  // ── Grupos (modelo) ──────────────────────────────────────────────
+  // ── Grupos (plano único) ──────────────────────────────────────────
   const addGrupo = useMutation({
-    mutationFn: async (g: { nome: string; tipo: OrcamentoGrupoTipo; valorPrevistoPadrao: number; categoriasVinculadas: string[] }) => {
+    mutationFn: async (g: { nome: string; tipo: OrcamentoGrupoTipo; modo: OrcamentoGrupoModo; valorPrevistoPadrao: number; categoriasVinculadas: string[] }) => {
       const ordem = (gruposQuery.data ?? []).length
       const { error } = await supabase.from('orcamento_grupos').insert({
-        nome: g.nome, tipo: g.tipo, valor_previsto_padrao: g.valorPrevistoPadrao,
-        categorias_vinculadas: g.categoriasVinculadas, ordem,
+        nome: g.nome, tipo: g.tipo, modo: g.modo, valor_previsto_padrao: g.valorPrevistoPadrao,
+        categorias_vinculadas: g.modo === 'categoria' ? g.categoriasVinculadas : [], ordem,
       })
       if (error) throw error
     },
@@ -204,12 +133,15 @@ export function useOrcamento(ano: FinAno, month: number) {
   })
 
   const updateGrupo = useMutation({
-    mutationFn: async ({ id, ...fields }: { id: string; nome?: string; tipo?: OrcamentoGrupoTipo; valorPrevistoPadrao?: number; categoriasVinculadas?: string[] }) => {
+    mutationFn: async ({ id, ...fields }: { id: string; nome?: string; tipo?: OrcamentoGrupoTipo; modo?: OrcamentoGrupoModo; valorPrevistoPadrao?: number; categoriasVinculadas?: string[] }) => {
       const { error } = await supabase.from('orcamento_grupos').update({
         ...(fields.nome !== undefined ? { nome: fields.nome } : {}),
         ...(fields.tipo !== undefined ? { tipo: fields.tipo } : {}),
+        ...(fields.modo !== undefined ? { modo: fields.modo } : {}),
         ...(fields.valorPrevistoPadrao !== undefined ? { valor_previsto_padrao: fields.valorPrevistoPadrao } : {}),
-        ...(fields.categoriasVinculadas !== undefined ? { categorias_vinculadas: fields.categoriasVinculadas } : {}),
+        ...(fields.categoriasVinculadas !== undefined
+          ? { categorias_vinculadas: fields.modo === 'manual' ? [] : fields.categoriasVinculadas }
+          : {}),
       }).eq('id', id)
       if (error) throw error
     },
@@ -224,7 +156,7 @@ export function useOrcamento(ano: FinAno, month: number) {
     onSettled: () => qc.invalidateQueries({ queryKey: ['orcamento_grupos'] }),
   })
 
-  // ── Entradas (modelo) ────────────────────────────────────────────
+  // ── Entradas (plano único) ────────────────────────────────────────
   const addEntrada = useMutation({
     mutationFn: async (e: { nome: string; valorPrevistoPadrao: number }) => {
       const ordem = (entradasQuery.data ?? []).length
@@ -255,7 +187,7 @@ export function useOrcamento(ano: FinAno, month: number) {
     onSettled: () => qc.invalidateQueries({ queryKey: ['orcamento_entradas'] }),
   })
 
-  // ── Config (meta de guardar) ─────────────────────────────────────
+  // ── Config (meta de investimento) ─────────────────────────────────
   const saveConfig = useMutation({
     mutationFn: async (c: { tipo: MetaGuardarTipo; valor: number }) => {
       const existing = configQuery.data
@@ -274,68 +206,56 @@ export function useOrcamento(ano: FinAno, month: number) {
     onSettled: () => qc.invalidateQueries({ queryKey: ['orcamento_config'] }),
   })
 
-  // ── Valores derivados (previsto/realizado considerando overrides) ─
+  // ── Valores derivados ──────────────────────────────────────────────
   const config = configQuery.data ?? { ...DEFAULT_CONFIG, id: '', user_id: user?.id ?? '', created_at: '', updated_at: '' }
   const grupos = gruposQuery.data ?? []
   const entradas = entradasQuery.data ?? []
   const realizadoPorCategoria = realizadoQuery.data?.byCategoria ?? {}
-  const entradasReais = realizadoQuery.data?.entradasReais ?? 0
-  const saidasReais = realizadoQuery.data?.saidasReais ?? 0
 
   function previstoGrupo(g: OrcamentoGrupo): number {
-    const ov = overrideFor('grupo', g.id)
-    return ov ? Number(ov.valor_override) : Number(g.valor_previsto_padrao)
+    return Number(g.valor_previsto_padrao)
   }
 
+  /** Só significa algo pra grupos em modo 'categoria'. Modo 'manual' não
+   * tem realizado de verdade — ver GrupoRow (sem barra de progresso). */
   function realizadoGrupo(g: OrcamentoGrupo): number {
     return g.categorias_vinculadas.reduce((s, catId) => s + (realizadoPorCategoria[catId] ?? 0), 0)
   }
 
-  function previstoEntrada(e: OrcamentoEntrada): number {
-    const ov = overrideFor('entrada', e.id)
-    return ov ? Number(ov.valor_override) : Number(e.valor_previsto_padrao)
-  }
+  const entradasPrevistas = entradas.reduce((s, e) => s + Number(e.valor_previsto_padrao), 0)
 
-  const entradasPrevistas = entradas.reduce((s, e) => s + previstoEntrada(e), 0)
-
-  const metaGuardarOverride = overrideFor('meta_guardar', null)
-  const metaGuardarValor = metaGuardarOverride ? Number(metaGuardarOverride.valor_override) : Number(config.meta_guardar_valor)
-  // Percentual incide sobre as entradas REAIS do mês (o que de fato entrou),
-  // não sobre as previstas — mantém consistência com o card Resultado, que
-  // também parte das entradas reais.
+  const metaGuardarValor = Number(config.meta_guardar_valor)
   const guardarMes = config.meta_guardar_tipo === 'percentual'
-    ? entradasReais * (metaGuardarValor / 100)
+    ? entradasPrevistas * (metaGuardarValor / 100)
     : metaGuardarValor
 
-  // Resultado = entradas reais - meta de guardar do mês - saídas reais
-  // (fin_lancamentos natureza='saida', TODAS — não só as vinculadas a
-  // algum grupo de orçamento).
-  const resultadoMes = entradasReais - guardarMes - saidasReais
+  // Resultado = entradas previstas - investimento - "saídas do plano":
+  // soma de todos os grupos, usando realizado (modo categoria, mês
+  // corrente) ou previsto (modo manual, já que não existe realizado
+  // nesse modo) — inteiramente baseado no orçamento em si, não mais
+  // misturado com fin_lancamentos "cru" (só indiretamente, via realizado
+  // dos grupos vinculados).
+  const saidasPlano = grupos.reduce((s, g) => {
+    const valor = g.modo === 'categoria' ? realizadoGrupo(g) : previstoGrupo(g)
+    return s + valor
+  }, 0)
+  const resultadoMes = entradasPrevistas - guardarMes - saidasPlano
 
   const isLoading = configQuery.isLoading || gruposQuery.isLoading || entradasQuery.isLoading
-    || overridesQuery.isLoading || categoriasQuery.isLoading || realizadoQuery.isLoading
+    || categoriasQuery.isLoading || realizadoQuery.isLoading
 
   return {
     isLoading,
-    mesRef,
     config,
     grupos,
     entradas,
     categoriasGasto: categoriasQuery.data ?? [],
     entradasPrevistas,
-    entradasReais,
-    saidasReais,
     guardarMes,
     resultadoMes,
     metaGuardarValor,
-    isMetaGuardarAjustada: !!metaGuardarOverride,
     previstoGrupo,
     realizadoGrupo,
-    previstoEntrada,
-    isGrupoAjustado: (id: string) => !!overrideFor('grupo', id),
-    isEntradaAjustada: (id: string) => !!overrideFor('entrada', id),
-    setOverride,
-    removeOverride,
     addGrupo,
     updateGrupo,
     deleteGrupo,

@@ -997,6 +997,7 @@ export type Database = {
           categorias_vinculadas: string[]
           created_at: string
           id: string
+          modo: string
           nome: string
           ordem: number
           tipo: string
@@ -1007,6 +1008,7 @@ export type Database = {
           categorias_vinculadas?: string[]
           created_at?: string
           id?: string
+          modo?: string
           nome: string
           ordem?: number
           tipo: string
@@ -1017,41 +1019,12 @@ export type Database = {
           categorias_vinculadas?: string[]
           created_at?: string
           id?: string
+          modo?: string
           nome?: string
           ordem?: number
           tipo?: string
           user_id?: string
           valor_previsto_padrao?: number
-        }
-        Relationships: []
-      }
-      orcamento_mes_overrides: {
-        Row: {
-          created_at: string
-          id: string
-          mes_ref: string
-          referencia_id: string | null
-          tipo_referencia: string
-          user_id: string
-          valor_override: number
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          mes_ref: string
-          referencia_id?: string | null
-          tipo_referencia: string
-          user_id?: string
-          valor_override: number
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          mes_ref?: string
-          referencia_id?: string | null
-          tipo_referencia?: string
-          user_id?: string
-          valor_override?: number
         }
         Relationships: []
       }

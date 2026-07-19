@@ -1,26 +1,18 @@
 import { useState } from 'react'
 import { Plus, Settings, TriangleAlert } from 'lucide-react'
-import type { FinAno } from '../../types'
-import { MS_OPT, MS_FULL } from '../MesTab/utils'
 import { useOrcamento } from './hooks/useOrcamento'
 import { GrupoRow } from './components/GrupoRow'
 import { GrupoModal } from './components/GrupoModal'
-import { OverrideModal } from './components/OverrideModal'
 import { ConfigPanel } from './components/ConfigPanel'
 import { BRL } from './utils'
-import type { OrcamentoGrupo, OrcamentoGrupoTipo } from './types'
+import type { OrcamentoGrupo, OrcamentoGrupoTipo, OrcamentoGrupoModo } from './types'
 
-interface Props { ano: FinAno; initialMonth: number }
-
-type OverrideTarget = { tipo: 'grupo'; grupo: OrcamentoGrupo } | { tipo: 'meta_guardar' }
 type GrupoModalState = { mode: 'create'; tipo: OrcamentoGrupoTipo } | { mode: 'edit'; grupo: OrcamentoGrupo } | null
 
-export function OrcamentoTab({ ano, initialMonth }: Props) {
-  const [month, setMonth] = useState(initialMonth)
-  const orc = useOrcamento(ano, month)
+export function OrcamentoTab() {
+  const orc = useOrcamento()
 
   const [grupoModal, setGrupoModal] = useState<GrupoModalState>(null)
-  const [overrideTarget, setOverrideTarget] = useState<OverrideTarget | null>(null)
   const [showConfig, setShowConfig] = useState(false)
   const [avisoDismissed, setAvisoDismissed] = useState(false)
 
@@ -36,33 +28,13 @@ export function OrcamentoTab({ ano, initialMonth }: Props) {
   const categoriasVinculadasIds = new Set(orc.grupos.flatMap(g => g.categorias_vinculadas))
   const categoriasSemGrupo = orc.categoriasGasto.filter(c => !categoriasVinculadasIds.has(c.id))
 
-  function handleSaveGrupo(fields: { nome: string; tipo: OrcamentoGrupoTipo; valorPrevistoPadrao: number; categoriasVinculadas: string[] }) {
+  function handleSaveGrupo(fields: { nome: string; tipo: OrcamentoGrupoTipo; modo: OrcamentoGrupoModo; valorPrevistoPadrao: number; categoriasVinculadas: string[] }) {
     if (grupoModal?.mode === 'edit') {
       orc.updateGrupo.mutate({ id: grupoModal.grupo.id, ...fields })
     } else {
       orc.addGrupo.mutate(fields)
     }
     setGrupoModal(null)
-  }
-
-  function handleSaveOverride(valor: number) {
-    if (!overrideTarget) return
-    if (overrideTarget.tipo === 'grupo') {
-      orc.setOverride.mutate({ tipo: 'grupo', referenciaId: overrideTarget.grupo.id, valor })
-    } else {
-      orc.setOverride.mutate({ tipo: 'meta_guardar', referenciaId: null, valor })
-    }
-    setOverrideTarget(null)
-  }
-
-  function handleRemoveOverride() {
-    if (!overrideTarget) return
-    if (overrideTarget.tipo === 'grupo') {
-      orc.removeOverride.mutate({ tipo: 'grupo', referenciaId: overrideTarget.grupo.id })
-    } else {
-      orc.removeOverride.mutate({ tipo: 'meta_guardar', referenciaId: null })
-    }
-    setOverrideTarget(null)
   }
 
   function Section({ title, tipo, grupos }: { title: string; tipo: OrcamentoGrupoTipo; grupos: OrcamentoGrupo[] }) {
@@ -87,8 +59,6 @@ export function OrcamentoTab({ ano, initialMonth }: Props) {
                 grupo={g}
                 previsto={orc.previstoGrupo(g)}
                 realizado={orc.realizadoGrupo(g)}
-                ajustado={orc.isGrupoAjustado(g.id)}
-                onEditValor={() => setOverrideTarget({ tipo: 'grupo', grupo: g })}
                 onEditGrupo={() => setGrupoModal({ mode: 'edit', grupo: g })}
                 onDelete={() => {
                   if (window.confirm(`Remover o grupo "${g.nome}"?`)) orc.deleteGrupo.mutate(g.id)
@@ -103,18 +73,10 @@ export function OrcamentoTab({ ano, initialMonth }: Props) {
 
   return (
     <div>
-      {/* Month selector + config */}
-      <div className="flex items-center justify-between gap-3 mb-5">
-        <div className="flex items-center gap-3">
-          <select
-            value={month}
-            onChange={e => setMonth(Number(e.target.value))}
-            className="bg-bg-2 border border-line text-white text-sm rounded-lg px-3 py-1.5 outline-none focus:border-brand/60"
-          >
-            {MS_OPT.map((m, i) => <option key={i + 1} value={i + 1}>{m}</option>)}
-          </select>
-          <span className="text-ink-3 text-sm hidden sm:inline">{MS_FULL[month - 1]} · {ano.ano}</span>
-        </div>
+      {/* Orçamento é um plano único (sem seletor de mês) — só o
+          "realizado" dos grupos vinculados a categoria olha pro mês
+          corrente automaticamente. */}
+      <div className="flex items-center justify-end gap-3 mb-5">
         <button
           onClick={() => setShowConfig(true)}
           className="text-ink-3 hover:text-white transition-colors flex items-center gap-1.5 text-xs border border-line rounded-lg px-3 py-1.5"
@@ -126,13 +88,13 @@ export function OrcamentoTab({ ano, initialMonth }: Props) {
       {/* Top cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
         <div className="bg-bg-2 border border-line rounded-xl p-3.5">
-          <div className="text-[10px] text-ink-3 uppercase tracking-wider font-[Sora] mb-1.5">Entradas</div>
-          <div className="text-base sm:text-lg font-bold tabular-nums text-[#22c55e]">{BRL(orc.entradasReais)}</div>
+          <div className="text-[10px] text-ink-3 uppercase tracking-wider font-[Sora] mb-1.5">Entradas previstas</div>
+          <div className="text-base sm:text-lg font-bold tabular-nums text-[#22c55e]">{BRL(orc.entradasPrevistas)}</div>
         </div>
         <div className="bg-bg-2 border border-line rounded-xl p-3.5">
-          <button onClick={() => setOverrideTarget({ tipo: 'meta_guardar' })} className="w-full text-left">
+          <button onClick={() => setShowConfig(true)} className="w-full text-left">
             <div className="text-[10px] text-ink-3 uppercase tracking-wider font-[Sora] mb-1.5">
-              Investimento{orc.isMetaGuardarAjustada ? ' ·' : ''}
+              Investimento
             </div>
             <div className="text-base sm:text-lg font-bold tabular-nums" style={{ color: 'var(--blue)' }}>
               {BRL(orc.guardarMes)}
@@ -184,17 +146,6 @@ export function OrcamentoTab({ ano, initialMonth }: Props) {
             }
           } : undefined}
           onClose={() => setGrupoModal(null)}
-        />
-      )}
-
-      {overrideTarget && (
-        <OverrideModal
-          title={overrideTarget.tipo === 'grupo' ? `Ajustar "${overrideTarget.grupo.nome}" — ${MS_FULL[month - 1]}` : `Ajustar meta de guardar — ${MS_FULL[month - 1]}`}
-          currentValue={overrideTarget.tipo === 'grupo' ? orc.previstoGrupo(overrideTarget.grupo) : orc.metaGuardarValor}
-          isAjustado={overrideTarget.tipo === 'grupo' ? orc.isGrupoAjustado(overrideTarget.grupo.id) : orc.isMetaGuardarAjustada}
-          onSave={handleSaveOverride}
-          onRemoveOverride={handleRemoveOverride}
-          onClose={() => setOverrideTarget(null)}
         />
       )}
 

@@ -120,7 +120,7 @@ export default function FinanceiroPage() {
         <>
           {activeTab === 'ano'          && ano && <AnoTab ano={ano} onGoToMonth={goToMonth} />}
           {activeTab === 'mes'          && ano && <MesTab ano={ano} initialMonth={selectedMonth} />}
-          {activeTab === 'orcamento'    && ano && <OrcamentoTab ano={ano} initialMonth={selectedMonth} />}
+          {activeTab === 'orcamento'    && <OrcamentoTab />}
           {activeTab === 'metas'        && <MetasTab />}
           {activeTab === 'investimentos' && <InvestimentosTab />}
           {activeTab === 'config'       && <ConfigTab anos={anos} onReload={loadAnos} />}

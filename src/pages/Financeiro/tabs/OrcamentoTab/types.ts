@@ -1,6 +1,6 @@
 export type OrcamentoGrupoTipo = 'fixo' | 'variavel'
+export type OrcamentoGrupoModo = 'manual' | 'categoria'
 export type MetaGuardarTipo = 'percentual' | 'valor_fixo'
-export type OverrideTipoReferencia = 'grupo' | 'entrada' | 'meta_guardar'
 
 export interface OrcamentoConfig {
   id: string
@@ -16,6 +16,7 @@ export interface OrcamentoGrupo {
   user_id: string
   nome: string
   tipo: OrcamentoGrupoTipo
+  modo: OrcamentoGrupoModo
   categorias_vinculadas: string[]
   valor_previsto_padrao: number
   ordem: number
@@ -28,15 +29,5 @@ export interface OrcamentoEntrada {
   nome: string
   valor_previsto_padrao: number
   ordem: number
-  created_at: string
-}
-
-export interface OrcamentoMesOverride {
-  id: string
-  user_id: string
-  mes_ref: string // 'YYYY-MM-DD', sempre dia 1
-  tipo_referencia: OverrideTipoReferencia
-  referencia_id: string | null
-  valor_override: number
   created_at: string
 }
