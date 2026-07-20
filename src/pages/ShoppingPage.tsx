@@ -1,20 +1,10 @@
 import { useState, useRef, type FormEvent, type KeyboardEvent } from 'react'
+import { Plus } from 'lucide-react'
 import { useShopping } from '../hooks/useShopping'
+import { useShoppingCategories } from '../hooks/useShoppingCategories'
 import { HelpButton } from '@/components/help/HelpButton'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { Skeleton } from '@/components/ui/Skeleton'
-
-const CATEGORIES = ['Todos', 'Geral', 'Açougue', 'Limpeza', 'Sacolão', 'Higiene Pessoal', 'Casa']
-const ADD_CATEGORIES = CATEGORIES.filter(c => c !== 'Todos')
-
-const CAT_COLORS: Record<string, string> = {
-  'Geral':           'var(--text3)',
-  'Açougue':         '#ef4444',
-  'Limpeza':         '#3b82f6',
-  'Sacolão':         '#22c55e',
-  'Higiene Pessoal': '#a78bfa',
-  'Casa':            '#f97316',
-}
 
 function ShoppingSkeleton() {
   return (
@@ -32,11 +22,28 @@ function ShoppingSkeleton() {
 export function ShoppingPage() {
   const { data: items, isLoading, isError, addItem, toggleItem, deleteItem, clearDone } =
     useShopping()
+  const { data: categoriesData, isLoading: categoriesLoading, addCategory } = useShoppingCategories()
+
+  const categories = categoriesData ?? []
+  const CATEGORIES = ['Todos', ...categories.map(c => c.nome)]
+  const ADD_CATEGORIES = categories.map(c => c.nome)
+  const CAT_COLORS: Record<string, string> = Object.fromEntries(categories.map(c => [c.nome, c.cor]))
 
   const [draft, setDraft]         = useState('')
   const [activeTab, setActiveTab] = useState('Todos')
   const [draftCat, setDraftCat]   = useState('Geral')
+  const [addingCat, setAddingCat] = useState(false)
+  const [newCatName, setNewCatName] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
+
+  function handleAddCategory(e?: FormEvent) {
+    e?.preventDefault()
+    const nome = newCatName.trim()
+    if (!nome || categories.some(c => c.nome.toLowerCase() === nome.toLowerCase())) return
+    addCategory.mutate(nome)
+    setNewCatName('')
+    setAddingCat(false)
+  }
 
   // Quando muda de aba, pré-seleciona a categoria no form
   function handleTabChange(tab: string) {
@@ -111,12 +118,12 @@ export function ShoppingPage() {
       </div>
 
       {isError && <ErrorState message="Não foi possível carregar sua lista de compras. Tente novamente." />}
-      {isLoading && <ShoppingSkeleton />}
+      {(isLoading || categoriesLoading) && <ShoppingSkeleton />}
 
-      {!isLoading && (
+      {!isLoading && !categoriesLoading && (
         <>
           {/* ── Abas de categoria ── */}
-          <div className="flex gap-1 mt-5 overflow-x-auto pb-1">
+          <div className="flex items-center gap-1 mt-5 overflow-x-auto pb-1">
             {CATEGORIES.map(cat => {
               const catItems = cat === 'Todos' ? allItems : allItems.filter(i => i.category === cat)
               const pending  = catItems.filter(i => !i.done).length
@@ -153,6 +160,38 @@ export function ShoppingPage() {
                 </button>
               )
             })}
+
+            {/* ── Nova categoria ── */}
+            {addingCat ? (
+              <form onSubmit={handleAddCategory} className="flex items-center gap-1 flex-shrink-0">
+                <input
+                  autoFocus
+                  value={newCatName}
+                  onChange={e => setNewCatName(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Escape') { setAddingCat(false); setNewCatName('') } }}
+                  onBlur={() => { if (!newCatName.trim()) setAddingCat(false) }}
+                  placeholder="Nome da categoria"
+                  className="bg-bg border border-line rounded-lg px-2 text-ink text-xs placeholder:text-ink-3 focus:outline-none focus:border-brand transition-colors"
+                  style={{ height: 30, width: 140 }}
+                />
+                <button
+                  type="submit"
+                  disabled={!newCatName.trim() || addCategory.isPending}
+                  className="text-brand text-xs font-semibold px-2 disabled:opacity-40"
+                  style={{ height: 30 }}
+                >
+                  Criar
+                </button>
+              </form>
+            ) : (
+              <button
+                onClick={() => setAddingCat(true)}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap text-ink-3 hover:text-ink border border-dashed border-line transition-colors flex-shrink-0"
+                title="Nova categoria"
+              >
+                <Plus size={12} /> Categoria
+              </button>
+            )}
           </div>
 
           {/* ── Lista ── */}

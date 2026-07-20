@@ -1296,6 +1296,33 @@ export type Database = {
         }
         Relationships: []
       }
+      shopping_categories: {
+        Row: {
+          cor: string
+          created_at: string
+          id: string
+          nome: string
+          ordem: number
+          user_id: string
+        }
+        Insert: {
+          cor: string
+          created_at?: string
+          id?: string
+          nome: string
+          ordem?: number
+          user_id?: string
+        }
+        Update: {
+          cor?: string
+          created_at?: string
+          id?: string
+          nome?: string
+          ordem?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       shopping_items: {
         Row: {
           category: string
