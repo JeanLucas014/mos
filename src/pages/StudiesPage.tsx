@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { FileText, Film, Link as LinkIcon, Paperclip, GraduationCap, FolderOpen } from 'lucide-react'
 import { useStudies } from '../hooks/useStudies'
 import type { Database } from '../types/db'
@@ -41,7 +42,7 @@ function timeAgo(dateStr: string): string {
 }
 
 /* ── Pill ─────────────────────────────────────────────────────────── */
-function Pill({ status }: { status: string }) {
+export function Pill({ status }: { status: string }) {
   const cfg = STATUS_CFG[status] ?? STATUS_CFG['ativo']
   return (
     <span style={{
@@ -55,7 +56,7 @@ function Pill({ status }: { status: string }) {
 }
 
 /* ── Progress bar ─────────────────────────────────────────────────── */
-function ProgressBar({
+export function ProgressBar({
   value,
   color = 'var(--blue)',
   onChange,
@@ -105,11 +106,13 @@ function StudiesSkeleton() {
 /* ── StudyRow ─────────────────────────────────────────────────────── */
 function StudyRow({
   study,
+  onOpen,
   onProgressChange,
   onStatusChange,
   onDelete,
 }: {
   study: Study
+  onOpen: () => void
   onProgressChange: (id: string, v: number) => void
   onStatusChange: (id: string, s: StudyStatus) => void
   onDelete: (id: string) => void
@@ -118,7 +121,8 @@ function StudyRow({
 
   return (
     <div
-      className="group border border-line rounded-xl p-4 bg-bg-3 hover:border-white/10 transition-colors"
+      onClick={onOpen}
+      className="group border border-line rounded-xl p-4 bg-bg-3 hover:border-white/10 transition-colors cursor-pointer"
     >
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -148,7 +152,7 @@ function StudyRow({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
           {/* Status selector — visible on hover or click */}
           {showEdit ? (
             <select
@@ -179,11 +183,13 @@ function StudyRow({
       </div>
 
       {/* Progress */}
-      <ProgressBar
-        value={study.progress ?? 0}
-        color={study.status === 'concluido' ? '#34d399' : 'var(--blue)'}
-        onChange={(v) => onProgressChange(study.id, v)}
-      />
+      <div onClick={(e) => e.stopPropagation()}>
+        <ProgressBar
+          value={study.progress ?? 0}
+          color={study.status === 'concluido' ? '#34d399' : 'var(--blue)'}
+          onChange={(v) => onProgressChange(study.id, v)}
+        />
+      </div>
     </div>
   )
 }
@@ -441,6 +447,7 @@ function AddFileForm({
 
 /* ── Page ─────────────────────────────────────────────────────────── */
 export function StudiesPage() {
+  const navigate = useNavigate()
   const [tab, setTab] = useState<'estudos' | 'biblioteca'>('estudos')
   const { studies: studiesQ, files: filesQ, addStudy, updateStudy, deleteStudy, addFile, deleteFile } = useStudies()
 
@@ -558,6 +565,7 @@ export function StudiesPage() {
                   <StudyRow
                     key={study.id}
                     study={study}
+                    onOpen={() => navigate(`/estudos/${study.id}`)}
                     onProgressChange={handleProgress}
                     onStatusChange={handleStatus}
                     onDelete={handleDeleteStudy}

@@ -28,6 +28,7 @@ const InvoicesPage       = lazy(() => import('./pages/InvoicesPage').then(m => (
 const NotesPage          = lazy(() => import('./pages/NotesPage').then(m => ({ default: m.NotesPage })))
 const LibraryPage        = lazy(() => import('./pages/LibraryPage').then(m => ({ default: m.LibraryPage })))
 const StudiesPage        = lazy(() => import('./pages/StudiesPage').then(m => ({ default: m.StudiesPage })))
+const StudyDetailPage    = lazy(() => import('./pages/Estudos/StudyDetailPage').then(m => ({ default: m.StudyDetailPage })))
 const VaultPage          = lazy(() => import('./pages/VaultPage').then(m => ({ default: m.VaultPage })))
 const SportsPage         = lazy(() => import('./pages/SportsPage').then(m => ({ default: m.SportsPage })))
 const SistemasPage       = lazy(() => import('./pages/SistemasPage'))
@@ -89,6 +90,7 @@ export default function App() {
         <Route path="notas" element={<NotesPage />} />
         <Route path="biblioteca" element={<LibraryPage />} />
         <Route path="estudos" element={<StudiesPage />} />
+        <Route path="estudos/:studyId" element={<StudyDetailPage />} />
         <Route path="senhas" element={<VaultPage />} />
         <Route path="esportes" element={<SportsPage />} />
         <Route path="sistemas" element={<RequireAdmin><SistemasPage /></RequireAdmin>} />

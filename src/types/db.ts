@@ -215,6 +215,101 @@ export type Database = {
         }
         Relationships: []
       }
+      estudos_anexos: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          nome_arquivo: string
+          tamanho_bytes: number | null
+          tipo_arquivo: string | null
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          nome_arquivo: string
+          tamanho_bytes?: number | null
+          tipo_arquivo?: string | null
+          url: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          nome_arquivo?: string
+          tamanho_bytes?: number | null
+          tipo_arquivo?: string | null
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estudos_anexos_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "estudos_itens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estudos_itens: {
+        Row: {
+          conteudo: Json | null
+          created_at: string
+          curso_id: string
+          id: string
+          nome: string
+          ordem: number
+          parent_id: string | null
+          tipo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          conteudo?: Json | null
+          created_at?: string
+          curso_id: string
+          id?: string
+          nome: string
+          ordem?: number
+          parent_id?: string | null
+          tipo: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          conteudo?: Json | null
+          created_at?: string
+          curso_id?: string
+          id?: string
+          nome?: string
+          ordem?: number
+          parent_id?: string | null
+          tipo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estudos_itens_curso_id_fkey"
+            columns: ["curso_id"]
+            isOneToOne: false
+            referencedRelation: "studies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estudos_itens_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "estudos_itens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           category: string | null
