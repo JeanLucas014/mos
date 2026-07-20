@@ -12,7 +12,6 @@ export function NotesPage() {
   const { user } = useAuth()
   const { data: notes, isLoading, isError, addNote, updateNote, deleteNote } = useNotes()
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [content, setContent] = useState<JSONContent>(emptyDoc())
   const [title, setTitle] = useState('')
   const [saved, setSaved] = useState(false)
   const [showList, setShowList] = useState(true) // mobile: toggle between list and editor
@@ -20,14 +19,18 @@ export function NotesPage() {
 
   const selected = (notes ?? []).find((n) => n.id === selectedId)
 
+  // Conteúdo derivado direto de `selected`, no mesmo render — nunca via
+  // useEffect+setState separado, que criava uma janela de um commit onde
+  // noteId já tinha mudado mas o conteúdo ainda era o da nota anterior
+  // (causa raiz de notas aparecendo vazias/com conteúdo trocado).
+  const content: JSONContent = selected
+    ? selected.body_json
+      ? (selected.body_json as unknown as JSONContent)
+      : textToTiptapDoc(selected.body)
+    : emptyDoc()
+
   useEffect(() => {
-    if (selected) {
-      const doc = selected.body_json
-        ? (selected.body_json as unknown as JSONContent)
-        : textToTiptapDoc(selected.body)
-      setContent(doc)
-      setTitle(selected.title ?? '')
-    }
+    if (selected) setTitle(selected.title ?? '')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected?.id])
 
@@ -54,7 +57,6 @@ export function NotesPage() {
   )
 
   function handleContentChange(doc: JSONContent, plainText: string) {
-    setContent(doc)
     if (selectedId) saveNote(selectedId, title, doc, plainText)
   }
 
@@ -218,7 +220,7 @@ export function NotesPage() {
                 )}
               </div>
               <NoteEditor
-                noteId={selected.id}
+                key={selected.id}
                 content={content}
                 userId={user?.id}
                 onChange={handleContentChange}

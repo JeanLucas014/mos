@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import { useEditor, EditorContent, type JSONContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import TaskList from '@tiptap/extension-task-list'
@@ -13,13 +13,16 @@ import { tiptapDocToText } from '@/lib/tiptapContent'
 import './noteEditor.css'
 
 interface Props {
-  noteId: string
   content: JSONContent
   userId: string | undefined
   onChange: (doc: JSONContent, plainText: string) => void
 }
 
-export function NoteEditor({ noteId, content, userId, onChange }: Props) {
+// O pai monta este componente com `key={noteId}` — trocar de nota sempre
+// desmonta/remonta o editor do zero, então `content` só precisa servir
+// como valor inicial do Tiptap; não há necessidade (nem risco de race)
+// de sincronizar conteúdo depois do mount.
+export function NoteEditor({ content, userId, onChange }: Props) {
   const onChangeRef = useRef(onChange)
   onChangeRef.current = onChange
 
@@ -69,19 +72,6 @@ export function NoteEditor({ noteId, content, userId, onChange }: Props) {
       },
     },
   })
-
-  // Troca de conteúdo só quando a nota selecionada muda de fato (por id) —
-  // nunca em resposta ao próprio onUpdate, senão o cursor pula a cada
-  // tecla digitada (autosave que reflete de volta pro editor controlado).
-  const prevNoteId = useRef(noteId)
-  useEffect(() => {
-    if (!editor) return
-    if (noteId !== prevNoteId.current) {
-      editor.commands.setContent(content, { emitUpdate: false })
-      prevNoteId.current = noteId
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [noteId, editor])
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
