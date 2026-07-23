@@ -12,8 +12,11 @@ interface Props {
   cursoNome: string
   parentId: string | null
   store: Store
-  onOpenFolder: (item: EstudoItem) => void
-  onOpenPage: (item: EstudoItem) => void
+  onOpenItem: (item: EstudoItem) => void
+  /** 'full' = painel principal da navegação em pilha. 'embedded' = seção
+   * "Sub-páginas" dentro do editor de uma página — mais compacta, com
+   * altura própria e sem crescer pra ocupar o resto da tela. */
+  variant?: 'full' | 'embedded'
 }
 
 type ModalState =
@@ -23,7 +26,7 @@ type ModalState =
   | { kind: 'move'; item: EstudoItem }
   | null
 
-export function ItemsExplorer({ items, cursoNome, parentId, store, onOpenFolder, onOpenPage }: Props) {
+export function ItemsExplorer({ items, cursoNome, parentId, store, onOpenItem, variant = 'full' }: Props) {
   const [modal, setModal] = useState<ModalState>(null)
 
   const children = items.filter((it) => it.parent_id === parentId)
@@ -34,7 +37,7 @@ export function ItemsExplorer({ items, cursoNome, parentId, store, onOpenFolder,
       {
         onSuccess: (novo) => {
           // Página nova abre direto no editor — pasta nova só aparece na lista.
-          if (tipo === 'pagina') onOpenPage(novo)
+          if (tipo === 'pagina') onOpenItem(novo)
         },
       },
     )
@@ -61,8 +64,15 @@ export function ItemsExplorer({ items, cursoNome, parentId, store, onOpenFolder,
     if (window.confirm(msg)) store.deleteItem.mutate(item.id)
   }
 
+  const isEmbedded = variant === 'embedded'
+
   return (
-    <div className="bg-bg-2 border border-line rounded-card flex flex-col flex-1 min-h-0">
+    <div
+      className={[
+        'bg-bg-2 border border-line rounded-card flex flex-col',
+        isEmbedded ? '' : 'flex-1 min-h-0',
+      ].join(' ')}
+    >
       <div className="flex items-center gap-2 px-3 py-2.5 border-b border-line flex-shrink-0">
         <button
           onClick={() => setModal({ kind: 'create-pasta' })}
@@ -78,7 +88,7 @@ export function ItemsExplorer({ items, cursoNome, parentId, store, onOpenFolder,
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className={isEmbedded ? 'overflow-y-auto' : 'flex-1 overflow-y-auto'} style={isEmbedded ? { maxHeight: 240 } : undefined}>
         {children.length === 0 ? (
           <p className="text-ink-3 text-sm text-center py-10">Vazio. Crie uma pasta ou página acima.</p>
         ) : (
@@ -86,7 +96,7 @@ export function ItemsExplorer({ items, cursoNome, parentId, store, onOpenFolder,
             <ItemRow
               key={item.id}
               item={item}
-              onOpen={() => (item.tipo === 'pasta' ? onOpenFolder(item) : onOpenPage(item))}
+              onOpen={() => onOpenItem(item)}
               onRename={() => setModal({ kind: 'rename', item })}
               onMove={() => setModal({ kind: 'move', item })}
               onDelete={() => handleDelete(item)}

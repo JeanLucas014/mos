@@ -310,6 +310,44 @@ export type Database = {
           },
         ]
       }
+      estudos_marcos: {
+        Row: {
+          concluido: boolean
+          created_at: string
+          curso_id: string
+          id: string
+          nome: string
+          ordem: number
+          user_id: string
+        }
+        Insert: {
+          concluido?: boolean
+          created_at?: string
+          curso_id: string
+          id?: string
+          nome: string
+          ordem?: number
+          user_id?: string
+        }
+        Update: {
+          concluido?: boolean
+          created_at?: string
+          curso_id?: string
+          id?: string
+          nome?: string
+          ordem?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estudos_marcos_curso_id_fkey"
+            columns: ["curso_id"]
+            isOneToOne: false
+            referencedRelation: "studies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           category: string | null
