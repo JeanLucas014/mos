@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type { CalendarEvent } from '../types'
+import { SNAP_MINUTES } from '../utils/snap'
 
 const HOUR_H  = 60
 const TIME_W  = 52
@@ -94,7 +95,9 @@ export function DayView({ events, currentDate, onSelectEvent, onSelectSlot }: Pr
 
   function eventHeight(ev: CalendarEvent): number {
     const ms = new Date(ev.end_at).getTime() - new Date(ev.start_at).getTime()
-    return Math.max(ms / (1000 * 60), 30)
+    // Só um piso mínimo pra evitar altura zero/negativa — a duração real
+    // (inclusive 15min) deve ficar proporcionalmente correta.
+    return Math.max(ms / (1000 * 60), 4)
   }
 
   const dayLabel = currentDate.toLocaleDateString('pt-BR', {
@@ -139,10 +142,11 @@ export function DayView({ events, currentDate, onSelectEvent, onSelectSlot }: Pr
           <div className="flex-1 relative border-l border-[#1f1f1f]"
             onClick={e => {
               const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect()
-              const y    = e.clientY - rect.top
-              const hour = Math.floor(y / HOUR_H)
-              const d    = new Date(currentDate)
-              d.setHours(hour, 0, 0, 0)
+              const y = e.clientY - rect.top
+              const rawMinutes = (y / HOUR_H) * 60
+              const snappedMinutes = Math.round(rawMinutes / SNAP_MINUTES) * SNAP_MINUTES
+              const d = new Date(currentDate)
+              d.setHours(0, snappedMinutes, 0, 0)
               onSelectSlot(d)
             }}
           >

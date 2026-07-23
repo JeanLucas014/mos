@@ -11,6 +11,7 @@ import { EventModal } from './components/EventModal'
 import { RotinaTab }  from './components/RotinaTab'
 import { RecurrenceDialog, type RecurrenceScope } from './components/RecurrenceDialog'
 import { expandRecurringEvents } from './utils/expandRecurrence'
+import { snapDateToQuarterHour } from './utils/snap'
 import { HelpButton } from '@/components/help/HelpButton'
 import { useRealtimeStore } from '@/stores/useRealtimeStore'
 import { useWeekStart } from '@/hooks/useWeekStart'
@@ -450,11 +451,12 @@ export default function AgendaPage() {
   }
 
   function openNewEvent(start: Date) {
-    const end = new Date(start)
-    end.setHours(start.getHours() + 1)
+    const snappedStart = snapDateToQuarterHour(start)
+    const end = new Date(snappedStart)
+    end.setHours(snappedStart.getHours() + 1)
     setModal({
       title:    '',
-      start_at: start.toISOString(),
+      start_at: snappedStart.toISOString(),
       end_at:   end.toISOString(),
       all_day:  false,
       color:    '#0EA5E9',

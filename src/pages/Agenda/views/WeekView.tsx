@@ -6,6 +6,7 @@ import {
 } from '@dnd-kit/core'
 import type { CalendarEvent } from '../types'
 import { startOfWeek, type WeekStart } from '../../../lib/dates'
+import { SNAP_MINUTES } from '../utils/snap'
 
 const DAYS_PT    = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 const DAYS_SHORT = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
@@ -25,27 +26,58 @@ function isSameDay(a: Date, b: Date): boolean {
     a.getFullYear() === b.getFullYear()
 }
 
-interface EventLayout {
+/** Pedaço de um evento visível dentro de UM dia específico. Um evento cujo
+ * start_at/end_at caem em dias diferentes vira um EventSegment por dia que
+ * ele atravessa — puramente pra exibição, o registro no banco continua
+ * sendo um único evento com um start_at/end_at. */
+interface EventSegment {
   ev: CalendarEvent
+  segStart: Date
+  segEnd: Date
+  /** Diferença entre o início deste pedaço e o start_at real do evento —
+   * usada pra reconstruir o horário correto ao arrastar qualquer pedaço. */
+  segmentOffsetMs: number
+}
+
+/** Recorta um evento nos limites de um dia (00:00–23:59:59.999). Retorna
+ * null se o evento não passa por esse dia. */
+function daySegment(ev: CalendarEvent, day: Date): EventSegment | null {
+  const dayStart = new Date(day)
+  dayStart.setHours(0, 0, 0, 0)
+  const dayEnd = new Date(dayStart)
+  dayEnd.setDate(dayEnd.getDate() + 1)
+
+  const evStart = new Date(ev.start_at)
+  const evEnd   = new Date(ev.end_at)
+
+  const segStart = evStart > dayStart ? evStart : dayStart
+  const segEnd   = evEnd   < dayEnd   ? evEnd   : dayEnd
+  if (segStart.getTime() >= segEnd.getTime()) return null
+
+  return { ev, segStart, segEnd, segmentOffsetMs: segStart.getTime() - evStart.getTime() }
+}
+
+interface EventLayout {
+  seg: EventSegment
   left: number
   width: number
   zIndex: number
 }
 
-function layoutEvents(events: CalendarEvent[]): EventLayout[] {
-  if (events.length === 0) return []
+function layoutEvents(segments: EventSegment[]): EventLayout[] {
+  if (segments.length === 0) return []
 
-  const sorted = [...events].sort((a, b) => {
-    const startDiff = new Date(a.start_at).getTime() - new Date(b.start_at).getTime()
+  const sorted = [...segments].sort((a, b) => {
+    const startDiff = a.segStart.getTime() - b.segStart.getTime()
     if (startDiff !== 0) return startDiff
-    const durA = new Date(a.end_at).getTime() - new Date(a.start_at).getTime()
-    const durB = new Date(b.end_at).getTime() - new Date(b.start_at).getTime()
+    const durA = a.segEnd.getTime() - a.segStart.getTime()
+    const durB = b.segEnd.getTime() - b.segStart.getTime()
     return durB - durA
   })
 
-  function overlaps(a: CalendarEvent, b: CalendarEvent): boolean {
-    return new Date(a.start_at).getTime() < new Date(b.end_at).getTime() &&
-           new Date(a.end_at).getTime()   > new Date(b.start_at).getTime()
+  function overlaps(a: EventSegment, b: EventSegment): boolean {
+    return a.segStart.getTime() < b.segEnd.getTime() &&
+           a.segEnd.getTime()   > b.segStart.getTime()
   }
 
   const cols: number[] = new Array(sorted.length).fill(0)
@@ -59,30 +91,30 @@ function layoutEvents(events: CalendarEvent[]): EventLayout[] {
     cols[i] = c
   }
 
-  const numCols: number[] = sorted.map((ev, i) => {
+  const numCols: number[] = sorted.map((seg, i) => {
     let max = cols[i] + 1
     for (let j = 0; j < sorted.length; j++) {
-      if (i !== j && overlaps(ev, sorted[j])) max = Math.max(max, cols[j] + 1)
+      if (i !== j && overlaps(seg, sorted[j])) max = Math.max(max, cols[j] + 1)
     }
     return max
   })
 
-  return sorted.map((ev, i) => {
+  return sorted.map((seg, i) => {
     const n      = numCols[i]
     const col    = cols[i]
     const baseW  = 100 / n
     const bonusW = n > 1 ? Math.min(12, baseW * 0.3) : 0
     const width  = Math.min(baseW + bonusW, 100 - col * baseW)
     const left   = col * baseW
-    return { ev, left, width, zIndex: 10 + col }
+    return { seg, left, width, zIndex: 10 + col }
   })
 }
 
-const SNAP_MIN = 15
+const SNAP_MIN = SNAP_MINUTES
 
 /* ── Um evento arrastável na grade ─────────────────────────────── */
 interface EventPillProps {
-  ev: CalendarEvent
+  seg: EventSegment
   dayIndex: number
   left: number
   width: number
@@ -94,10 +126,14 @@ interface EventPillProps {
   onSelectEvent: (e: Partial<CalendarEvent>) => void
 }
 
-function EventPill({ ev, dayIndex, left, width, zIndex, top, height, isMobile, isBeingDragged, onSelectEvent }: EventPillProps) {
+function EventPill({ seg, dayIndex, left, width, zIndex, top, height, isMobile, isBeingDragged, onSelectEvent }: EventPillProps) {
+  const { ev, segStart, segEnd, segmentOffsetMs } = seg
+  // id único por pedaço (o mesmo evento pode ter um segmento em cada dia
+  // que ele atravessa) — dnd-kit exige ids únicos por draggable. O drag
+  // sempre opera sobre o evento inteiro (data.event), preservando duração.
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
-    id: ev.id,
-    data: { event: ev, dayIndex },
+    id: `${ev.id}::${dayIndex}`,
+    data: { event: ev, dayIndex, segStart, segEnd, segmentOffsetMs },
   })
 
   const dragTransform = isBeingDragged && transform
@@ -137,14 +173,14 @@ function EventPill({ ev, dayIndex, left, width, zIndex, top, height, isMobile, i
         </div>
         {height > 35 && !isMobile && (
           <div className="text-white/75 truncate" style={{ fontSize: 10 }}>
-            {new Date(ev.start_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+            {segStart.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
             {' – '}
-            {new Date(ev.end_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+            {segEnd.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
           </div>
         )}
         {height <= 35 && (
           <div className="text-white/75 truncate" style={{ fontSize: 9 }}>
-            {new Date(ev.start_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+            {segStart.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
           </div>
         )}
       </div>
@@ -167,19 +203,19 @@ interface DayColumnProps {
   HOUR_H: number
   nowTop: number
   widthStyle: React.CSSProperties
-  events: CalendarEvent[]
+  segments: EventSegment[]
   isMobile: boolean
   draggingEventId: string | null
   dragPreview: DragPreview | null
   onSelectEvent: (e: Partial<CalendarEvent>) => void
   onSelectSlot: (start: Date) => void
-  eventTop: (ev: CalendarEvent) => number
-  eventHeight: (ev: CalendarEvent) => number
+  segTop: (seg: EventSegment) => number
+  segHeight: (seg: EventSegment) => number
 }
 
 function DayColumn({
-  day, dayIndex, today, hours, HOUR_H, nowTop, widthStyle, events, isMobile,
-  draggingEventId, dragPreview, onSelectEvent, onSelectSlot, eventTop, eventHeight,
+  day, dayIndex, today, hours, HOUR_H, nowTop, widthStyle, segments, isMobile,
+  draggingEventId, dragPreview, onSelectEvent, onSelectSlot, segTop, segHeight,
 }: DayColumnProps) {
   return (
     <div
@@ -187,10 +223,11 @@ function DayColumn({
       style={widthStyle}
       onClick={e => {
         const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect()
-        const y    = e.clientY - rect.top
-        const hour = Math.floor(y / HOUR_H)
-        const d    = new Date(day)
-        d.setHours(hour, 0, 0, 0)
+        const y = e.clientY - rect.top
+        const rawMinutes = (y / HOUR_H) * 60
+        const snappedMinutes = Math.round(rawMinutes / SNAP_MIN) * SNAP_MIN
+        const d = new Date(day)
+        d.setHours(0, snappedMinutes, 0, 0)
         onSelectSlot(d)
       }}
     >
@@ -232,18 +269,18 @@ function DayColumn({
       )}
 
       {/* Events */}
-      {layoutEvents(events).map(({ ev, left, width, zIndex }) => (
+      {layoutEvents(segments).map(({ seg, left, width, zIndex }) => (
         <EventPill
-          key={ev.id}
-          ev={ev}
+          key={`${seg.ev.id}::${dayIndex}`}
+          seg={seg}
           dayIndex={dayIndex}
           left={left}
           width={width}
           zIndex={zIndex}
-          top={eventTop(ev)}
-          height={eventHeight(ev)}
+          top={segTop(seg)}
+          height={segHeight(seg)}
           isMobile={isMobile}
-          isBeingDragged={draggingEventId === ev.id}
+          isBeingDragged={draggingEventId === seg.ev.id}
           onSelectEvent={onSelectEvent}
         />
       ))}
@@ -291,22 +328,30 @@ export function WeekView({ events, currentDate, weekStartsOn, onSelectEvent, onS
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isMobile, weekStart.getTime()])
 
-  function getEventsByDay(day: Date): CalendarEvent[] {
-    return events.filter(e => !e.all_day && isSameDay(new Date(e.start_at), day))
+  // Eventos que passam da meia-noite viram um EventSegment por dia que
+  // atravessam — cada dia da grade só recebe o pedaço (segStart/segEnd)
+  // recortado dentro dele, nunca o evento inteiro fora dos limites do dia.
+  function getEventsByDay(day: Date): EventSegment[] {
+    return events
+      .filter(e => !e.all_day)
+      .map(e => daySegment(e, day))
+      .filter((s): s is EventSegment => s !== null)
   }
 
   function getAllDayByDay(day: Date): CalendarEvent[] {
     return events.filter(e => e.all_day && isSameDay(new Date(e.start_at), day))
   }
 
-  function eventTop(ev: CalendarEvent): number {
-    const s = new Date(ev.start_at)
-    return s.getHours() * HOUR_H + s.getMinutes() * (HOUR_H / 60)
+  function segTop(seg: EventSegment): number {
+    return seg.segStart.getHours() * HOUR_H + seg.segStart.getMinutes() * (HOUR_H / 60)
   }
 
-  function eventHeight(ev: CalendarEvent): number {
-    const ms = new Date(ev.end_at).getTime() - new Date(ev.start_at).getTime()
-    return Math.max(ms / (1000 * 60) * (HOUR_H / 60), isMobile ? 24 : 30)
+  function segHeight(seg: EventSegment): number {
+    const ms = seg.segEnd.getTime() - seg.segStart.getTime()
+    // Só um piso mínimo pra evitar altura zero/negativa em dado degenerado
+    // — a duração real (inclusive 15min) deve ficar proporcionalmente
+    // correta, sem um floor artificial inflando eventos curtos.
+    return Math.max(ms / (1000 * 60) * (HOUR_H / 60), 4)
   }
 
   /* ── Drag-and-drop ────────────────────────────────────────────── */
@@ -315,7 +360,7 @@ export function WeekView({ events, currentDate, weekStartsOn, onSelectEvent, onS
     useSensor(TouchSensor,  { activationConstraint: { delay: 200, tolerance: 8 } }),
   )
 
-  const [dragOrigin, setDragOrigin] = useState<{ event: CalendarEvent; dayIndex: number; top: number; height: number } | null>(null)
+  const [dragOrigin, setDragOrigin] = useState<{ event: CalendarEvent; dayIndex: number; top: number; height: number; segmentOffsetMs: number } | null>(null)
   const [dragPreview, setDragPreview] = useState<DragPreview | null>(null)
 
   function computeSnap(deltaX: number, deltaY: number) {
@@ -333,10 +378,12 @@ export function WeekView({ events, currentDate, weekStartsOn, onSelectEvent, onS
   }
 
   const handleDragStart = useCallback((e: DragStartEvent) => {
-    const data = e.active.data.current as { event: CalendarEvent; dayIndex: number } | undefined
+    const data = e.active.data.current as { event: CalendarEvent; dayIndex: number; segStart: Date; segEnd: Date; segmentOffsetMs: number } | undefined
     if (!data) return
     colWidthRef.current = rowRef.current ? rowRef.current.clientWidth / days.length : 0
-    setDragOrigin({ event: data.event, dayIndex: data.dayIndex, top: eventTop(data.event), height: eventHeight(data.event) })
+    const top = data.segStart.getHours() * HOUR_H + data.segStart.getMinutes() * (HOUR_H / 60)
+    const height = Math.max((data.segEnd.getTime() - data.segStart.getTime()) / (1000 * 60) * (HOUR_H / 60), 4)
+    setDragOrigin({ event: data.event, dayIndex: data.dayIndex, top, height, segmentOffsetMs: data.segmentOffsetMs })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [days.length, isMobile])
 
@@ -358,9 +405,14 @@ export function WeekView({ events, currentDate, weekStartsOn, onSelectEvent, onS
     const { newTop, newDayIndex } = snap
     if (newDayIndex === dragOrigin.dayIndex && newTop === dragOrigin.top) return // não moveu de fato
 
+    // newTop/newDayIndex descrevem a nova posição do PEDAÇO arrastado —
+    // subtrai o offset desse pedaço em relação ao início real do evento
+    // pra sempre mover o evento inteiro preservando a duração original,
+    // não importa qual segmento (dia) foi de fato arrastado.
     const minutesSinceMidnight = newTop * (60 / HOUR_H)
-    const newStart = new Date(days[newDayIndex])
-    newStart.setHours(0, minutesSinceMidnight, 0, 0)
+    const newSegStart = new Date(days[newDayIndex])
+    newSegStart.setHours(0, minutesSinceMidnight, 0, 0)
+    const newStart = new Date(newSegStart.getTime() - dragOrigin.segmentOffsetMs)
     const durationMs = new Date(dragOrigin.event.end_at).getTime() - new Date(dragOrigin.event.start_at).getTime()
     const newEnd = new Date(newStart.getTime() + durationMs)
 
@@ -372,7 +424,7 @@ export function WeekView({ events, currentDate, weekStartsOn, onSelectEvent, onS
 
   const sharedColumnProps = {
     today, hours, HOUR_H, nowTop, isMobile, draggingEventId, dragPreview,
-    onSelectEvent, onSelectSlot, eventTop, eventHeight,
+    onSelectEvent, onSelectSlot, segTop, segHeight,
   }
 
   return (
@@ -434,7 +486,7 @@ export function WeekView({ events, currentDate, weekStartsOn, onSelectEvent, onS
                       day={day}
                       dayIndex={di}
                       widthStyle={{ width: DAY_W, flexShrink: 0 }}
-                      events={getEventsByDay(day)}
+                      segments={getEventsByDay(day)}
                       {...sharedColumnProps}
                     />
                   ))}
@@ -493,7 +545,7 @@ export function WeekView({ events, currentDate, weekStartsOn, onSelectEvent, onS
                       day={day}
                       dayIndex={di}
                       widthStyle={{ flex: 1 }}
-                      events={getEventsByDay(day)}
+                      segments={getEventsByDay(day)}
                       {...sharedColumnProps}
                     />
                   ))}
