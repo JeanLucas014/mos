@@ -145,7 +145,7 @@ function VaultModal({
           >×</button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-3" autoComplete="off" data-lpignore="true" data-1p-ignore data-bwignore data-form-type="other">
           {/* Kind selector */}
           <div className="flex gap-2">
             {(['senha', 'chave_api'] as const).map(k => (
@@ -177,6 +177,10 @@ function VaultModal({
               placeholder={servicePh}
               className={inputCls}
               style={h}
+              autoComplete="off"
+              data-lpignore="true"
+              data-1p-ignore
+              data-bwignore
             />
           </div>
 
@@ -191,6 +195,10 @@ function VaultModal({
               placeholder={usernamePh}
               className={inputCls}
               style={h}
+              autoComplete="off"
+              data-lpignore="true"
+              data-1p-ignore
+              data-bwignore
             />
           </div>
 
@@ -219,6 +227,10 @@ function VaultModal({
                 placeholder={passwordPh}
                 className={inputCls + ' pr-10'}
                 style={{ ...h, fontFamily: showPw ? 'JetBrains Mono, monospace' : undefined }}
+                autoComplete="new-password"
+                data-lpignore="true"
+                data-1p-ignore
+                data-bwignore
               />
               <button
                 type="button"
@@ -594,7 +606,11 @@ export function VaultPage() {
     kind: string,
     itemId?: string,
   ) {
-    if (!cryptoKey) return
+    // Nunca falhar em silêncio: se a chave sumir por qualquer motivo, o
+    // modal precisa mostrar um erro real em vez de fechar como se tivesse
+    // salvo (foi exatamente esse silêncio que mascarou o bug de extensão
+    // de navegador interceptando o formulário — ver investigação).
+    if (!cryptoKey) throw new Error('Cofre bloqueado — desbloqueie novamente antes de salvar.')
 
     /* Only re-encrypt if password was provided (for edit, blank = keep old) */
     if (itemId && !password) {
