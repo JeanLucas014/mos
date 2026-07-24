@@ -80,6 +80,14 @@ function calcPace(distance_m: number, duration_s: number): string {
   return `${Math.floor(secPerKm / 60)}:${String(Math.round(secPerKm % 60)).padStart(2, '0')}/km`
 }
 
+/** Sinaliza 401 na PRIMEIRA página — dispara o refresh "preguiçoso" no
+ * chamador (padrão B: o access_token passou no check de expires_at mas o
+ * Strava invalidou por outro motivo, ex: revogação manual do lado do
+ * usuário). 401 em páginas seguintes não dispara retry — cenário raro
+ * demais (token expirar no meio de uma paginação de segundos) pra
+ * justificar a complexidade de retomar de onde parou. */
+class StravaUnauthorizedError extends Error {}
+
 /* ── Fetch all activities with pagination ─────────────────────── */
 async function fetchAllActivities(accessToken: string): Promise<Array<{
   id: number
@@ -100,6 +108,10 @@ async function fetchAllActivities(accessToken: string): Promise<Array<{
   for (let page = 1; page <= SAFETY_MAX_PAGES; page++) {
     const url = `https://www.strava.com/api/v3/athlete/activities?per_page=${PER_PAGE}&page=${page}`
     const resp = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } })
+
+    if (resp.status === 401 && page === 1) {
+      throw new StravaUnauthorizedError('strava rejeitou o access_token')
+    }
 
     if (resp.status === 429) {
       console.error('[strava-sync] rate limited na página', page)
@@ -130,13 +142,18 @@ Deno.serve(async (req: Request) => {
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) return json({ error: 'Missing authorization' }, 401)
 
-    const userClient = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
-      { global: { headers: { Authorization: authHeader } } },
-    )
-    const { data: { user }, error: authErr } = await userClient.auth.getUser()
-    if (authErr || !user) return json({ error: 'Unauthorized' }, 401)
+    // createClient(...).auth.getUser() sem argumento NÃO usa o header
+    // Authorization passado em `global.headers` — ele tenta resolver a
+    // sessão via storage interno do SDK, que não existe no runtime
+    // stateless de Edge Function, e sempre retorna user null (401 falso,
+    // mesmo com token válido). Mesmo padrão já usado em mos-chat,
+    // daily-briefing e send-support.
+    const userRes = await fetch(`${Deno.env.get('SUPABASE_URL')}/auth/v1/user`, {
+      headers: { Authorization: authHeader, apikey: Deno.env.get('SUPABASE_ANON_KEY')! },
+    })
+    if (!userRes.ok) return json({ error: 'Unauthorized' }, 401)
+    const user = await userRes.json()
+    if (!user?.id) return json({ error: 'Unauthorized' }, 401)
 
     const encKey       = Deno.env.get('TOKEN_ENCRYPTION_KEY')!
     const clientId     = Deno.env.get('STRAVA_CLIENT_ID')!
@@ -155,16 +172,14 @@ Deno.serve(async (req: Request) => {
 
     if (intErr || !integration) return json({ error: 'Strava not connected' }, 400)
 
-    /* Ensure valid access token */
-    const meta      = (integration.meta as { expires_at?: number; athlete?: unknown }) ?? {}
-    const expiresAt = meta.expires_at ?? 0
-    let accessToken: string
+    const meta = (integration.meta as { expires_at?: number; athlete?: unknown }) ?? {}
 
-    if (Date.now() < expiresAt - 60_000) {
-      accessToken = await decrypt(integration.access_token_cipher!, encKey)
-    } else {
-      if (!integration.refresh_token_cipher) return json({ error: 'No refresh token' }, 400)
-      const refreshToken = await decrypt(integration.refresh_token_cipher, encKey)
+    /* Troca o refresh_token por um access_token novo, salva os três campos
+     * (o Strava rotaciona o refresh_token a cada uso — o antigo é
+     * descartado). Usado tanto no check-then-refresh (A) quanto no lazy
+     * refresh (B) abaixo. */
+    async function refreshAccessToken(refreshCipher: string): Promise<string> {
+      const refreshToken = await decrypt(refreshCipher, encKey)
       const refreshResp  = await fetch('https://www.strava.com/oauth/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -175,19 +190,44 @@ Deno.serve(async (req: Request) => {
           grant_type:    'refresh_token',
         }),
       })
-      if (!refreshResp.ok) return json({ error: 'Token refresh failed' }, 502)
+      if (!refreshResp.ok) throw new Error('Token refresh failed')
       const refreshed = await refreshResp.json() as { access_token: string; refresh_token: string; expires_at: number }
-      accessToken = refreshed.access_token
       await admin.from('integrations').update({
-        access_token_cipher:  await encrypt(accessToken, encKey),
+        access_token_cipher:  await encrypt(refreshed.access_token, encKey),
         refresh_token_cipher: await encrypt(refreshed.refresh_token, encKey),
         meta: { ...meta, expires_at: refreshed.expires_at * 1000 },
         updated_at: new Date().toISOString(),
       }).eq('user_id', user.id).eq('provider', 'strava')
+      return refreshed.access_token
     }
 
-    /* Fetch all activities (paginated) */
-    const activities = await fetchAllActivities(accessToken)
+    if (!integration.refresh_token_cipher) return json({ error: 'No refresh token' }, 400)
+
+    /* A) check-then-refresh: renova ANTES da chamada se o token já
+     * expirou (ou expira nos próximos 60s). */
+    const expiresAt = meta.expires_at ?? 0
+    let accessToken = Date.now() < expiresAt - 60_000
+      ? await decrypt(integration.access_token_cipher!, encKey)
+      : await refreshAccessToken(integration.refresh_token_cipher)
+
+    /* B) lazy refresh: se o Strava rejeitar mesmo assim (token
+     * invalidado por outro motivo, ex: revogado manualmente), renova
+     * uma vez e tenta de novo antes de desistir. */
+    let activities: Awaited<ReturnType<typeof fetchAllActivities>>
+    try {
+      activities = await fetchAllActivities(accessToken)
+    } catch (e) {
+      if (!(e instanceof StravaUnauthorizedError)) throw e
+      console.log('[strava-sync] 401 do Strava com token supostamente válido — tentando refresh + retry')
+      try {
+        accessToken = await refreshAccessToken(integration.refresh_token_cipher)
+        activities = await fetchAllActivities(accessToken)
+      } catch {
+        // Refresh ou retry falharam de novo — o problema não é mais token
+        // expirado, é reconexão manual mesmo.
+        return json({ error: 'Reconexão com o Strava necessária' }, 401)
+      }
+    }
     console.log(`[strava-sync] total activities fetched: ${activities.length}`)
 
     /* Get existing external_ids to avoid duplicates */

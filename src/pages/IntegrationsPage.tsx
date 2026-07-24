@@ -134,7 +134,7 @@ function StravaCard() {
 
   const [loading,   setLoading]   = useState(false)
   const [syncing,   setSyncing]   = useState(false)
-  const [syncError, setSyncError] = useState<string | null>(null)
+  const [syncError, setSyncError] = useState<'reconnect' | 'generic' | null>(null)
   const [toast,     setToast]     = useState<{ msg: string; ok: boolean } | null>(null)
 
   async function handleConnect() {
@@ -160,7 +160,11 @@ function StravaCard() {
       qc.invalidateQueries({ queryKey: ['workouts', 'corrida'] })
     } catch (e: unknown) {
       console.error('[IntegrationsPage]', e)
-      setSyncError('Erro ao sincronizar')
+      // Só 401 (edge function pediu reconexão explicitamente) é de fato
+      // sobre a conexão — qualquer outro erro (rede, rate limit do
+      // Strava, etc) não é "expirado" e reconectar não resolveria.
+      const status = (e as { context?: { status?: number } })?.context?.status
+      setSyncError(status === 401 ? 'reconnect' : 'generic')
       setToast({ msg: 'Erro ao sincronizar com Strava.', ok: false })
     }
     setSyncing(false)
@@ -179,8 +183,10 @@ function StravaCard() {
     ? `${athlete.firstname ?? ''} ${athlete.lastname ?? ''}`.trim() || null
     : null
 
-  const erro = syncError
+  const erro = syncError === 'reconnect'
     ? `Conexão expirada. `
+    : syncError === 'generic'
+    ? `Erro ao sincronizar. `
     : null
 
   return (
