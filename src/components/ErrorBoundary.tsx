@@ -1,28 +1,64 @@
 import { Component, type ReactNode } from 'react'
+import { isChunkLoadError, shouldAutoReload } from '@/lib/chunkErrorDetection'
 
 interface Props {
   children: ReactNode
 }
 
+type Mode = 'ok' | 'error' | 'chunk-updating'
+
 interface State {
+  mode: Mode
   error: Error | null
 }
 
-export class ErrorBoundary extends Component<Props, State> {
-  state: State = { error: null }
+const RELOAD_DELAY_MS = 400
 
+export class ErrorBoundary extends Component<Props, State> {
+  state: State = { mode: 'ok', error: null }
+
+  // Classificação pura (só regex, sem sessionStorage/setTimeout) — decide
+  // já no primeiro render qual tela mostrar, sem flash da tela de erro
+  // genérica antes de trocar pra "Atualizando…".
   static getDerivedStateFromError(error: Error): State {
-    return { error }
+    return { error, mode: isChunkLoadError(error) ? 'chunk-updating' : 'error' }
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     console.error('[ErrorBoundary]', error, info.componentStack)
+
+    if (this.state.mode !== 'chunk-updating') return
+
+    // Chunk antigo após deploy: recarrega automaticamente. Protegido contra
+    // loop infinito — se isso já aconteceu demais em pouco tempo, o
+    // problema provavelmente não é chunk desatualizado (pode ser o
+    // servidor fora do ar, ou um bug real disfarçado de erro de módulo) e
+    // insistir só pioraria. Nesse caso, cai pra tela de erro normal.
+    if (shouldAutoReload()) {
+      setTimeout(() => window.location.reload(), RELOAD_DELAY_MS)
+    } else {
+      this.setState({ mode: 'error' })
+    }
   }
 
-  reset = () => this.setState({ error: null })
+  reset = () => this.setState({ mode: 'ok', error: null })
 
   render() {
-    if (this.state.error) {
+    if (this.state.mode === 'chunk-updating') {
+      return (
+        <div className="flex flex-col items-center justify-center h-screen bg-bg text-center px-6" style={{ gap: 16 }}>
+          <div
+            className="rounded-full border-2 border-brand border-t-transparent animate-spin"
+            style={{ width: 24, height: 24 }}
+          />
+          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', fontFamily: 'Sora, sans-serif' }}>
+            Atualizando…
+          </div>
+        </div>
+      )
+    }
+
+    if (this.state.mode === 'error') {
       return (
         <div className="flex flex-col items-center justify-center h-screen bg-bg text-center px-6" style={{ gap: 16 }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', fontFamily: 'Sora, sans-serif' }}>
