@@ -3,7 +3,6 @@ import { X, Trash2, MapPin, AlignLeft, Clock, Tag } from 'lucide-react'
 import type { CalendarEvent, CalendarTag } from '../types'
 import { EVENT_COLORS } from '../types'
 import { supabase } from '../../../lib/supabase'
-import { snapDateToQuarterHour, SNAP_MINUTES } from '../utils/snap'
 
 interface Props {
   event: Partial<CalendarEvent>
@@ -20,14 +19,6 @@ function toLocalInput(iso: string): string {
 
 function fromLocalInput(local: string): string {
   return new Date(local).toISOString()
-}
-
-/** Arredonda o valor de um <input type="datetime-local"> pro múltiplo de
- * 15 minutos mais próximo — mesmo padrão de snap do drag-and-drop da
- * grade, pra manter consistência em todo o módulo Agenda. */
-function snapLocalInput(local: string): string {
-  if (!local) return local
-  return toLocalInput(snapDateToQuarterHour(new Date(local)).toISOString())
 }
 
 const RECURRENCE_OPTIONS = [
@@ -179,9 +170,8 @@ export function EventModal({ event, onSave, onDelete, onClose }: Props) {
               <Clock size={14} className="text-ink-3 shrink-0" />
               <input
                 type={allDay ? 'date' : 'datetime-local'}
-                step={allDay ? undefined : SNAP_MINUTES * 60}
                 value={allDay ? startAt.slice(0, 10) : startAt}
-                onChange={e => setStartAt(allDay ? e.target.value + 'T00:00' : snapLocalInput(e.target.value))}
+                onChange={e => setStartAt(allDay ? e.target.value + 'T00:00' : e.target.value)}
                 className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-brand/60"
               />
             </div>
@@ -190,9 +180,8 @@ export function EventModal({ event, onSave, onDelete, onClose }: Props) {
                 <div className="w-[14px]" />
                 <input
                   type="datetime-local"
-                  step={SNAP_MINUTES * 60}
                   value={endAt}
-                  onChange={e => setEndAt(snapLocalInput(e.target.value))}
+                  onChange={e => setEndAt(e.target.value)}
                   className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-brand/60"
                 />
               </div>
