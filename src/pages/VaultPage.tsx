@@ -1,12 +1,13 @@
-import { useState, type FormEvent } from 'react'
+import { useState, useEffect, type FormEvent } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { Eye, EyeOff, Lock } from 'lucide-react'
+import { Eye, EyeOff, Lock, Dices, RefreshCw } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useVaultStore } from '../stores/useVaultStore'
 import { useVaultItems, type VaultItem } from '../hooks/useVaultItems'
 import { HelpButton } from '@/components/help/HelpButton'
 import { supabase } from '../lib/supabase'
 import { deriveKey, encrypt, decrypt, makeUserSalt, LEGACY_ITERATIONS } from '../lib/crypto'
+import { generatePassword, MIN_LENGTH, MAX_LENGTH, DEFAULT_LENGTH } from '../lib/passwordGenerator'
 
 /* ══════════════════════════════════════════════════════════════
    COPY BUTTON with feedback
@@ -46,6 +47,118 @@ function CopyBtn({ getValue }: { getValue: () => Promise<string | null> }) {
         </svg>
       )}
     </button>
+  )
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PASSWORD GENERATOR
+══════════════════════════════════════════════════════════════ */
+function PasswordGeneratorButton({ onGenerate }: { onGenerate: (pw: string) => void }) {
+  const [open,    setOpen]    = useState(false)
+  const [length,  setLength]  = useState(DEFAULT_LENGTH)
+  const [upper,   setUpper]   = useState(true)
+  const [lower,   setLower]   = useState(true)
+  const [numbers, setNumbers] = useState(true)
+  const [symbols, setSymbols] = useState(true)
+
+  function runGenerate() {
+    const pw = generatePassword({ length, uppercase: upper, lowercase: lower, numbers, symbols })
+    if (pw) onGenerate(pw)
+  }
+
+  // Gera ao abrir o painel e sempre que uma opção muda — "Gerar novamente"
+  // cobre o caso de querer outra sugestão sem mexer em nenhuma opção.
+  useEffect(() => {
+    if (!open) return
+    runGenerate()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, length, upper, lower, numbers, symbols])
+
+  const activeCount = [upper, lower, numbers, symbols].filter(Boolean).length
+
+  function toggle(current: boolean, setter: (v: boolean) => void) {
+    // nunca deixa desativar o último conjunto de caracteres ativo
+    if (current && activeCount <= 1) return
+    setter(!current)
+  }
+
+  const checks: { label: string; value: boolean; onChange: () => void }[] = [
+    { label: 'Maiúsculas (A-Z)', value: upper,   onChange: () => toggle(upper, setUpper) },
+    { label: 'Minúsculas (a-z)', value: lower,   onChange: () => toggle(lower, setLower) },
+    { label: 'Números (0-9)',    value: numbers, onChange: () => toggle(numbers, setNumbers) },
+    { label: 'Símbolos (!@#…)',  value: symbols, onChange: () => toggle(symbols, setSymbols) },
+  ]
+
+  return (
+    <div className="relative flex-shrink-0">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        title="Gerar senha"
+        aria-label="Gerar senha"
+        className="flex items-center justify-center text-ink-3 hover:text-brand hover:border-brand/50 border border-line rounded-input transition-colors"
+        style={{ width: 44, height: 44 }}
+      >
+        <Dices size={16} />
+      </button>
+
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div
+            className="absolute right-0 z-20 border rounded-xl p-4 shadow-xl"
+            style={{
+              top: 'calc(100% + 6px)', width: 260,
+              background: '#1a1a1a', borderColor: '#2a2a2a',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-ink-2" style={{ fontSize: 12, fontWeight: 600 }}>
+                Gerador de senha
+              </span>
+              <span className="text-brand" style={{ fontSize: 12, fontFamily: 'JetBrains Mono, monospace' }}>
+                {length}
+              </span>
+            </div>
+
+            <input
+              type="range"
+              min={MIN_LENGTH}
+              max={MAX_LENGTH}
+              value={length}
+              onChange={(e) => setLength(Number(e.target.value))}
+              className="w-full accent-brand mb-3"
+            />
+
+            <div className="space-y-2 mb-3">
+              {checks.map((opt) => (
+                <label
+                  key={opt.label}
+                  className="flex items-center gap-2 text-xs text-ink-2 cursor-pointer select-none"
+                >
+                  <input
+                    type="checkbox"
+                    checked={opt.value}
+                    onChange={opt.onChange}
+                    className="accent-brand"
+                  />
+                  {opt.label}
+                </label>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={runGenerate}
+              className="w-full flex items-center justify-center gap-1.5 bg-brand text-black rounded-lg font-semibold text-xs py-2 hover:brightness-110 transition-all"
+            >
+              <RefreshCw size={12} /> Gerar novamente
+            </button>
+          </div>
+        </>
+      )}
+    </div>
   )
 }
 
@@ -98,6 +211,11 @@ function VaultModal({
       setError('Não foi possível descriptografar a senha atual.')
     }
     setLoadingCurrent(false)
+  }
+
+  function handleGenerated(pw: string) {
+    setPassword(pw)
+    setShowPw(true)
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -219,27 +337,30 @@ function VaultModal({
                 </button>
               )}
             </div>
-            <div className="relative">
-              <input
-                type={showPw ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder={passwordPh}
-                className={inputCls + ' pr-10'}
-                style={{ ...h, fontFamily: showPw ? 'JetBrains Mono, monospace' : undefined }}
-                autoComplete="new-password"
-                data-lpignore="true"
-                data-1p-ignore
-                data-bwignore
-              />
-              <button
-                type="button"
-                onClick={() => setShowPw((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-3 hover:text-ink transition-colors"
-                style={{ fontSize: 14 }}
-              >
-                {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
-              </button>
+            <div className="flex items-start gap-2">
+              <div className="relative flex-1 min-w-0">
+                <input
+                  type={showPw ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={passwordPh}
+                  className={inputCls + ' pr-10'}
+                  style={{ ...h, fontFamily: showPw ? 'JetBrains Mono, monospace' : undefined }}
+                  autoComplete="new-password"
+                  data-lpignore="true"
+                  data-1p-ignore
+                  data-bwignore
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPw((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-3 hover:text-ink transition-colors"
+                  style={{ fontSize: 14 }}
+                >
+                  {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+              </div>
+              <PasswordGeneratorButton onGenerate={handleGenerated} />
             </div>
           </div>
 
