@@ -14,9 +14,16 @@ export const SPORT_CATALOG: { key: string; label: string }[] = [
   { key: 'escalada',   label: 'Escalada' },
 ]
 
+export const SPORT_LABEL_BY_KEY: Record<string, string> = Object.fromEntries(
+  SPORT_CATALOG.map(c => [c.key, c.label]),
+)
+
 /* ── Sport config ──────────────────────────────────────────────── */
 export const SPORT_KINDS: Record<string, string[]> = {
   corrida:    ['easy', 'long', 'tempo', 'interval'],
+  caminhada:  ['easy', 'long', 'tempo', 'interval'],
+  ciclismo:   ['easy', 'long', 'tempo', 'interval'],
+  natacao:    ['easy', 'long', 'tempo', 'interval'],
   triathlon:  ['natação', 'bike', 'corrida', 'tijolo'],
   musculacao: ['superior', 'inferior', 'full_body', 'cardio', 'alongamento'],
 }
@@ -31,6 +38,9 @@ export const KIND_LABELS: Record<string, string> = {
 export const MODALITY_TABS = [
   { key: 'todos',      label: 'Todos' },
   { key: 'corrida',    label: 'Corrida' },
+  { key: 'caminhada',  label: 'Caminhada' },
+  { key: 'ciclismo',   label: 'Ciclismo' },
+  { key: 'natacao',    label: 'Natação' },
   { key: 'musculacao', label: 'Musculação' },
   { key: 'triathlon',  label: 'Triathlon' },
 ] as const

@@ -1559,6 +1559,7 @@ export type Database = {
       }
       sports: {
         Row: {
+          activity_name: string | null
           created_at: string
           distance_m: number | null
           duration_s: number
@@ -1572,6 +1573,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          activity_name?: string | null
           created_at?: string
           distance_m?: number | null
           duration_s: number
@@ -1585,6 +1587,7 @@ export type Database = {
           user_id?: string
         }
         Update: {
+          activity_name?: string | null
           created_at?: string
           distance_m?: number | null
           duration_s?: number

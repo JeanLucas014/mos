@@ -23,6 +23,35 @@ export function calcPace(distance_m: number, duration_s: number): string {
   return `${Math.floor(secPerKm / 60)}:${String(Math.round(secPerKm % 60)).padStart(2, '0')}/km`
 }
 
+export function calcSpeedKmh(distance_m: number, duration_s: number): string {
+  if (!distance_m || !duration_s) return '—'
+  const kmh = (distance_m / 1000) / (duration_s / 3600)
+  return `${kmh.toFixed(1)} km/h`
+}
+
+export function calcSwimPace(distance_m: number, duration_s: number): string {
+  if (!distance_m || !duration_s) return '—'
+  const secPer100 = duration_s / (distance_m / 100)
+  return `${Math.floor(secPer100 / 60)}:${String(Math.round(secPer100 % 60)).padStart(2, '0')}/100m`
+}
+
+/** Métrica principal por tipo de esporte — corrida/caminhada usam pace
+ * (min/km, já vem calculado em pace_label); ciclismo usa velocidade média
+ * (km/h); natação usa pace por 100m. Os demais (musculação, yoga, etc, sem
+ * distância) não mostram nada aqui — só duração. */
+export function primaryMetric(w: Sport): { label: string; value: string } | null {
+  if (w.sport === 'ciclismo') {
+    return w.distance_m ? { label: 'Vel. média', value: calcSpeedKmh(w.distance_m, w.duration_s) } : null
+  }
+  if (w.sport === 'natacao') {
+    return w.distance_m ? { label: 'Ritmo/100m', value: calcSwimPace(w.distance_m, w.duration_s) } : null
+  }
+  if ((w.sport === 'corrida' || w.sport === 'caminhada') && w.pace_label) {
+    return { label: 'Ritmo médio', value: w.pace_label }
+  }
+  return null
+}
+
 export function fmtDate(d: string): string {
   return new Date(d + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
 }
@@ -56,7 +85,9 @@ export function fmtDayLabel(dateStr: string): string {
 }
 
 export function calcAvgPace(workouts: Sport[]): string | null {
-  const runs = workouts.filter(w => w.sport !== 'musculacao' && w.distance_m && w.duration_s)
+  // Restrito a corrida/caminhada — misturar bike/natação (unidades
+  // diferentes: km/h, min/100m) num único "pace médio" não faz sentido.
+  const runs = workouts.filter(w => (w.sport === 'corrida' || w.sport === 'caminhada') && w.distance_m && w.duration_s)
   if (!runs.length) return null
   const totalDist = runs.reduce((s, w) => s + (w.distance_m ?? 0), 0)
   const totalTime = runs.reduce((s, w) => s + (w.duration_s ?? 0), 0)

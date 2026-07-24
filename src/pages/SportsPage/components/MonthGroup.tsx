@@ -29,7 +29,7 @@ export function MonthGroup({ monthKey, workouts, onDelete }: { monthKey: string;
         </div>
       </button>
       {open && (
-        <div className="border-t border-[#1a1a1a]">
+        <div className="border-t border-[#1a1a1a] p-3 space-y-3">
           {workouts.map(w => <WorkoutRow key={w.id} w={w} onDelete={onDelete} />)}
         </div>
       )}

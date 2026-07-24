@@ -1,8 +1,16 @@
 import type { Sport } from '../types'
 import { calcAvgPace } from '../utils'
+import { SPORT_LABEL_BY_KEY } from '../constants'
 
 /* ── YearStats ─────────────────────────────────────────────────── */
-export function YearStats({ workouts, year }: { workouts: Sport[]; year: string }) {
+export function YearStats({
+  workouts, year, availableYears, onYearChange,
+}: {
+  workouts: Sport[]
+  year: string
+  availableYears: string[]
+  onYearChange: (year: string) => void
+}) {
   const totalKm   = workouts.reduce((s, w) => s + (w.distance_m ?? 0), 0)
   const totalTime = workouts.reduce((s, w) => s + (w.duration_s ?? 0), 0)
   const totalCount = workouts.length
@@ -11,11 +19,11 @@ export function YearStats({ workouts, year }: { workouts: Sport[]; year: string 
   const withDist   = workouts.filter(w => w.distance_m)
   const longestRun = withDist.length ? Math.max(...withDist.map(w => w.distance_m!)) : 0
 
-  const modalityCounts = [
-    { key: 'corrida',    label: 'Corrida',    count: workouts.filter(w => w.sport === 'corrida').length },
-    { key: 'musculacao', label: 'Musculação', count: workouts.filter(w => w.sport === 'musculacao').length },
-    { key: 'triathlon',  label: 'Triathlon',  count: workouts.filter(w => w.sport === 'triathlon').length },
-  ].filter(m => m.count > 0)
+  const bySport = new Map<string, number>()
+  for (const w of workouts) bySport.set(w.sport, (bySport.get(w.sport) ?? 0) + 1)
+  const modalityCounts = [...bySport.entries()]
+    .map(([key, count]) => ({ key, label: SPORT_LABEL_BY_KEY[key] ?? key, count }))
+    .sort((a, b) => b.count - a.count)
 
   const stats = [
     { label: 'Distância total', value: `${(totalKm / 1000).toFixed(0)} km` },
@@ -28,13 +36,22 @@ export function YearStats({ workouts, year }: { workouts: Sport[]; year: string 
 
   return (
     <div className="border border-[#1f1f1f] rounded-2xl p-5 mb-5" style={{ background: 'var(--bg)' }}>
-      <div className="flex items-start justify-between mb-5">
+      <div className="flex items-start justify-between mb-5 flex-wrap gap-3">
         <div>
           <div className="text-[10px] uppercase tracking-widest font-bold text-[#444] mb-1">Resumo anual</div>
-          <div className="font-bold text-xl text-white" style={{ fontFamily: 'Sora, sans-serif' }}>{year}</div>
+          <select
+            value={year}
+            onChange={e => onYearChange(e.target.value)}
+            className="font-bold text-xl text-white bg-transparent outline-none cursor-pointer"
+            style={{ fontFamily: 'Sora, sans-serif' }}
+          >
+            {availableYears.map(y => (
+              <option key={y} value={y} style={{ background: 'var(--bg2)' }}>{y}</option>
+            ))}
+          </select>
         </div>
         {modalityCounts.length > 0 && (
-          <div className="flex gap-5">
+          <div className="flex gap-5 flex-wrap">
             {modalityCounts.map(m => (
               <div key={m.key} className="text-center">
                 <div className="text-lg font-bold text-white" style={{ fontFamily: 'Sora, sans-serif' }}>{m.count}</div>

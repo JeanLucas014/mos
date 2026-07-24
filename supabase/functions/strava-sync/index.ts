@@ -35,6 +35,10 @@ async function encrypt(plaintext: string, secret: string): Promise<string> {
 }
 
 /* ── Activity type mapping ─────────────────────────────────────── */
+// Tipos que usam pace (min/km) como métrica principal — ver calcPace abaixo
+// e a mesma regra espelhada em src/pages/SportsPage/utils.ts.
+const PACE_SPORTS = new Set(['corrida', 'caminhada'])
+
 function mapActivityType(type: string): { sport: string; kind: string } {
   switch (type) {
     case 'Run':
@@ -46,9 +50,9 @@ function mapActivityType(type: string): { sport: string; kind: string } {
     case 'MountainBikeRide':
     case 'EBikeRide':
     case 'Handcycle':
-      return { sport: 'triathlon', kind: 'bike' }
+      return { sport: 'ciclismo', kind: 'easy' }
     case 'Swim':
-      return { sport: 'triathlon', kind: 'natação' }
+      return { sport: 'natacao', kind: 'easy' }
     case 'Triathlon':
       return { sport: 'triathlon', kind: 'tijolo' }
     case 'WeightTraining':
@@ -62,6 +66,7 @@ function mapActivityType(type: string): { sport: string; kind: string } {
       return { sport: 'musculacao', kind: 'cardio' }
     case 'Walk':
     case 'Hike':
+      return { sport: 'caminhada', kind: 'easy' }
     case 'VirtualRun':
       return { sport: 'corrida', kind: 'easy' }
     default:
@@ -201,20 +206,23 @@ Deno.serve(async (req: Request) => {
         const sport_date = (a.start_date_local ?? '').slice(0, 10) || new Date().toISOString().slice(0, 10)
         const distance_m   = Math.round(a.distance ?? 0)
         const duration_s   = a.moving_time ?? 0
-        // For musculacao, distance is irrelevant — set 0 and skip pace
-        const pace_label   = mapped.sport === 'musculacao' || distance_m === 0
-          ? null
-          : calcPace(distance_m, duration_s)
+        // pace (min/km) só faz sentido pra corrida/caminhada — bike usa
+        // velocidade média e natação usa pace/100m, calculados na UI a
+        // partir de distance_m/duration_s (ver primaryMetric em utils.ts).
+        const pace_label   = PACE_SPORTS.has(mapped.sport) && distance_m > 0
+          ? calcPace(distance_m, duration_s)
+          : null
         return {
-          user_id:    user.id,
-          sport:      mapped.sport,
-          kind:       mapped.kind,
-          distance_m: distance_m || null,
-          duration_s: duration_s,
+          user_id:       user.id,
+          sport:         mapped.sport,
+          kind:          mapped.kind,
+          distance_m:    distance_m || null,
+          duration_s:    duration_s,
           pace_label,
           sport_date,
-          notes:       `strava:${a.id}`,
-          external_id: String(a.id),
+          activity_name: a.name || null,
+          notes:         `strava:${a.id}`,
+          external_id:   String(a.id),
         }
       })
 

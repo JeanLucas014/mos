@@ -90,17 +90,19 @@ export function WorkoutsSection({ sport }: { sport: string }) {
     )
   }
 
-  const currentYear   = new Date().getFullYear().toString()
-  const yearWorkouts  = allWorkouts.filter(w => w.sport_date.startsWith(currentYear))
-  const filtered      = modalityTab === 'todos' ? allWorkouts : allWorkouts.filter(w => w.sport === modalityTab)
-  const grouped       = groupByMonth(filtered)
+  const currentYear    = new Date().getFullYear().toString()
+  const [statsYear, setStatsYear] = useState(currentYear)
+  const availableYears = [...new Set([currentYear, ...allWorkouts.map(w => w.sport_date.slice(0, 4))])].sort().reverse()
+  const yearWorkouts   = allWorkouts.filter(w => w.sport_date.startsWith(statsYear))
+  const filtered       = modalityTab === 'todos' ? allWorkouts : allWorkouts.filter(w => w.sport === modalityTab)
+  const grouped        = groupByMonth(filtered)
 
   return (
     <Section
       title="Treinos"
       icon={<Activity size={16} />}
       count={allWorkouts.length}
-      extra={sport === 'corrida' && stravaConnected ? (
+      extra={stravaConnected ? (
         <button
           onClick={handleStravaSync} disabled={syncing}
           style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 8, fontSize: 11, fontWeight: 600, background: 'rgba(252,76,2,.12)', border: '1px solid rgba(252,76,2,.3)', color: '#FC4C02', cursor: syncing ? 'not-allowed' : 'pointer', opacity: syncing ? 0.7 : 1 }}
@@ -123,7 +125,7 @@ export function WorkoutsSection({ sport }: { sport: string }) {
         </div>
       ) : (
         <>
-          <YearStats workouts={yearWorkouts} year={currentYear} />
+          <YearStats workouts={yearWorkouts} year={statsYear} availableYears={availableYears} onYearChange={setStatsYear} />
 
           {/* Modality tabs */}
           <div className="flex border-b border-[#1f1f1f] mb-4 -mx-5 px-5">
