@@ -75,14 +75,14 @@ export function NoteEditor({ content, userId, onChange }: Props) {
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      <div className="hidden lg:block border-b border-line" style={{ background: '#0a0a0a' }}>
+      <div className="hidden lg:block border-b border-line flex-shrink-0" style={{ background: '#0a0a0a' }}>
         <EditorToolbar editor={editor} userId={userId} />
+      </div>
+      <div className="lg:hidden border-b border-line flex-shrink-0" style={{ background: '#0a0a0a' }}>
+        <EditorToolbar editor={editor} userId={userId} compact />
       </div>
       <div className="flex-1 overflow-y-auto">
         <EditorContent editor={editor} />
-      </div>
-      <div className="lg:hidden border-t border-line flex-shrink-0" style={{ background: '#0a0a0a' }}>
-        <EditorToolbar editor={editor} userId={userId} compact />
       </div>
     </div>
   )

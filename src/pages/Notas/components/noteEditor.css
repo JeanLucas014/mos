@@ -4,8 +4,16 @@
   min-height: calc(100vh - 260px);
   color: var(--text);
   font-family: 'Manrope', sans-serif;
-  font-size: 14px;
+  /* >=16px evita o zoom automático do Safari/iOS ao focar — o editor é uma
+     div contenteditable, então a regra global de input/select/textarea em
+     index.css não o alcança. Mesmo breakpoint (640px) usado lá. */
+  font-size: 16px;
   line-height: 1.7;
+}
+@media (min-width: 640px) {
+  .note-prosemirror {
+    font-size: 14px;
+  }
 }
 .note-prosemirror p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);

@@ -157,7 +157,7 @@ export function EditorToolbar({ editor, userId, compact }: Props) {
           <div
             className="flex items-center gap-1.5"
             style={{
-              position: 'absolute', bottom: compact ? 'calc(100% + 6px)' : undefined, top: compact ? undefined : 'calc(100% + 6px)',
+              position: 'absolute', top: 'calc(100% + 6px)',
               left: 0, zIndex: 40,
               background: '#111111', border: '1px solid #1f1f1f', borderRadius: 10,
               padding: 6, boxShadow: '0 8px 24px rgba(0,0,0,.5)',
