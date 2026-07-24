@@ -48,7 +48,7 @@ export function EditModal({ item, categorias, cartoes, onSave, onClose }: EditMo
       onClick={onClose}
     >
       <div
-        className="bg-bg-2 border border-line rounded-xl p-5 w-full max-w-sm space-y-3.5"
+        className="bg-bg-2 border border-line rounded-xl p-5 w-full max-w-sm space-y-3.5 max-h-[90vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}

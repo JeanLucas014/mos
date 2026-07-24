@@ -40,7 +40,7 @@ export function ChangePasswordModal({ onClose }: { onClose: () => void }) {
       style={{ background: 'rgba(0,0,0,.8)' }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="w-full max-w-md rounded-2xl border border-line p-6" style={{ background: 'var(--bg2)' }}>
+      <div className="w-full max-w-md rounded-2xl border border-line p-6" style={{ background: 'var(--bg2)', maxHeight: '90vh', overflowY: 'auto' }}>
         {success ? (
           <div className="text-center py-6">
             <div className="flex justify-center mb-3"><CheckCircle size={40} className="text-ok" /></div>

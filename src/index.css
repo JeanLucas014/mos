@@ -112,3 +112,13 @@ input, select, textarea {
 button, a, [role="button"] {
   touch-action: manipulation;
 }
+
+/* O anel de foco padrão do navegador (cor definida pelo SO/browser) aparece
+ * esbranquiçado sobre o tema escuro do MOS — troca pra cor de destaque do
+ * design system em vez do padrão, sem remover o indicador de foco (mantém
+ * acessibilidade). Elementos que já tratam o próprio foco via outline-none +
+ * mudança de cor de borda (a maioria dos inputs do app) ficam de fora. */
+:focus-visible:not(.outline-none) {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
