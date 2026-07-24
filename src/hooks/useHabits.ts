@@ -123,6 +123,18 @@ export function useHabits() {
     },
   })
 
+  const updateHabit = useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      const { data, error } = await supabase.from('habits')
+        .update({ name }).eq('id', id).select().single()
+      if (error) throw error
+      return data as Habit
+    },
+    onSuccess: (updated) => {
+      qc.setQueryData<Habit[]>(habitsKey, (old) => old?.map((h) => h.id === updated.id ? updated : h))
+    },
+  })
+
   const deleteHabit = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from('habits').delete().eq('id', id)
@@ -175,6 +187,7 @@ export function useHabits() {
     error: habitsQuery.error || logsQuery.error,
     toggleDay,
     addHabit,
+    updateHabit,
     deleteHabit,
     toggleException,
     isException,

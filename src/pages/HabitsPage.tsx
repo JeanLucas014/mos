@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { useHabits } from '../hooks/useHabits'
+import { useHabits, type HabitWithLogs } from '../hooks/useHabits'
 import { HelpButton } from '@/components/help/HelpButton'
 import { formatLocalDate } from '../lib/dates'
+import { NameModal } from './Estudos/components/NameModal'
 
 /* ── Context menu ─────────────────────────────────────────────── */
 interface CtxMenuState { x: number; y: number; habitId: string; date: string }
@@ -91,8 +92,15 @@ function firstDayOffset(year: number, month: number) {
 
 /* ── main component ───────────────────────────────────────────── */
 export function HabitsPage() {
-  const { habits, isLoading, isError, error, toggleDay, addHabit, deleteHabit, toggleException, isException } = useHabits()
+  const { habits, isLoading, isError, error, toggleDay, addHabit, updateHabit, deleteHabit, toggleException, isException } = useHabits()
   const [ctxMenu, setCtxMenu] = useState<CtxMenuState | null>(null)
+  const [editingHabit, setEditingHabit] = useState<HabitWithLogs | null>(null)
+
+  function handleDeleteHabit(habit: HabitWithLogs) {
+    if (window.confirm(`Excluir hábito "${habit.name}"? Todos os registros históricos serão perdidos.`)) {
+      deleteHabit.mutate(habit.id)
+    }
+  }
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleContextMenu = useCallback((e: React.MouseEvent, habitId: string, date: string) => {
@@ -383,16 +391,28 @@ export function HabitsPage() {
                                 {habit.name}
                               </span>
 
-                              {/* delete — only show for first day (avoids 7 × repeat) */}
+                              {/* editar/excluir — só aparecem no 1º dia (evita repetir 7×) */}
                               {di === 0 && (
-                                <button
-                                  onClick={() => deleteHabit.mutate(habit.id)}
-                                  className="opacity-0 group-hover:opacity-100 flex-shrink-0 text-ink-3 hover:text-red-400 transition-all flex items-center justify-center"
-                                  style={{ width: 18, height: 18, fontSize: 14, lineHeight: 1 }}
-                                  title="Excluir hábito"
-                                >
-                                  ×
-                                </button>
+                                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0">
+                                  <button
+                                    onClick={() => setEditingHabit(habit)}
+                                    className="text-ink-3 hover:text-ink flex items-center justify-center"
+                                    style={{ width: 18, height: 18 }}
+                                    title="Editar hábito"
+                                  >
+                                    <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
+                                      <path d="M9.5 2.5l2 2L4.5 11.5l-2.5.5.5-2.5 7-7z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteHabit(habit)}
+                                    className="text-ink-3 hover:text-red-400 flex items-center justify-center"
+                                    style={{ width: 18, height: 18, fontSize: 14, lineHeight: 1 }}
+                                    title="Excluir hábito"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
                               )}
                             </div>
                           )
@@ -411,14 +431,14 @@ export function HabitsPage() {
                             value={newName}
                             onChange={e => setNewName(e.target.value)}
                             placeholder="Nome…"
-                            className="flex-1 bg-bg border border-line rounded-[5px] px-2 py-1 text-ink text-xs placeholder:text-ink-3 focus:outline-none focus:border-brand transition-colors"
+                            className="flex-1 min-w-0 bg-bg border border-line rounded-[5px] px-2 py-1 text-ink text-xs placeholder:text-ink-3 focus:outline-none focus:border-brand transition-colors"
                             style={{ minHeight: 28 }}
                             onKeyDown={e => { if (e.key === 'Escape') { setAddingDay(null); setNewName('') } }}
                           />
                           <button
                             type="submit"
                             disabled={!newName.trim() || addHabit.isPending}
-                            className="bg-brand text-white rounded-[5px] px-2 text-xs font-semibold disabled:opacity-40"
+                            className="flex-shrink-0 bg-brand text-white rounded-[5px] px-2 text-xs font-semibold disabled:opacity-40"
                             style={{ minHeight: 28 }}
                           >
                             OK
@@ -691,6 +711,17 @@ export function HabitsPage() {
           state={ctxMenu}
           onException={() => toggleException.mutate({ habitId: ctxMenu.habitId, date: ctxMenu.date })}
           onClose={() => setCtxMenu(null)}
+        />
+      )}
+
+      {/* Editar hábito */}
+      {editingHabit && (
+        <NameModal
+          title="Editar hábito"
+          initialValue={editingHabit.name}
+          confirmLabel="Salvar"
+          onSave={(name) => { updateHabit.mutate({ id: editingHabit.id, name }); setEditingHabit(null) }}
+          onClose={() => setEditingHabit(null)}
         />
       )}
     </div>
