@@ -597,6 +597,10 @@ export type Database = {
           pago: boolean | null
           parent_id: string | null
           pluggy_tx_id: string | null
+          recorrencia_ate: string | null
+          recorrencia_freq: string | null
+          recorrencia_serie_id: string | null
+          recorrente: boolean
           saida_tipo: string | null
           user_id: string
           valor: number | null
@@ -616,6 +620,10 @@ export type Database = {
           pago?: boolean | null
           parent_id?: string | null
           pluggy_tx_id?: string | null
+          recorrencia_ate?: string | null
+          recorrencia_freq?: string | null
+          recorrencia_serie_id?: string | null
+          recorrente?: boolean
           saida_tipo?: string | null
           user_id?: string
           valor?: number | null
@@ -635,6 +643,10 @@ export type Database = {
           pago?: boolean | null
           parent_id?: string | null
           pluggy_tx_id?: string | null
+          recorrencia_ate?: string | null
+          recorrencia_freq?: string | null
+          recorrencia_serie_id?: string | null
+          recorrente?: boolean
           saida_tipo?: string | null
           user_id?: string
           valor?: number | null

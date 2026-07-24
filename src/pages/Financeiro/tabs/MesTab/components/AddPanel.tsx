@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import type { FinCategoria, FinCartao, Natureza, SaidaTipo } from '../../../types'
 import type { AddForm } from '../types'
@@ -32,25 +32,6 @@ export function AddPanel({
   const [savingCat, setSavingCat]       = useState(false)
 
   const set = (k: keyof AddForm, v: unknown) => onChange({ ...form, [k]: v })
-
-  const repeticaoCount = useMemo(() => {
-    if (!form.repetir || !form.repeticao_ate) return 1
-    const base = new Date(`${anoAno}-${String(monthNum).padStart(2,'0')}-${String(dia).padStart(2,'0')}`)
-    const ate = new Date(form.repeticao_ate)
-    let count = 0
-    let current = new Date(base)
-    while (current <= ate) {
-      count++
-      if (form.repeticao_freq === 'mensal') {
-        current = new Date(current.getFullYear(), current.getMonth() + 1, current.getDate())
-      } else if (form.repeticao_freq === 'quinzenal') {
-        current = new Date(current.getTime() + 14 * 24 * 60 * 60 * 1000)
-      } else {
-        current = new Date(current.getTime() + 7 * 24 * 60 * 60 * 1000)
-      }
-    }
-    return count
-  }, [form.repetir, form.repeticao_ate, form.repeticao_freq, anoAno, monthNum, dia])
 
   async function saveNewCat() {
     if (!newCatNome.trim()) return
@@ -290,14 +271,16 @@ export function AddPanel({
                   </button>
                 ))}
               </div>
+              <p className="text-[11px] text-ink-3">
+                Repete indefinidamente (aparece automaticamente nos próximos meses ao navegar).
+              </p>
               <div>
-                <div className="text-[10px] text-ink-3 mb-1">Repetir até</div>
+                <div className="text-[10px] text-ink-3 mb-1">Repetir até (opcional)</div>
                 <input
                   type="date"
                   value={form.repeticao_ate}
                   onChange={e => set('repeticao_ate', e.target.value)}
-                  min={`${anoAno}-01-01`}
-                  max={`${anoAno}-12-31`}
+                  min={`${anoAno}-${String(monthNum).padStart(2, '0')}-${String(dia).padStart(2, '0')}`}
                   className="w-full bg-bg border border-line rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-brand/60"
                 />
               </div>
@@ -318,7 +301,7 @@ export function AddPanel({
             disabled={saving || !form.nome.trim()}
             className="flex-1 py-1.5 text-sm font-medium bg-brand text-black rounded-lg hover:bg-[#38bdf8] disabled:opacity-40 transition-colors"
           >
-            {saving ? 'Salvando…' : form.repetir && form.repeticao_ate ? `Adicionar (${repeticaoCount}x)` : 'Adicionar'}
+            {saving ? 'Salvando…' : 'Adicionar'}
           </button>
         </div>
       </div>

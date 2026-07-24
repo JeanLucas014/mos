@@ -43,7 +43,13 @@ export interface FinLancamento {
   is_previsao?: boolean
   pago?: boolean
   created_at: string
+  recorrente?: boolean
+  recorrencia_freq?: RecorrenciaFreq | null
+  recorrencia_serie_id?: string | null
+  recorrencia_ate?: string | null
 }
+
+export type RecorrenciaFreq = 'mensal' | 'quinzenal' | 'semanal'
 
 export interface FinLancamentoTree extends FinLancamento {
   children: FinLancamentoTree[]

@@ -23,27 +23,17 @@ export function useMesActions({ ano, month, reload }: UseMesActionsParams) {
     const nome = form.nome.trim()
     if (!nome) return
 
-    const baseDate = new Date(`${ano.ano}-${String(month).padStart(2,'0')}-${String(dia).padStart(2,'0')}`)
-    const datas: string[] = []
+    const data = `${ano.ano}-${String(month).padStart(2,'0')}-${String(dia).padStart(2,'0')}`
 
-    if (!form.repetir || !form.repeticao_ate) {
-      datas.push(baseDate.toISOString().slice(0, 10))
-    } else {
-      const ateDate = new Date(form.repeticao_ate)
-      let current = new Date(baseDate)
-      while (current <= ateDate) {
-        datas.push(current.toISOString().slice(0, 10))
-        if (form.repeticao_freq === 'mensal') {
-          current = new Date(current.getFullYear(), current.getMonth() + 1, current.getDate())
-        } else if (form.repeticao_freq === 'quinzenal') {
-          current = new Date(current.getTime() + 14 * 24 * 60 * 60 * 1000)
-        } else {
-          current = new Date(current.getTime() + 7 * 24 * 60 * 60 * 1000)
-        }
-      }
-    }
+    // Recorrência agora é uma única linha marcada `recorrente` — a próxima
+    // ocorrência é gerada sob demanda (useMesData.generateRecorrentesIfNeeded)
+    // quando o usuário navega até o mês seguinte, nunca em lote na criação.
+    // `recorrencia_serie_id` referencia o próprio id desta linha, gerado no
+    // cliente pra poder ser incluído já no insert inicial.
+    const id = form.repetir ? crypto.randomUUID() : undefined
 
-    const inserts = datas.map(data => ({
+    await supabase.from('fin_lancamentos').insert({
+      ...(id ? { id } : {}),
       ano_id:      ano.id,
       parent_id:   form.parent_id || null,
       data,
@@ -55,9 +45,11 @@ export function useMesActions({ ano, month, reload }: UseMesActionsParams) {
       categoria_id: form.categoria_id || null,
       cartao_id:   form.natureza === 'saida' && form.saida_tipo === 'cartao' ? form.cartao_id || null : null,
       saida_tipo:  form.natureza === 'saida' ? form.saida_tipo : null,
-    }))
-
-    await supabase.from('fin_lancamentos').insert(inserts)
+      recorrente:  form.repetir,
+      recorrencia_freq: form.repetir ? form.repeticao_freq : null,
+      recorrencia_serie_id: id ?? null,
+      recorrencia_ate: form.repetir && form.repeticao_ate ? form.repeticao_ate : null,
+    })
     await reload()
   }
 
