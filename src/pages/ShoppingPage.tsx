@@ -34,15 +34,28 @@ export function ShoppingPage() {
   const [draftCat, setDraftCat]   = useState('Geral')
   const [addingCat, setAddingCat] = useState(false)
   const [newCatName, setNewCatName] = useState('')
+  const [catError, setCatError]   = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
   function handleAddCategory(e?: FormEvent) {
     e?.preventDefault()
     const nome = newCatName.trim()
-    if (!nome || categories.some(c => c.nome.toLowerCase() === nome.toLowerCase())) return
-    addCategory.mutate(nome)
-    setNewCatName('')
-    setAddingCat(false)
+    if (!nome) return
+    if (categories.some(c => c.nome.toLowerCase() === nome.toLowerCase())) {
+      setCatError('Essa categoria já existe.')
+      return
+    }
+    setCatError('')
+    addCategory.mutate(nome, {
+      onSuccess: (nova) => {
+        setNewCatName('')
+        setAddingCat(false)
+        setDraftCat(nova.nome) // confirmação visível: seleciona a categoria recém-criada
+      },
+      onError: () => {
+        setCatError('Não foi possível criar a categoria. Tente novamente.')
+      },
+    })
   }
 
   // Quando muda de aba, pré-seleciona a categoria no form
@@ -98,7 +111,7 @@ export function ShoppingPage() {
             <HelpButton pageId="compras" />
           </div>
           <p className="text-ink-2 mt-1 text-sm">
-            {isLoading ? 'Carregando...' : `${totalPending} item${totalPending !== 1 ? 'ns' : ''} pendente${totalPending !== 1 ? 's' : ''}`}
+            {isLoading ? 'Carregando...' : `${totalPending} ${totalPending !== 1 ? 'itens' : 'item'} pendente${totalPending !== 1 ? 's' : ''}`}
           </p>
         </div>
 
@@ -163,26 +176,31 @@ export function ShoppingPage() {
 
             {/* ── Nova categoria ── */}
             {addingCat ? (
-              <form onSubmit={handleAddCategory} className="flex items-center gap-1 flex-shrink-0">
-                <input
-                  autoFocus
-                  value={newCatName}
-                  onChange={e => setNewCatName(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Escape') { setAddingCat(false); setNewCatName('') } }}
-                  onBlur={() => { if (!newCatName.trim()) setAddingCat(false) }}
-                  placeholder="Nome da categoria"
-                  className="bg-bg border border-line rounded-lg px-2 text-ink text-xs placeholder:text-ink-3 focus:outline-none focus:border-brand transition-colors"
-                  style={{ height: 30, width: 140 }}
-                />
-                <button
-                  type="submit"
-                  disabled={!newCatName.trim() || addCategory.isPending}
-                  className="text-brand text-xs font-semibold px-2 disabled:opacity-40"
-                  style={{ height: 30 }}
-                >
-                  Criar
-                </button>
-              </form>
+              <div className="flex flex-col flex-shrink-0">
+                <form onSubmit={handleAddCategory} className="flex items-center gap-1">
+                  <input
+                    autoFocus
+                    value={newCatName}
+                    onChange={e => { setNewCatName(e.target.value); setCatError('') }}
+                    onKeyDown={e => { if (e.key === 'Escape') { setAddingCat(false); setNewCatName(''); setCatError('') } }}
+                    onBlur={() => { if (!newCatName.trim()) { setAddingCat(false); setCatError('') } }}
+                    placeholder="Nome da categoria"
+                    className="bg-bg border border-line rounded-lg px-2 text-ink text-xs placeholder:text-ink-3 focus:outline-none focus:border-brand transition-colors"
+                    style={{ height: 30, width: 140 }}
+                  />
+                  <button
+                    type="submit"
+                    disabled={!newCatName.trim() || addCategory.isPending}
+                    className="text-brand text-xs font-semibold px-2 disabled:opacity-40"
+                    style={{ height: 30 }}
+                  >
+                    {addCategory.isPending ? '...' : 'Criar'}
+                  </button>
+                </form>
+                {catError && (
+                  <span className="text-red-400" style={{ fontSize: 10 }}>{catError}</span>
+                )}
+              </div>
             ) : (
               <button
                 onClick={() => setAddingCat(true)}

@@ -6,6 +6,7 @@ import type { Book } from '../types'
  * Ordem de aplicacao preservada: status -> favoritos -> ano -> ordenacao.
  */
 export function useLibraryFilters(allBooks: Book[]) {
+  const [search,          setSearch]          = useState('')
   const [filterStatus,    setFilterStatus]    = useState<string>('all')
   const [filterYear,      setFilterYear]      = useState<string>('all')
   const [filterFavorites, setFilterFavorites] = useState(false)
@@ -21,6 +22,12 @@ export function useLibraryFilters(allBooks: Book[]) {
 
   /* Apply filters */
   let filtered = allBooks
+  const q = search.trim().toLowerCase()
+  if (q) {
+    filtered = filtered.filter((b) =>
+      b.title.toLowerCase().includes(q) || (b.author ?? '').toLowerCase().includes(q),
+    )
+  }
   if (filterStatus !== 'all')   filtered = filtered.filter((b) => b.status === filterStatus)
   if (filterFavorites)          filtered = filtered.filter((b) => b.favorite)
   if (filterYear !== 'all') {
@@ -43,6 +50,7 @@ export function useLibraryFilters(allBooks: Book[]) {
   const useGroups = filterStatus === 'all'
 
   return {
+    search, setSearch,
     filterStatus, setFilterStatus,
     filterYear, setFilterYear,
     filterFavorites, setFilterFavorites,

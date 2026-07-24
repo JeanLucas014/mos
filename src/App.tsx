@@ -1,6 +1,5 @@
 import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { useTheme } from './hooks/useTheme'
 import { AppShell } from './components/layout/AppShell'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { RequireAuth } from './components/auth/RequireAuth'
@@ -37,11 +36,6 @@ const IntegrationsPage   = lazy(() => import('./pages/IntegrationsPage').then(m 
 const SettingsPage       = lazy(() => import('./pages/SettingsPage'))
 const AdminPage          = lazy(() => import('./pages/AdminPage').then(m => ({ default: m.AdminPage })))
 
-function ThemeApplier() {
-  useTheme()
-  return null
-}
-
 function PageLoader() {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
@@ -53,7 +47,6 @@ function PageLoader() {
 export default function App() {
   return (
     <>
-    <ThemeApplier />
     <ErrorBoundary>
     <Suspense fallback={<PageLoader />}>
     <Routes>

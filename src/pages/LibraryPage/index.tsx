@@ -27,6 +27,7 @@ export function LibraryPage() {
 
   /* ── Filters ── */
   const {
+    search, setSearch,
     filterStatus, setFilterStatus,
     filterYear, setFilterYear,
     filterFavorites, setFilterFavorites,
@@ -97,6 +98,31 @@ export function LibraryPage() {
         >
           + Adicionar
         </button>
+      </div>
+
+      {/* Search */}
+      <div className="relative mb-4">
+        <svg
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-3"
+          width="14" height="14" viewBox="0 0 16 16" fill="none"
+        >
+          <circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.3" />
+          <path d="M10 10l3 3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+        </svg>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar por título ou autor…"
+          className="w-full bg-bg-2 border border-line rounded-input pl-9 pr-4 text-ink text-sm placeholder:text-ink-3 focus:outline-none focus:border-brand transition-colors"
+          style={{ minHeight: 42 }}
+        />
+        {search && (
+          <button
+            onClick={() => setSearch('')}
+            aria-label="Limpar busca"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-3 hover:text-ink transition-colors"
+          >×</button>
+        )}
       </div>
 
       <FiltersBar
