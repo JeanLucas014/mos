@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
 import { formatMonthYearBR, startOfWeek, type WeekStart } from '@/lib/dates'
-import { Plus, ChevronLeft, ChevronRight, Calendar, List, Grid3x3, CalendarDays, Check, X } from 'lucide-react'
-import type { CalendarEvent, CalendarView, Rotina } from './types'
+import { Plus, ChevronLeft, ChevronRight, Calendar, List, Grid3x3, CalendarDays, Check, X, Layers } from 'lucide-react'
+import type { Agenda, CalendarEvent, CalendarView, EventFormPayload, Rotina } from './types'
 import { WeekView }   from './views/WeekView'
 import { MonthView }  from './views/MonthView'
 import { DayView }    from './views/DayView'
@@ -10,11 +10,32 @@ import { ListView }   from './views/ListView'
 import { EventModal } from './components/EventModal'
 import { RotinaTab }  from './components/RotinaTab'
 import { RecurrenceDialog, type RecurrenceScope } from './components/RecurrenceDialog'
+import { AgendaSidebar } from './components/AgendaSidebar'
+import { AgendaFormModal } from './components/AgendaFormModal'
+import { DeleteAgendaDialog } from './components/DeleteAgendaDialog'
 import { expandRecurringEvents } from './utils/expandRecurrence'
 import { snapDateToQuarterHour } from './utils/snap'
 import { HelpButton } from '@/components/help/HelpButton'
 import { useRealtimeStore } from '@/stores/useRealtimeStore'
 import { useWeekStart } from '@/hooks/useWeekStart'
+import { useAgendas } from '@/hooks/useAgendas'
+
+/** Shape cru vindo do banco — cor ainda pode ser null (sem customização,
+ * herda a cor da agenda). CalendarEvent.color é sempre a versão já
+ * resolvida, calculada a partir disso + a cor da agenda (ver `events` abaixo). */
+type RawCalendarEvent = Omit<CalendarEvent, 'color'> & { color: string | null }
+
+const HIDDEN_AGENDAS_KEY = 'mos-agenda-hidden-ids'
+
+function loadHiddenAgendaIds(): Set<string> {
+  try {
+    const raw = localStorage.getItem(HIDDEN_AGENDAS_KEY)
+    const parsed = raw ? JSON.parse(raw) : []
+    return new Set(Array.isArray(parsed) ? parsed : [])
+  } catch {
+    return new Set()
+  }
+}
 
 type Tab = 'agenda' | 'rotina'
 
@@ -141,13 +162,42 @@ export default function AgendaPage() {
   const [tab,               setTab]               = useState<Tab>('agenda')
   const [view,              setView]              = useState<CalendarView>('semana')
   const [currentDate,       setCurrentDate]       = useState(new Date())
-  const [events,            setEvents]            = useState<CalendarEvent[]>([])
+  const [rawEvents,         setRawEvents]         = useState<RawCalendarEvent[]>([])
   const [rotinas,           setRotinas]           = useState<Rotina[]>([])
-  const [modal,             setModal]             = useState<Partial<CalendarEvent> | null>(null)
-  const [recurrenceDialog,  setRecurrenceDialog]  = useState<{ mode: 'edit' | 'delete' | 'move'; event: Partial<CalendarEvent> } | null>(null)
-  const [pendingSaveEvent,  setPendingSaveEvent]  = useState<Partial<CalendarEvent> | null>(null)
+  const [modal,             setModal]             = useState<EventFormPayload | null>(null)
+  const [recurrenceDialog,  setRecurrenceDialog]  = useState<{ mode: 'edit' | 'delete' | 'move' | 'resize'; event: EventFormPayload } | null>(null)
+  const [pendingSaveEvent,  setPendingSaveEvent]  = useState<EventFormPayload | null>(null)
   const [pendingMove,       setPendingMove]       = useState<{ event: CalendarEvent; newStart: Date; newEnd: Date } | null>(null)
+  const [pendingResize,     setPendingResize]     = useState<{ event: CalendarEvent; newEnd: Date } | null>(null)
   const [toast,             setToast]             = useState<{ msg: string; ok: boolean } | null>(null)
+
+  const { agendas, defaultAgenda, createAgenda, updateAgenda, setDefaultAgenda, deleteAgenda } = useAgendas()
+  const [hiddenAgendaIds,   setHiddenAgendaIds]   = useState<Set<string>>(loadHiddenAgendaIds)
+  const [agendaPanelOpen,   setAgendaPanelOpen]   = useState(false)
+  const [agendaForm,        setAgendaForm]        = useState<{ mode: 'create' } | { mode: 'edit'; agenda: Agenda } | null>(null)
+  const [deleteAgendaState, setDeleteAgendaState] = useState<{ agenda: Agenda; count: number } | null>(null)
+
+  useEffect(() => {
+    localStorage.setItem(HIDDEN_AGENDAS_KEY, JSON.stringify([...hiddenAgendaIds]))
+  }, [hiddenAgendaIds])
+
+  const agendaById = useMemo(() => {
+    const map = new Map<string, Agenda>()
+    for (const a of agendas) map.set(a.id, a)
+    return map
+  }, [agendas])
+
+  // Cor efetiva: a customizada do evento tem precedência; sem ela, herda a
+  // da agenda. Eventos de agendas ocultadas (checkbox desmarcado) são
+  // filtrados aqui antes de chegar em qualquer view.
+  const events = useMemo<CalendarEvent[]>(() => {
+    return rawEvents
+      .filter(e => !e.agenda_id || !hiddenAgendaIds.has(e.agenda_id))
+      .map(e => ({
+        ...e,
+        color: e.color || agendaById.get(e.agenda_id ?? '')?.cor || '#0EA5E9',
+      }))
+  }, [rawEvents, agendaById, hiddenAgendaIds])
 
   const loadEvents = useCallback(async () => {
     const from = new Date(); from.setDate(from.getDate() - 7)
@@ -168,9 +218,9 @@ export default function AgendaPage() {
       .lte('start_at', to.toISOString())
       .order('start_at')
 
-    const all      = [...(normalEvents ?? []), ...(recurringEvents ?? [])] as CalendarEvent[]
+    const all      = [...(normalEvents ?? []), ...(recurringEvents ?? [])] as RawCalendarEvent[]
     const expanded = expandRecurringEvents(all, from, to)
-    setEvents(expanded)
+    setRawEvents(expanded)
   }, [])
 
   const loadRotinas = useCallback(async () => {
@@ -248,7 +298,7 @@ export default function AgendaPage() {
   }
 
   /* ── Save ───────────────────────────────────────────────────── */
-  async function saveEvent(ev: Partial<CalendarEvent>, scope?: RecurrenceScope) {
+  async function saveEvent(ev: EventFormPayload, scope?: RecurrenceScope) {
     if (!ev.title || !ev.start_at || !ev.end_at) return
 
     const originalId   = ev.id ? getOriginalId(ev.id) : null
@@ -261,7 +311,8 @@ export default function AgendaPage() {
       start_at:        ev.start_at,
       end_at:          ev.end_at,
       all_day:         ev.all_day,
-      color:           ev.color,
+      color:           ev.color ?? null,
+      agenda_id:       ev.agenda_id ?? null,
       location:        ev.location,
       recurrence_rule: ev.recurrence_rule,
       tags:            ev.tags,
@@ -336,6 +387,7 @@ export default function AgendaPage() {
         end_at:           newEnd.toISOString(),
         all_day:         ev.all_day,
         color:           ev.color,
+        agenda_id:       ev.agenda_id,
         location:        ev.location,
         recurrence_rule: null,
         tags:            ev.tags,
@@ -373,6 +425,7 @@ export default function AgendaPage() {
           end_at:           newEnd.toISOString(),
           all_day:         ev.all_day,
           color:           ev.color,
+          agenda_id:       ev.agenda_id,
           location:        ev.location,
           recurrence_rule: newSeriesRule,
           tags:            ev.tags,
@@ -422,21 +475,119 @@ export default function AgendaPage() {
     }
 
     // Não recorrente: atualização otimista + reverte em caso de erro.
-    const prevEvents = events
-    setEvents(prev => prev.map(e => e.id === ev.id
+    const prevRaw = rawEvents
+    setRawEvents(prev => prev.map(e => e.id === ev.id
       ? { ...e, start_at: newStart.toISOString(), end_at: newEnd.toISOString() }
       : e))
     try {
       await moveEvent(ev, newStart, newEnd)
       loadEvents()
     } catch {
-      setEvents(prevEvents)
+      setRawEvents(prevRaw)
       setToast({ msg: 'Não foi possível mover o evento. Tente novamente.', ok: false })
     }
   }
 
+  /* ── Resize (arrastar borda inferior) ──────────────────────────── */
+  async function resizeEvent(ev: CalendarEvent, newEnd: Date, scope?: RecurrenceScope) {
+    const originalId   = getOriginalId(ev.id)
+    const instanceDate = getInstanceDate(ev.id)
+    const isRecurring  = !!ev.recurrence_rule || !!instanceDate
+
+    if (!isRecurring) {
+      await supabase.from('calendar_events').update({
+        end_at: newEnd.toISOString(),
+      }).eq('id', ev.id)
+      return
+    }
+
+    const newDuration = newEnd.getTime() - new Date(ev.start_at).getTime()
+
+    if (scope === 'this') {
+      // Cria evento avulso (mesmo início, duração nova), exclui a data original da série.
+      await supabase.from('calendar_events').insert({
+        title:           ev.title,
+        description:     ev.description,
+        start_at:        ev.start_at,
+        end_at:          newEnd.toISOString(),
+        all_day:         ev.all_day,
+        color:           ev.color,
+        agenda_id:       ev.agenda_id,
+        location:        ev.location,
+        recurrence_rule: null,
+        tags:            ev.tags,
+      })
+      const dateKey = (instanceDate ?? ev.start_at.slice(0, 10)).replace(/-/g, '')
+      const { data: parent } = await supabase
+        .from('calendar_events').select('recurrence_rule').eq('id', originalId).maybeSingle()
+      if (parent) {
+        const newRule = addExdate(parent.recurrence_rule, dateKey)
+        await supabase.from('calendar_events').update({ recurrence_rule: newRule }).eq('id', originalId)
+      }
+    } else if (scope === 'this_and_following') {
+      const originalDateStr = instanceDate ?? ev.start_at.slice(0, 10)
+      const until    = new Date(originalDateStr)
+      until.setDate(until.getDate() - 1)
+      const untilStr = until.toISOString().slice(0, 10).replace(/-/g, '') + 'T235959Z'
+      const { data: parent } = await supabase
+        .from('calendar_events').select('recurrence_rule').eq('id', originalId).maybeSingle()
+      if (parent) {
+        const cappedRule = (parent.recurrence_rule ?? '')
+          .split(';').filter((p: string) => !p.startsWith('UNTIL')).join(';')
+        await supabase.from('calendar_events').update({
+          recurrence_rule: cappedRule + `;UNTIL=${untilStr}`,
+        }).eq('id', originalId)
+
+        const newSeriesRule = parent.recurrence_rule
+          ? parent.recurrence_rule.split(';').filter((p: string) => !p.startsWith('UNTIL') && !p.startsWith('EXDATE')).join(';')
+          : null
+        await supabase.from('calendar_events').insert({
+          title:           ev.title,
+          description:     ev.description,
+          start_at:        ev.start_at,
+          end_at:          newEnd.toISOString(),
+          all_day:         ev.all_day,
+          color:           ev.color,
+          agenda_id:       ev.agenda_id,
+          location:        ev.location,
+          recurrence_rule: newSeriesRule,
+          tags:            ev.tags,
+        })
+      }
+    } else if (scope === 'all') {
+      const { data: parent } = await supabase
+        .from('calendar_events').select('start_at').eq('id', originalId).maybeSingle()
+      if (parent) {
+        const masterEnd = new Date(new Date(parent.start_at).getTime() + newDuration)
+        await supabase.from('calendar_events').update({
+          end_at: masterEnd.toISOString(),
+        }).eq('id', originalId)
+      }
+    }
+  }
+
+  async function handleResizeEvent(ev: CalendarEvent, newEnd: Date) {
+    const isRecurring = !!ev.recurrence_rule || isSyntheticId(ev.id)
+
+    if (isRecurring) {
+      setPendingResize({ event: ev, newEnd })
+      setRecurrenceDialog({ mode: 'resize', event: ev })
+      return
+    }
+
+    const prevRaw = rawEvents
+    setRawEvents(prev => prev.map(e => e.id === ev.id ? { ...e, end_at: newEnd.toISOString() } : e))
+    try {
+      await resizeEvent(ev, newEnd)
+      loadEvents()
+    } catch {
+      setRawEvents(prevRaw)
+      setToast({ msg: 'Não foi possível redimensionar o evento. Tente novamente.', ok: false })
+    }
+  }
+
   /* ── Handlers ───────────────────────────────────────────────── */
-  function handleSelectEvent(ev: Partial<CalendarEvent>) {
+  function handleSelectEvent(ev: EventFormPayload) {
     setModal(ev)
   }
 
@@ -455,12 +606,21 @@ export default function AgendaPage() {
     const end = new Date(snappedStart)
     end.setHours(snappedStart.getHours() + 1)
     setModal({
-      title:    '',
-      start_at: snappedStart.toISOString(),
-      end_at:   end.toISOString(),
-      all_day:  false,
-      color:    '#0EA5E9',
+      title:     '',
+      start_at:  snappedStart.toISOString(),
+      end_at:    end.toISOString(),
+      all_day:   false,
+      agenda_id: defaultAgenda?.id ?? null,
+      // sem color explícita → EventModal trata como "Automático" (herda da agenda)
     })
+  }
+
+  async function openDeleteAgenda(agenda: Agenda) {
+    const { count } = await supabase
+      .from('calendar_events')
+      .select('id', { count: 'exact', head: true })
+      .eq('agenda_id', agenda.id)
+    setDeleteAgendaState({ agenda, count: count ?? 0 })
   }
 
   const sharedViewProps = {
@@ -470,6 +630,7 @@ export default function AgendaPage() {
     onSelectEvent: handleSelectEvent,
     onSelectSlot:  (start: Date) => openNewEvent(start),
     onMoveEvent:   handleMoveEvent,
+    onResizeEvent: handleResizeEvent,
   }
 
   return (
@@ -507,6 +668,14 @@ export default function AgendaPage() {
                 {headerLabel(view, currentDate, weekStartsOn)}
               </span>
               <div className="flex-1" />
+              <button
+                onClick={() => setAgendaPanelOpen(true)}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-ink-3 border border-[#1f1f1f] rounded-lg hover:text-white transition-colors shrink-0"
+                title="Minhas agendas"
+              >
+                <Layers size={13} />
+                <span className="hidden sm:inline">Agendas</span>
+              </button>
               <button
                 onClick={() => openNewEvent(new Date())}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-brand text-black rounded-lg hover:bg-[#38bdf8] transition-colors shrink-0"
@@ -555,6 +724,8 @@ export default function AgendaPage() {
       {modal && (
         <EventModal
           event={modal}
+          agendas={agendas}
+          defaultAgendaId={defaultAgenda?.id}
           onSave={(ev) => {
             const isRecurringInstance = modal?.id && (isSyntheticId(modal.id) || !!modal.recurrence_rule)
             if (isRecurringInstance) {
@@ -588,6 +759,17 @@ export default function AgendaPage() {
               }
               setPendingMove(null)
               setRecurrenceDialog(null)
+            } else if (recurrenceDialog.mode === 'resize') {
+              if (pendingResize) {
+                try {
+                  await resizeEvent(pendingResize.event, pendingResize.newEnd, scope)
+                  loadEvents()
+                } catch {
+                  setToast({ msg: 'Não foi possível redimensionar o evento. Tente novamente.', ok: false })
+                }
+              }
+              setPendingResize(null)
+              setRecurrenceDialog(null)
             } else {
               if (pendingSaveEvent) {
                 await saveEvent(pendingSaveEvent, scope)
@@ -596,7 +778,55 @@ export default function AgendaPage() {
               setRecurrenceDialog(null)
             }
           }}
-          onClose={() => { setRecurrenceDialog(null); setPendingSaveEvent(null); setPendingMove(null) }}
+          onClose={() => { setRecurrenceDialog(null); setPendingSaveEvent(null); setPendingMove(null); setPendingResize(null) }}
+        />
+      )}
+
+      {/* Painel "Minhas agendas" */}
+      {agendaPanelOpen && (
+        <AgendaSidebar
+          agendas={agendas}
+          visibleIds={new Set(agendas.filter(a => !hiddenAgendaIds.has(a.id)).map(a => a.id))}
+          onToggleVisible={(id) => setHiddenAgendaIds(prev => {
+            const next = new Set(prev)
+            if (next.has(id)) next.delete(id); else next.add(id)
+            return next
+          })}
+          onOpenCreate={() => setAgendaForm({ mode: 'create' })}
+          onOpenEdit={(agenda) => setAgendaForm({ mode: 'edit', agenda })}
+          onSetDefault={(id) => setDefaultAgenda.mutate(id)}
+          onOpenDelete={(agenda) => openDeleteAgenda(agenda)}
+          onClose={() => setAgendaPanelOpen(false)}
+        />
+      )}
+
+      {/* Criar/editar agenda */}
+      {agendaForm && (
+        <AgendaFormModal
+          title={agendaForm.mode === 'create' ? 'Nova agenda' : 'Editar agenda'}
+          initialNome={agendaForm.mode === 'edit' ? agendaForm.agenda.nome : ''}
+          initialCor={agendaForm.mode === 'edit' ? agendaForm.agenda.cor : undefined}
+          confirmLabel={agendaForm.mode === 'create' ? 'Criar' : 'Salvar'}
+          onSave={(nome, cor) => {
+            if (agendaForm.mode === 'create') createAgenda.mutate({ nome, cor })
+            else updateAgenda.mutate({ id: agendaForm.agenda.id, nome, cor })
+            setAgendaForm(null)
+          }}
+          onClose={() => setAgendaForm(null)}
+        />
+      )}
+
+      {/* Excluir agenda */}
+      {deleteAgendaState && (
+        <DeleteAgendaDialog
+          agenda={deleteAgendaState.agenda}
+          otherAgendas={agendas.filter(a => a.id !== deleteAgendaState.agenda.id)}
+          eventCount={deleteAgendaState.count}
+          onConfirm={(reassignToId) => {
+            deleteAgenda.mutate({ id: deleteAgendaState.agenda.id, reassignToId: reassignToId ?? undefined })
+            setDeleteAgendaState(null)
+          }}
+          onClose={() => setDeleteAgendaState(null)}
         />
       )}
 

@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import { X, Trash2, MapPin, AlignLeft, Clock, Tag } from 'lucide-react'
-import type { CalendarEvent, CalendarTag } from '../types'
+import type { Agenda, CalendarTag, EventFormPayload } from '../types'
 import { EVENT_COLORS } from '../types'
 import { supabase } from '../../../lib/supabase'
 
 interface Props {
-  event: Partial<CalendarEvent>
-  onSave: (e: Partial<CalendarEvent>) => void
+  event: EventFormPayload
+  agendas: Agenda[]
+  defaultAgendaId?: string
+  onSave: (e: EventFormPayload) => void
   onDelete?: () => void
   onClose: () => void
 }
@@ -41,7 +43,7 @@ const WEEK_DAYS = [
   { id: 'SU', label: 'D' },
 ]
 
-export function EventModal({ event, onSave, onDelete, onClose }: Props) {
+export function EventModal({ event, agendas, defaultAgendaId, onSave, onDelete, onClose }: Props) {
   const isNew = !event.id
 
   const [title,       setTitle]       = useState(event.title ?? '')
@@ -49,11 +51,19 @@ export function EventModal({ event, onSave, onDelete, onClose }: Props) {
   const [startAt,     setStartAt]     = useState(event.start_at ? toLocalInput(event.start_at) : '')
   const [endAt,       setEndAt]       = useState(event.end_at   ? toLocalInput(event.end_at)   : '')
   const [allDay,      setAllDay]      = useState(event.all_day  ?? false)
-  const [color,       setColor]       = useState(event.color    ?? '#0EA5E9')
   const [location,    setLocation]    = useState(event.location ?? '')
   const [saving,      setSaving]      = useState(false)
   const [tags,        setTags]        = useState<string[]>(event.tags ?? [])
   const [allTags,     setAllTags]     = useState<CalendarTag[]>([])
+
+  const [agendaId, setAgendaId] = useState(event.agenda_id ?? defaultAgendaId ?? '')
+  const selectedAgenda = agendas.find(a => a.id === agendaId)
+  // Sem cor própria, ou cor igual à da agenda atual → assume que o evento
+  // estava herdando a cor da agenda ("Automático"), não que foi customizado
+  // de propósito pra bater com a mesma cor por coincidência.
+  const initialIsAuto = !event.color || event.color === selectedAgenda?.cor
+  const [colorMode, setColorMode] = useState<'auto' | 'custom'>(initialIsAuto ? 'auto' : 'custom')
+  const [color,     setColor]     = useState(event.color ?? selectedAgenda?.cor ?? '#0EA5E9')
 
   // Recurrence
   const [rrule,       setRrule]       = useState(event.recurrence_rule ?? '')
@@ -101,7 +111,8 @@ export function EventModal({ event, onSave, onDelete, onClose }: Props) {
       start_at:         fromLocalInput(startAt),
       end_at:           endAt ? fromLocalInput(endAt) : fromLocalInput(startAt),
       all_day:          allDay,
-      color,
+      color:            colorMode === 'auto' ? null : color,
+      agenda_id:        agendaId || null,
       location:         location.trim() || null,
       tags,
       recurrence_rule:  buildRrule() || null,
@@ -120,13 +131,25 @@ export function EventModal({ event, onSave, onDelete, onClose }: Props) {
       >
         {/* Header */}
         <div className="flex items-center gap-2 px-5 py-4 border-b border-[#1f1f1f]">
-          <div className="flex gap-1.5 flex-wrap">
+          <div className="flex gap-1.5 flex-wrap items-center">
+            <button
+              onClick={() => setColorMode('auto')}
+              title="Automático (cor da agenda)"
+              className="w-5 h-5 rounded-full transition-transform hover:scale-110 flex items-center justify-center"
+              style={{
+                background:    selectedAgenda?.cor ?? '#0EA5E9',
+                outline:       colorMode === 'auto' ? '2px solid #fff' : 'none',
+                outlineOffset: 2,
+              }}
+            >
+              {colorMode === 'auto' && <span style={{ fontSize: 9, color: '#fff' }}>A</span>}
+            </button>
             {EVENT_COLORS.map(c => (
-              <button key={c} onClick={() => setColor(c)}
+              <button key={c} onClick={() => { setColor(c); setColorMode('custom') }}
                 className="w-5 h-5 rounded-full transition-transform hover:scale-110"
                 style={{
                   background:    c,
-                  outline:       color === c ? `2px solid ${c}` : 'none',
+                  outline:       colorMode === 'custom' && color === c ? `2px solid ${c}` : 'none',
                   outlineOffset: 2,
                 }} />
             ))}
@@ -163,6 +186,22 @@ export function EventModal({ event, onSave, onDelete, onClose }: Props) {
             />
             Dia inteiro
           </label>
+
+          {/* Agenda */}
+          {agendas.length > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: selectedAgenda?.cor ?? '#0EA5E9' }} />
+              <select
+                value={agendaId}
+                onChange={e => setAgendaId(e.target.value)}
+                className="flex-1 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-brand/60"
+              >
+                {agendas.map(a => (
+                  <option key={a.id} value={a.id}>{a.nome}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Start / End */}
           <div className="space-y-2">

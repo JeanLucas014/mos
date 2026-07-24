@@ -4,7 +4,7 @@ import { X } from 'lucide-react'
 export type RecurrenceScope = 'this' | 'this_and_following' | 'all'
 
 interface Props {
-  mode: 'edit' | 'delete' | 'move'
+  mode: 'edit' | 'delete' | 'move' | 'resize'
   onConfirm: (scope: RecurrenceScope) => void
   onClose: () => void
 }
@@ -23,7 +23,7 @@ export function RecurrenceDialog({ mode, onConfirm, onClose }: Props) {
       >
         <div className="flex items-center justify-between mb-5">
           <span className="text-sm font-semibold font-[Sora] text-white">
-            {mode === 'delete' ? 'Excluir evento recorrente' : mode === 'move' ? 'Mover evento recorrente' : 'Editar evento recorrente'}
+            {mode === 'delete' ? 'Excluir evento recorrente' : mode === 'move' ? 'Mover evento recorrente' : mode === 'resize' ? 'Redimensionar evento recorrente' : 'Editar evento recorrente'}
           </span>
           <button onClick={onClose} className="text-ink-3 hover:text-white transition-colors">
             <X size={15} />

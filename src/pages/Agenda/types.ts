@@ -5,6 +5,16 @@ export interface CalendarTag {
   color: string
 }
 
+export interface Agenda {
+  id: string
+  user_id: string
+  nome: string
+  cor: string
+  eh_padrao: boolean
+  ordem: number
+  created_at: string
+}
+
 export interface CalendarEvent {
   id: string
   user_id: string
@@ -13,12 +23,20 @@ export interface CalendarEvent {
   start_at: string
   end_at: string
   all_day: boolean
+  /** Sempre resolvida no load (nunca null em runtime) — se o evento não tem
+   * cor própria, herda a cor da agenda; ver resolveEventColor em index.tsx. */
   color: string
+  agenda_id: string | null
   location: string | null
   recurrence_rule: string | null
   tags?: string[]
   created_at: string
 }
+
+/** Payload do formulário de evento — cor pode ser null explicitamente
+ * ("Automático": herda a cor da agenda), diferente de CalendarEvent.color
+ * (sempre uma string já resolvida, usado pra exibição na grade). */
+export type EventFormPayload = Omit<Partial<CalendarEvent>, 'color'> & { color?: string | null }
 
 export interface Rotina {
   id: string

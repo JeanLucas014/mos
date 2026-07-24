@@ -18,6 +18,7 @@ interface Props {
   onSelectEvent: (e: Partial<CalendarEvent>) => void
   onSelectSlot: (start: Date) => void
   onMoveEvent: (event: CalendarEvent, newStart: Date, newEnd: Date) => void
+  onResizeEvent: (event: CalendarEvent, newEnd: Date) => void
 }
 
 function isSameDay(a: Date, b: Date): boolean {
@@ -112,6 +113,26 @@ function layoutEvents(segments: EventSegment[]): EventLayout[] {
 
 const SNAP_MIN = SNAP_MINUTES
 
+/* ── Alça de redimensionar (borda inferior) ────────────────────── */
+interface ResizeHandleProps {
+  isMobile: boolean
+  onStart: (clientY: number) => void
+}
+
+function ResizeHandle({ isMobile, onStart }: ResizeHandleProps) {
+  const HIT_H = isMobile ? 10 : 6 // área tocável — maior no mobile pra facilitar o toque
+  return (
+    <div
+      onMouseDown={e => { e.stopPropagation(); onStart(e.clientY) }}
+      onTouchStart={e => { e.stopPropagation(); if (e.touches[0]) onStart(e.touches[0].clientY) }}
+      className="absolute left-0 right-0 bottom-0 flex items-end justify-center"
+      style={{ height: HIT_H, cursor: 'ns-resize', touchAction: 'none', zIndex: 5 }}
+    >
+      <div style={{ width: 22, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.85)', marginBottom: 1 }} />
+    </div>
+  )
+}
+
 /* ── Um evento arrastável na grade ─────────────────────────────── */
 interface EventPillProps {
   seg: EventSegment
@@ -123,10 +144,16 @@ interface EventPillProps {
   height: number
   isMobile: boolean
   isBeingDragged: boolean
+  isBeingResized: boolean
+  liveEndLabel?: string
   onSelectEvent: (e: Partial<CalendarEvent>) => void
+  onResizeStart: (ev: CalendarEvent, dayIndex: number, segStart: Date, clientY: number, startHeightPx: number) => void
 }
 
-function EventPill({ seg, dayIndex, left, width, zIndex, top, height, isMobile, isBeingDragged, onSelectEvent }: EventPillProps) {
+function EventPill({
+  seg, dayIndex, left, width, zIndex, top, height, isMobile, isBeingDragged, isBeingResized, liveEndLabel,
+  onSelectEvent, onResizeStart,
+}: EventPillProps) {
   const { ev, segStart, segEnd, segmentOffsetMs } = seg
   // id único por pedaço (o mesmo evento pode ter um segmento em cada dia
   // que ele atravessa) — dnd-kit exige ids únicos por draggable. O drag
@@ -140,18 +167,23 @@ function EventPill({ seg, dayIndex, left, width, zIndex, top, height, isMobile, 
     ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
     : undefined
 
+  // Só a última "fatia" de um evento multi-dia (onde segEnd bate com o
+  // end_at real) recebe a alça — redimensionar um pedaço no meio só
+  // moveria o corte de meia-noite, não o horário de fim de verdade.
+  const isLastSegment = segEnd.getTime() === new Date(ev.end_at).getTime()
+
   return (
     <div
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      onClick={e => { e.stopPropagation(); if (!isBeingDragged) onSelectEvent(ev) }}
+      onClick={e => { e.stopPropagation(); if (!isBeingDragged && !isBeingResized) onSelectEvent(ev) }}
       className="absolute cursor-pointer overflow-hidden transition-colors hover:brightness-110"
       style={{
         top, height,
         left:         `calc(${left}% + 1px)`,
         width:        `calc(${width}% - 2px)`,
-        zIndex:       isBeingDragged ? 999 : zIndex,
+        zIndex:       isBeingDragged || isBeingResized ? 999 : zIndex,
         borderRadius: 6,
         background:   ev.color + 'e8',
         borderLeft:   `3px solid ${ev.color}`,
@@ -175,15 +207,23 @@ function EventPill({ seg, dayIndex, left, width, zIndex, top, height, isMobile, 
           <div className="text-white/75 truncate" style={{ fontSize: 10 }}>
             {segStart.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
             {' – '}
-            {segEnd.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+            {isBeingResized && liveEndLabel ? liveEndLabel : segEnd.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
           </div>
         )}
         {height <= 35 && (
           <div className="text-white/75 truncate" style={{ fontSize: 9 }}>
             {segStart.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+            {isBeingResized && liveEndLabel ? ` – ${liveEndLabel}` : ''}
           </div>
         )}
       </div>
+
+      {isLastSegment && !isBeingDragged && (
+        <ResizeHandle
+          isMobile={isMobile}
+          onStart={(clientY) => onResizeStart(ev, dayIndex, segStart, clientY, height)}
+        />
+      )}
     </div>
   )
 }
@@ -193,6 +233,14 @@ interface DragPreview {
   top: number
   height: number
   color: string
+}
+
+interface ResizeState {
+  ev: CalendarEvent
+  dayIndex: number
+  segStart: Date
+  liveHeightPx: number
+  liveEndLabel: string
 }
 
 interface DayColumnProps {
@@ -207,15 +255,17 @@ interface DayColumnProps {
   isMobile: boolean
   draggingEventId: string | null
   dragPreview: DragPreview | null
+  resizeState: ResizeState | null
   onSelectEvent: (e: Partial<CalendarEvent>) => void
   onSelectSlot: (start: Date) => void
+  onResizeStart: (ev: CalendarEvent, dayIndex: number, segStart: Date, clientY: number, startHeightPx: number) => void
   segTop: (seg: EventSegment) => number
   segHeight: (seg: EventSegment) => number
 }
 
 function DayColumn({
   day, dayIndex, today, hours, HOUR_H, nowTop, widthStyle, segments, isMobile,
-  draggingEventId, dragPreview, onSelectEvent, onSelectSlot, segTop, segHeight,
+  draggingEventId, dragPreview, resizeState, onSelectEvent, onSelectSlot, onResizeStart, segTop, segHeight,
 }: DayColumnProps) {
   return (
     <div
@@ -269,26 +319,32 @@ function DayColumn({
       )}
 
       {/* Events */}
-      {layoutEvents(segments).map(({ seg, left, width, zIndex }) => (
-        <EventPill
-          key={`${seg.ev.id}::${dayIndex}`}
-          seg={seg}
-          dayIndex={dayIndex}
-          left={left}
-          width={width}
-          zIndex={zIndex}
-          top={segTop(seg)}
-          height={segHeight(seg)}
-          isMobile={isMobile}
-          isBeingDragged={draggingEventId === seg.ev.id}
-          onSelectEvent={onSelectEvent}
-        />
-      ))}
+      {layoutEvents(segments).map(({ seg, left, width, zIndex }) => {
+        const isBeingResized = resizeState?.ev.id === seg.ev.id && resizeState.dayIndex === dayIndex
+        return (
+          <EventPill
+            key={`${seg.ev.id}::${dayIndex}`}
+            seg={seg}
+            dayIndex={dayIndex}
+            left={left}
+            width={width}
+            zIndex={zIndex}
+            top={segTop(seg)}
+            height={isBeingResized ? resizeState!.liveHeightPx : segHeight(seg)}
+            isMobile={isMobile}
+            isBeingDragged={draggingEventId === seg.ev.id}
+            isBeingResized={isBeingResized}
+            liveEndLabel={isBeingResized ? resizeState!.liveEndLabel : undefined}
+            onSelectEvent={onSelectEvent}
+            onResizeStart={onResizeStart}
+          />
+        )
+      })}
     </div>
   )
 }
 
-export function WeekView({ events, currentDate, weekStartsOn, onSelectEvent, onSelectSlot, onMoveEvent }: Props) {
+export function WeekView({ events, currentDate, weekStartsOn, onSelectEvent, onSelectSlot, onMoveEvent, onResizeEvent }: Props) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640)
   const scrollRef  = useRef<HTMLDivElement>(null)
   const rowRef     = useRef<HTMLDivElement>(null)
@@ -422,9 +478,72 @@ export function WeekView({ events, currentDate, weekStartsOn, onSelectEvent, onS
 
   const draggingEventId = dragOrigin?.event.id ?? null
 
+  /* ── Resize (arrastar a borda inferior do evento) ────────────────
+   * Área tocável separada do resto do evento (ResizeHandle, dentro do
+   * próprio EventPill) — não usa dnd-kit, então não conflita com o
+   * drag-and-drop do evento inteiro. Suave durante o arraste; só o valor
+   * final (ao soltar) é arredondado pro múltiplo de 15min. */
+  const [resizeState, setResizeState] = useState<ResizeState | null>(null)
+  const resizeStartRef = useRef<{ clientY: number; startHeightPx: number } | null>(null)
+
+  const handleResizeStart = useCallback((ev: CalendarEvent, dayIndex: number, segStart: Date, clientY: number, startHeightPx: number) => {
+    resizeStartRef.current = { clientY, startHeightPx }
+    const label = new Date(segStart.getTime() + (startHeightPx / (HOUR_H / 60)) * 60000)
+      .toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    setResizeState({ ev, dayIndex, segStart, liveHeightPx: startHeightPx, liveEndLabel: label })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [HOUR_H])
+
+  useEffect(() => {
+    if (!resizeState) return
+
+    const MIN_HEIGHT_PX = SNAP_MIN * (HOUR_H / 60)
+
+    function updateHeight(clientY: number) {
+      const start = resizeStartRef.current
+      if (!start) return
+      const newHeightPx = Math.max(MIN_HEIGHT_PX, start.startHeightPx + (clientY - start.clientY))
+      setResizeState(rs => {
+        if (!rs) return rs
+        const minutes = newHeightPx / (HOUR_H / 60)
+        const label = new Date(rs.segStart.getTime() + minutes * 60000)
+          .toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+        return { ...rs, liveHeightPx: newHeightPx, liveEndLabel: label }
+      })
+    }
+
+    function onMouseMove(e: MouseEvent) { updateHeight(e.clientY) }
+    function onTouchMove(e: TouchEvent) { if (e.touches[0]) updateHeight(e.touches[0].clientY) }
+
+    function finish() {
+      setResizeState(rs => {
+        if (rs) {
+          const rawMinutes = rs.liveHeightPx / (HOUR_H / 60)
+          const snappedMinutes = Math.max(SNAP_MIN, Math.round(rawMinutes / SNAP_MIN) * SNAP_MIN)
+          const newEnd = new Date(rs.segStart.getTime() + snappedMinutes * 60000)
+          onResizeEvent(rs.ev, newEnd)
+        }
+        return null
+      })
+      resizeStartRef.current = null
+    }
+
+    window.addEventListener('mousemove', onMouseMove)
+    window.addEventListener('touchmove', onTouchMove, { passive: false })
+    window.addEventListener('mouseup', finish)
+    window.addEventListener('touchend', finish)
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('touchmove', onTouchMove)
+      window.removeEventListener('mouseup', finish)
+      window.removeEventListener('touchend', finish)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [!!resizeState, HOUR_H, onResizeEvent])
+
   const sharedColumnProps = {
-    today, hours, HOUR_H, nowTop, isMobile, draggingEventId, dragPreview,
-    onSelectEvent, onSelectSlot, segTop, segHeight,
+    today, hours, HOUR_H, nowTop, isMobile, draggingEventId, dragPreview, resizeState,
+    onSelectEvent, onSelectSlot, onResizeStart: handleResizeStart, segTop, segHeight,
   }
 
   return (

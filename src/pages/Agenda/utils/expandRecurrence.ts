@@ -1,5 +1,3 @@
-import type { CalendarEvent } from '../types'
-
 function parseRrule(rule: string): Record<string, string> {
   const map: Record<string, string> = {}
   rule.split(';').forEach(part => {
@@ -9,12 +7,22 @@ function parseRrule(rule: string): Record<string, string> {
   return map
 }
 
-export function expandRecurringEvents(
-  events: CalendarEvent[],
+interface RecurrableEvent {
+  id: string
+  start_at: string
+  end_at: string
+  recurrence_rule: string | null
+}
+
+/** Genérico — funciona tanto pra CalendarEvent (cor já resolvida) quanto pro
+ * shape "cru" recém-buscado do banco (cor ainda nullable), já que só lê
+ * id/start_at/end_at/recurrence_rule e espalha o resto sem tocar. */
+export function expandRecurringEvents<T extends RecurrableEvent>(
+  events: T[],
   viewStart: Date,
   viewEnd: Date
-): CalendarEvent[] {
-  const result: CalendarEvent[] = []
+): T[] {
+  const result: T[] = []
 
   for (const event of events) {
     if (!event.recurrence_rule) {

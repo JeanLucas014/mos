@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      agendas: {
+        Row: {
+          cor: string
+          created_at: string
+          eh_padrao: boolean
+          id: string
+          nome: string
+          ordem: number
+          user_id: string
+        }
+        Insert: {
+          cor?: string
+          created_at?: string
+          eh_padrao?: boolean
+          id?: string
+          nome: string
+          ordem?: number
+          user_id?: string
+        }
+        Update: {
+          cor?: string
+          created_at?: string
+          eh_padrao?: boolean
+          id?: string
+          nome?: string
+          ordem?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       books: {
         Row: {
           author: string | null
@@ -73,6 +103,7 @@ export type Database = {
       }
       calendar_events: {
         Row: {
+          agenda_id: string | null
           all_day: boolean | null
           color: string | null
           created_at: string | null
@@ -87,6 +118,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          agenda_id?: string | null
           all_day?: boolean | null
           color?: string | null
           created_at?: string | null
@@ -101,6 +133,7 @@ export type Database = {
           user_id?: string
         }
         Update: {
+          agenda_id?: string | null
           all_day?: boolean | null
           color?: string | null
           created_at?: string | null
@@ -114,7 +147,15 @@ export type Database = {
           title?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_agenda_id_fkey"
+            columns: ["agenda_id"]
+            isOneToOne: false
+            referencedRelation: "agendas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       calendar_rotinas: {
         Row: {
