@@ -1,7 +1,8 @@
 // src/pages/Financeiro/components/HorizonteSaldos.tsx
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { FinAno } from '../types'
+import { useRealtimeStore } from '@/stores/useRealtimeStore'
 
 const MONTHS = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
 
@@ -52,6 +53,15 @@ export function HorizonteSaldos({ ano }: Props) {
   const PAGE_LABELS = ['Jan–Mar', 'Abr–Jun', 'Jul–Set', 'Out–Dez']
 
   useEffect(() => { load() }, [ano.id])
+
+  // Recarrega quando outra aba/dispositivo muda fin_lancamentos (useRealtimeSync).
+  // Pula a primeira execução — o mount acima já carrega os dados.
+  const lancamentosVersion = useRealtimeStore(s => s.versions.fin_lancamentos)
+  const skipFirstSync = useRef(true)
+  useEffect(() => {
+    if (skipFirstSync.current) { skipFirstSync.current = false; return }
+    load()
+  }, [lancamentosVersion])
 
   async function load() {
     setLoading(true)
